@@ -24,3 +24,8 @@ Thumbs.db
 
 # Astro
 .astro/
+.vercel
+
+# Private / local reference files
+assets/
+skill_sources.md
