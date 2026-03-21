@@ -1,9 +1,127 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+const allPosts = await getCollection("posts", ({ data }) => !data.draft);
+const posts = allPosts.sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+// Group by year
+const postsByYear: Record<number, typeof posts> = {};
+for (const post of posts) {
+  const year = post.data.pubDate.getFullYear();
+  if (!postsByYear[year]) postsByYear[year] = [];
+  postsByYear[year].push(post);
+}
+const years = Object.keys(postsByYear)
+  .map(Number)
+  .sort((a, b) => b - a);
 ---
-<BaseLayout title="Posts">
-  <div class="container" style="padding-block: 4rem;">
-    <h1>Posts</h1>
-    <p style="color: var(--fg-muted); margin-top: 1rem;">Coming in Phase 3.</p>
+
+<BaseLayout title="Writing" description="All posts by Gen Li — research, cycling, books, and more.">
+  <div class="container posts-page">
+    <h1 class="page-title">Writing</h1>
+
+    {
+      posts.length === 0 ? (
+        <p class="empty-state">Posts coming soon.</p>
+      ) : (
+        years.map((year) => (
+          <section class="year-group">
+            <h2 class="year-label">{year}</h2>
+            <ul class="post-list" role="list">
+              {postsByYear[year].map((post) => (
+                <li class="post-item">
+                  <a href={`/posts/${post.id}/`} class="post-link">
+                    <span class="post-title">{post.data.title}</span>
+                    <span class="post-date">{formatDate(post.data.pubDate)}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      )
+    }
   </div>
 </BaseLayout>
+
+<style>
+  .posts-page {
+    padding-block: 4rem;
+  }
+
+  .page-title {
+    font-size: var(--text-2xl);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 3rem;
+  }
+
+  .empty-state {
+    color: var(--fg-muted);
+    font-style: italic;
+  }
+
+  .year-group {
+    margin-bottom: 2.5rem;
+  }
+
+  .year-label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--fg-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .post-list {
+    list-style: none;
+  }
+
+  .post-item {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .post-item:first-child {
+    border-top: 1px solid var(--border);
+  }
+
+  .post-link {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.875rem;
+    text-decoration: none;
+  }
+
+  .post-title {
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: var(--fg);
+    transition: color var(--transition);
+  }
+
+  .post-link:hover .post-title {
+    color: var(--accent);
+  }
+
+  .post-date {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+</style>

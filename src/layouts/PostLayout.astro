@@ -1,0 +1,127 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  post: CollectionEntry<"posts">;
+  readingTime?: string;
+}
+
+const { post, readingTime } = Astro.props;
+const { title, description, pubDate, updatedDate, tags } = post.data;
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+---
+
+<BaseLayout title={title} description={description}>
+  <article class="container post-article">
+    <header class="post-header">
+      <h1 class="post-title">{title}</h1>
+      <div class="post-meta">
+        <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
+        {readingTime && <span class="meta-sep">·</span>}
+        {readingTime && <span>{readingTime}</span>}
+        {
+          updatedDate && (
+            <>
+              <span class="meta-sep">·</span>
+              <span class="updated">Updated {formatDate(updatedDate)}</span>
+            </>
+          )
+        }
+      </div>
+      {
+        tags.length > 0 && (
+          <div class="post-tags">
+            {tags.map((tag) => (
+              <span class="tag">{tag}</span>
+            ))}
+          </div>
+        )
+      }
+    </header>
+
+    <hr class="post-divider" />
+
+    <div class="prose">
+      <slot />
+    </div>
+
+    <hr class="post-divider" />
+
+    <footer class="post-footer">
+      <a href="/posts/" class="back-link">← All posts</a>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .post-article {
+    padding-block: 4rem;
+    max-width: 720px;
+  }
+
+  .post-header {
+    margin-bottom: 2rem;
+  }
+
+  .post-title {
+    font-size: var(--text-2xl);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+
+  .post-meta {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    align-items: center;
+    margin-bottom: 0.875rem;
+  }
+
+  .meta-sep {
+    opacity: 0.4;
+  }
+
+  .updated {
+    font-style: italic;
+  }
+
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .post-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin-block: 2rem;
+  }
+
+  .post-footer {
+    margin-top: 1rem;
+  }
+
+  .back-link {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    text-decoration: none;
+    transition: color var(--transition);
+  }
+
+  .back-link:hover {
+    color: var(--accent);
+  }
+</style>
