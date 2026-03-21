@@ -9,7 +9,7 @@ const projects = [
       "Interactive knowledge hub for sustainable mining decisions. Multi-objective optimization with stakeholder-guided decision-making and live Plotly visualizations.",
     tags: ["Python", "FastAPI", "Plotly", "React"],
     href: "https://mamoda-web-dashboard.vercel.app/",
-    image: "/images/projects/mamoda.png",
+    image: null,
     // gradient used when no image
     gradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
     size: "large", // spans 2 columns
@@ -21,7 +21,7 @@ const projects = [
       "Stochastic MILP for optimal EV charging station placement under grid uncertainty. PCT patent granted.",
     tags: ["Python", "Pyomo", "CPLEX"],
     href: "https://patentscope.wipo.int/search/en/detail.jsf?docId=WO2025026594",
-    image: "/images/projects/ev-optimizer.png",
+    image: null,
     gradient: "linear-gradient(135deg, #0d1b2a 0%, #1b4332 50%, #2d6a4f 100%)",
     badge: "PCT WO2025026594",
     size: "tall", // spans 2 rows
@@ -34,7 +34,7 @@ const projects = [
     tags: ["Astro", "Sveltia CMS", "TypeScript", "Python"],
     href: "https://github.com/GenLI3202/acc_clubhub",
     liveHref: "https://acc-clubhub.vercel.app/",
-    image: "/images/projects/accross.png",
+    image: null,
     gradient: "linear-gradient(135deg, #1a0a0a 0%, #4a1010 50%, #7b2020 100%)",
     size: "small",
   },
@@ -64,52 +64,48 @@ const projects = [
       {
         projects.map((project) => (
           <li class={`bento-card bento-card--${project.size}`}>
+            {/* Cover link — fills the whole card */}
             <a
               href={project.href}
-              class="bento-link"
+              class="bento-cover-link"
               target="_blank"
               rel="noopener noreferrer"
               aria-label={project.title}
+            />
+
+            {/* Visual area */}
+            <div
+              class="bento-visual"
+              style={`background: ${project.gradient};`}
             >
-              {/* Visual area */}
-              <div
-                class="bento-visual"
-                style={
-                  `background: ${project.gradient};` +
-                  (project.image
-                    ? ` background-image: url(${project.image}); background-size: cover; background-position: center;`
-                    : "")
-                }
-              >
-                {project.badge && (
-                  <span class="bento-badge">{project.badge}</span>
-                )}
-                {project.liveHref && (
-                  <a
-                    href={project.liveHref}
-                    class="bento-live"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onclick="event.stopPropagation()"
-                  >
-                    Live ↗
-                  </a>
-                )}
-              </div>
+              {project.badge && (
+                <span class="bento-badge">{project.badge}</span>
+              )}
+              {/* Live badge sits above the cover link via z-index */}
+              {project.liveHref && (
+                <a
+                  href={project.liveHref}
+                  class="bento-live"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Live ↗
+                </a>
+              )}
+            </div>
 
-              {/* Content area */}
-              <div class="bento-content">
-                <h2 class="bento-title">{project.title}</h2>
-                <p class="bento-desc">{project.description}</p>
-                <div class="bento-tags">
-                  {project.tags.map((tag) => (
-                    <span class="tag">{tag}</span>
-                  ))}
-                </div>
+            {/* Content area */}
+            <div class="bento-content">
+              <h2 class="bento-title">{project.title}</h2>
+              <p class="bento-desc">{project.description}</p>
+              <div class="bento-tags">
+                {project.tags.map((tag) => (
+                  <span class="tag">{tag}</span>
+                ))}
               </div>
+            </div>
 
-              <span class="bento-arrow" aria-hidden="true">↗</span>
-            </a>
+            <span class="bento-arrow" aria-hidden="true">↗</span>
           </li>
         ))
       }
@@ -166,6 +162,9 @@ const projects = [
     border: 1px solid var(--border);
     overflow: hidden;
     background: var(--surface);
+    position: relative;
+    display: flex;
+    flex-direction: column;
     transition: border-color var(--transition), transform var(--transition),
       box-shadow var(--transition);
   }
@@ -176,12 +175,11 @@ const projects = [
     box-shadow: var(--shadow-hover);
   }
 
-  .bento-link {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    text-decoration: none;
-    position: relative;
+  /* Cover link stretches over the entire card */
+  .bento-cover-link {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
   }
 
   /* ── Visual area ── */
@@ -189,6 +187,7 @@ const projects = [
     position: relative;
     width: 100%;
     flex-shrink: 0;
+    z-index: 0;
   }
 
   .bento-card--large .bento-visual {
@@ -234,7 +233,7 @@ const projects = [
     transition: color var(--transition);
   }
 
-  .bento-link:hover .bento-title {
+  .bento-card:hover .bento-title {
     color: var(--accent);
   }
 
@@ -267,7 +266,7 @@ const projects = [
     border: 1px solid rgba(255, 255, 255, 0.2);
     text-decoration: none;
     transition: background var(--transition), color var(--transition);
-    z-index: 1;
+    z-index: 2;
   }
 
   .bento-live:hover {
@@ -288,7 +287,7 @@ const projects = [
     transition: opacity var(--transition), transform var(--transition);
   }
 
-  .bento-link:hover .bento-arrow {
+  .bento-card:hover .bento-arrow {
     opacity: 1;
     transform: translate(0, 0);
   }
