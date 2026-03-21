@@ -1,0 +1,11 @@
+{
+  "nav.home": "李根",
+  "nav.posts": "文章",
+  "nav.projects": "项目",
+  "nav.hobbies": "爱好",
+  "nav.about": "关于",
+  "footer.built": "由 Astro 构建",
+  "footer.rights": "保留所有权利",
+  "theme.toggle": "切换主题",
+  "lang.switch": "语言"
+}

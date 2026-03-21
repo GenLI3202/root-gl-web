@@ -1,0 +1,11 @@
+{
+  "nav.home": "Gen Li",
+  "nav.posts": "Beiträge",
+  "nav.projects": "Projekte",
+  "nav.hobbies": "Hobbys",
+  "nav.about": "Über mich",
+  "footer.built": "Erstellt mit Astro",
+  "footer.rights": "Alle Rechte vorbehalten",
+  "theme.toggle": "Theme wechseln",
+  "lang.switch": "Sprache"
+}
