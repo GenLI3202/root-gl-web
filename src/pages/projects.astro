@@ -1,9 +1,205 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
+
+const projects = [
+  {
+    title: "MAMODA Web Dashboard",
+    description:
+      "Interactive knowledge hub supporting sustainable mining decisions. Built a multi-objective optimization engine with stakeholder-guided decision-making, deployed as a full-stack web application with live Plotly visualizations.",
+    tags: ["Python", "FastAPI", "Plotly", "React"],
+    href: "https://mamoda-web-dashboard.vercel.app/",
+    status: "live",
+  },
+  {
+    title: "EV Charging Station Optimizer",
+    description:
+      "Stochastic MILP model for optimal EV charging infrastructure placement under grid uncertainty. Balances installation cost, peak-load risk, and accessibility across city-scale networks. PCT patent granted.",
+    tags: ["Python", "Pyomo", "CPLEX", "Stochastic Programming"],
+    href: "https://patentscope.wipo.int/search/en/detail.jsf?docId=WO2025026594",
+    status: "patent",
+    badge: "PCT WO2025026594",
+  },
+  {
+    title: "Accross Cycling Club Platform",
+    description:
+      "Event registration and results platform for Munich's Accross Cycling Club. Handles ride scheduling, member management, and results publishing for weekly group rides year-round.",
+    tags: ["Astro", "TypeScript"],
+    href: "https://accross-cc.de",
+    status: "live",
+  },
+  {
+    title: "Personal Website (this site)",
+    description:
+      "Built with Astro v5 and CSS Custom Properties. Black-and-white minimalist design with progressive disclosure, dark mode, and a trilingual system planned for EN/ZH/DE.",
+    tags: ["Astro", "TypeScript", "CSS"],
+    href: "https://github.com",
+    status: "open-source",
+  },
+];
 ---
-<BaseLayout title="Projects">
-  <div class="container" style="padding-block: 4rem;">
-    <h1>Projects</h1>
-    <p style="color: var(--fg-muted); margin-top: 1rem;">Coming in Phase 4.</p>
+
+<BaseLayout
+  title="Projects"
+  description="Selected projects by Gen Li — energy systems optimization, web tooling, and cycling infrastructure."
+>
+  <div class="container projects-page">
+    <h1 class="page-title">Projects</h1>
+    <p class="page-subtitle">
+      A mix of research software, web tools, and side projects.
+    </p>
+
+    <ul class="project-list" role="list">
+      {
+        projects.map((project) => (
+          <li class="project-card">
+            <a
+              href={project.href}
+              class="project-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="project-left">
+                <div class="project-header">
+                  <h2 class="project-title">{project.title}</h2>
+                  {project.badge && (
+                    <span class="project-badge">{project.badge}</span>
+                  )}
+                </div>
+                <p class="project-desc">{project.description}</p>
+                <div class="project-tags">
+                  {project.tags.map((tag) => (
+                    <span class="tag">{tag}</span>
+                  ))}
+                </div>
+              </div>
+              <span class="project-arrow" aria-hidden="true">→</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
   </div>
 </BaseLayout>
+
+<style>
+  .projects-page {
+    padding-block: 4rem;
+  }
+
+  .page-title {
+    font-size: var(--text-2xl);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-subtitle {
+    font-size: var(--text-base);
+    color: var(--fg-muted);
+    margin-bottom: 3rem;
+  }
+
+  .project-list {
+    list-style: none;
+  }
+
+  .project-card {
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .project-card:first-child {
+    border-top: 1px solid var(--border);
+  }
+
+  /* Accent left bar on hover */
+  .project-card::before {
+    content: "";
+    position: absolute;
+    left: -1.5rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity var(--transition);
+  }
+
+  .project-card:hover::before {
+    opacity: 1;
+  }
+
+  .project-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding-block: 1.5rem;
+    text-decoration: none;
+  }
+
+  .project-left {
+    flex: 1;
+  }
+
+  .project-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .project-title {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--fg);
+    font-family: var(--font-body);
+    transition: color var(--transition);
+  }
+
+  .project-link:hover .project-title {
+    color: var(--accent);
+  }
+
+  .project-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-pill);
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+
+  .project-desc {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+  }
+
+  .project-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .project-arrow {
+    font-size: var(--text-lg);
+    color: var(--fg-muted);
+    flex-shrink: 0;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity var(--transition), transform var(--transition),
+      color var(--transition);
+  }
+
+  .project-link:hover .project-arrow {
+    opacity: 1;
+    transform: translateX(0);
+    color: var(--accent);
+  }
+</style>
