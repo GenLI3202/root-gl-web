@@ -71,6 +71,7 @@
 | Strava API | Auto-fetch cycling stats for Hobbies page |
 | OG images | Dynamic Satori generation |
 | View Transitions | `<ViewTransitions />` for page-to-page animation |
+| **Hobbies immersive redesign** | Horizontal scroll-driven, GSAP ScrollTrigger — full spec in `docs/hobbies-immersive-spec.md`. Blocked on: bicycle SVG + 4 character illustrations. ~25h work. |
 
 ## Architecture Decisions
 
