@@ -511,3 +511,224 @@ src/pages/posts/index.astro 中：
 - 客户端 JS 监听点击事件，show/hide 对应 <li>，无需 Astro SSR
 - Tag 列表从所有文章的 tags 字段动态收集、去重
 ```
+
+---
+
+## 十一、Advanced Feature Spec — Literary Characters Carousel
+
+> **优先级**: Phase 5 之后，Hobbies 页 Reading 板块的视觉增强
+> **状态**: 已设计，待实施
+
+### 功能概述
+
+在 `/hobbies/` 页面的 **Reading** 板块中，精选 4 个来自最爱文学作品的人物，每人配一句标志性引言。人物卡片从左右交替滑入，营造「人物走出书页，向你开口说话」的沉浸感。
+
+### 人物选单（最终 4 席）
+
+精选原则：**主题统一** — 每个角色代表一种「突破边界、成为自己」的哲学，与作者 ENFP 气质高度契合。
+
+| 角色 | 作品 | 引言 | 语言 |
+|---|---|---|---|
+| **郭靖** | 金庸《射雕英雄传》 | 侠之大者，为国为民。 | 中文 |
+| **令狐冲** | 金庸《笑傲江湖》 | 无招胜有招，剑法不在招式，在乎一心。 | 中文 |
+| **Sinclair / Demian** | 赫尔曼·黑塞《德米安》 | Der Vogel kämpft sich aus dem Ei. Das Ei ist die Welt. Wer geboren werden will, muss eine Welt zerstören. | 德文 |
+| **叶文洁** | 刘慈欣《三体》 | 给岁月以文明，给文明以岁月。 | 中文 |
+
+> **设计注记**: 4 个角色，2 位武侠（个人自由 vs 家国担当的张力）、1 位欧洲文学（灵魂破壳）、1 位科幻（文明尺度的悲悯）。恰好覆盖作者阅读版图的四个象限。
+
+### 数据模型
+
+```typescript
+// src/data/literaryCharacters.ts
+interface LiteraryCharacter {
+  id: string;
+  name: string;           // 角色名（显示用）
+  nameEn?: string;        // 英文名（可选）
+  work: string;           // 作品名
+  author: string;         // 作者
+  quote: string;          // 引言原文
+  quoteTranslation?: string; // 英译（可选，用于 tooltip）
+  avatar: string;         // 插图路径 public/images/characters/<id>.png
+  slideFrom: "left" | "right"; // 交替方向
+  accentColor?: string;   // 可覆盖默认 --accent（如叶文洁用冷蓝调）
+}
+
+export const characters: LiteraryCharacter[] = [
+  {
+    id: "guo-jing",
+    name: "郭靖",
+    work: "射雕英雄传",
+    author: "金庸",
+    quote: "侠之大者，为国为民。",
+    quoteTranslation: "The greatest of knights serves his country and its people.",
+    avatar: "/images/characters/guo-jing.png",
+    slideFrom: "left",
+  },
+  {
+    id: "linghu-chong",
+    name: "令狐冲",
+    work: "笑傲江湖",
+    author: "金庸",
+    quote: "无招胜有招，剑法不在招式，在乎一心。",
+    quoteTranslation: "No move surpasses all moves. The sword lives in the mind, not the form.",
+    avatar: "/images/characters/linghu-chong.png",
+    slideFrom: "right",
+  },
+  {
+    id: "sinclair",
+    name: "Sinclair",
+    work: "Demian",
+    author: "Hermann Hesse",
+    quote: "Der Vogel kämpft sich aus dem Ei. Wer geboren werden will, muss eine Welt zerstören.",
+    quoteTranslation: "The bird fights its way out of the egg. He who would be born must first destroy a world.",
+    avatar: "/images/characters/sinclair.png",
+    slideFrom: "left",
+  },
+  {
+    id: "ye-wenjie",
+    name: "叶文洁",
+    work: "三体",
+    author: "刘慈欣",
+    quote: "给岁月以文明，给文明以岁月。",
+    quoteTranslation: "To give civilization to the ages, and ages to civilization.",
+    avatar: "/images/characters/ye-wenjie.png",
+    slideFrom: "right",
+  },
+];
+```
+
+### 组件架构
+
+```
+src/components/hobbies/
+├── CharacterCarousel.astro      # 容器组件（Astro island, client:visible）
+├── CharacterCard.astro          # 单张卡片：头像 + 引言气泡
+└── characters.ts                # 数据（或放 src/data/）
+```
+
+### 动画行为设计
+
+**触发方式**: Scroll-triggered（Intersection Observer）
+- 卡片在进入视口时触发 —— 比 auto-play 更自然，用户控制节奏
+- 每次只展示一张，配 prev/next 手动翻页（移动端支持 swipe）
+- 停止在当前卡片，不自动轮播（尊重「progressive disclosure」原则）
+
+**动画规格**:
+```css
+/* 卡片从左进入 */
+@keyframes slideFromLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* 卡片从右进入 */
+@keyframes slideFromRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.character-card[data-slide="left"]  { animation: slideFromLeft  0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.character-card[data-slide="right"] { animation: slideFromRight 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+```
+
+**翻页交互**:
+- `←` / `→` 按钮：切换时，旧卡片反向淡出，新卡片按自身 `slideFrom` 方向滑入
+- 指示点（dots）显示当前位置
+- 键盘：左右方向键支持
+- 移动端：touch swipe
+
+### 视觉设计规格
+
+```
+┌─────────────────────────────────────────┐
+│                                         │
+│  ┌──────┐                               │
+│  │ 头像 │  郭靖                         │  ← slideFromLeft
+│  │ 插图 │  射雕英雄传 · 金庸             │
+│  └──────┘                               │
+│                                         │
+│  ❝ 侠之大者，为国为民。❞               │  ← 引言，Playfair Display，大字
+│                                         │
+│  [The greatest of knights...]           │  ← 英译，--fg-muted，小字，可折叠
+│                                         │
+│              ● ○ ○ ○    ←  →           │
+└─────────────────────────────────────────┘
+```
+
+**配色**（继承全站设计系统）:
+- 背景: `--surface`（#F5F5F5 / dark: #1A1A1A）
+- 引言文字: `--fg`，Playfair Display，`--text-xl`，`font-style: italic`
+- 引号装饰 `❝ ❞`: `--accent`（#E63946），大号，opacity 0.3
+- 角色名 + 作品: `--fg-muted`，Inter，`--text-sm`
+- 头像：圆角矩形（`--radius-lg`），黑白滤镜 `filter: grayscale(100%)`，hover 还原彩色
+- 翻页按钮：`--border` 描边圆形，hover 填充 `--accent`
+
+**插图来源策略**:
+- MVP：用角色的代表性线稿/简笔画，AI 生成（统一风格：黑白墨线，浮世绘/漫画混合）
+- 理想：委托插画师，统一画风，每张 400×500px PNG（透明背景）
+
+### 技术实现方案
+
+```astro
+---
+// CharacterCarousel.astro
+import { characters } from "@/data/literaryCharacters";
+---
+
+<div class="character-carousel" data-carousel>
+  {characters.map((char, i) => (
+    <div
+      class="character-card"
+      data-index={i}
+      data-slide={char.slideFrom}
+      aria-hidden={i !== 0}
+    >
+      <img src={char.avatar} alt={char.name} class="char-avatar" loading="lazy" />
+      <div class="char-info">
+        <span class="char-name">{char.name}</span>
+        <span class="char-work">{char.work} · {char.author}</span>
+      </div>
+      <blockquote class="char-quote">{char.quote}</blockquote>
+      {char.quoteTranslation && (
+        <p class="char-translation">{char.quoteTranslation}</p>
+      )}
+    </div>
+  ))}
+  <div class="carousel-controls">
+    <button class="carousel-prev" aria-label="Previous character">←</button>
+    <div class="carousel-dots" role="tablist">
+      {characters.map((_, i) => (
+        <button class="dot" role="tab" aria-selected={i === 0} data-dot={i} />
+      ))}
+    </div>
+    <button class="carousel-next" aria-label="Next character">→</button>
+  </div>
+</div>
+
+<script>
+  // ~30 行纯 JS，无依赖
+  // Intersection Observer 触发首次动画
+  // prev/next/dot/keyboard/swipe 事件处理
+</script>
+```
+
+**Astro 集成方式**: `<CharacterCarousel client:visible />` — 仅在组件进入视口后 hydrate，零首屏 JS 开销。
+
+### 无障碍（Accessibility）
+
+- `role="region"` + `aria-label="Literary Characters"` 包裹整个组件
+- 每张卡片 `aria-hidden` 隐藏非激活卡片，激活卡片 `aria-live="polite"` 报读
+- 翻页按钮有明确 `aria-label`
+- `prefers-reduced-motion`: 禁用位移动画，改为纯淡入淡出
+  ```css
+  @media (prefers-reduced-motion: reduce) {
+    .character-card { animation: fadeIn 0.3s ease forwards; }
+  }
+  ```
+- 键盘：Tab 可聚焦 prev/next/dots，方向键在 dots 间导航
+
+### 实施前置条件
+
+1. 准备 4 张角色插图（AI 生成或手绘），统一风格，放入 `public/images/characters/`
+2. Phase 5 Hobbies 页面基础版完成后，作为增强层叠加
+3. 建议插图分辨率：400×500px，PNG 透明背景，文件 < 150KB（WebP 优化）
