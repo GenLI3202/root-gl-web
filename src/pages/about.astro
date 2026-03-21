@@ -1,9 +1,330 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 ---
-<BaseLayout title="About">
-  <div class="container" style="padding-block: 4rem;">
-    <h1>About</h1>
-    <p style="color: var(--fg-muted); margin-top: 1rem;">Coming in Phase 6.</p>
+
+<BaseLayout title="About · Gen Li" description="PhD candidate at TU Munich, operations researcher, cyclist, reader.">
+  <div class="about-page container">
+
+    <!-- ─── BIO ──────────────────────────────────────── -->
+    <section class="about-bio">
+      <h1 class="about-title">About</h1>
+
+      <div class="bio-body">
+        <p>
+          I'm Gen Li (李根) — a PhD candidate in Mathematics at
+          <a href="https://www.tum.de" target="_blank" rel="noopener noreferrer">TU Munich</a>,
+          working at the intersection of energy systems and operations research.
+          My day job is building mathematical models that help figure out how electricity markets
+          work, and how to make them work better.
+        </p>
+        <p>
+          Before the PhD I spent time at Siemens AG optimising EV charging infrastructure
+          (which became a <a href="https://patentscope.wipo.int/search/en/detail.jsf?docId=WO2025026594" target="_blank" rel="noopener noreferrer">PCT patent</a>),
+          and at RENAIO Assets doing risk management for energy portfolios.
+          The common thread: complex systems, uncertainty, and the occasional MILP that refuses to converge.
+        </p>
+        <p>
+          I grew up in China, studied in Changchun, and have been in Munich long enough
+          to have opinions about which Isar cycling route is best on a Tuesday morning.
+          Outside the office I run the software side of
+          <a href="https://acc-clubhub.vercel.app/" target="_blank" rel="noopener noreferrer">Accross Cycling Club Munich</a>,
+          read too many wuxia novels, and play acoustic guitar badly but enthusiastically.
+        </p>
+        <p>
+          This site is where I write about what I'm thinking — optimization problems,
+          books, the occasional cycling tangent. If something here resonates, I'd love to hear from you.
+        </p>
+      </div>
+    </section>
+
+    <div class="about-divider"></div>
+
+    <!-- ─── RESEARCH ──────────────────────────────────── -->
+    <section class="about-section">
+      <h2 class="section-heading">Research</h2>
+      <div class="section-body">
+        <p>
+          My PhD work lives at the TUM
+          <a href="https://www.cem.tum.de" target="_blank" rel="noopener noreferrer">Center for Energy Markets</a>.
+          I focus on stochastic and robust optimisation for electricity markets —
+          specifically how to make dispatch and pricing decisions under uncertainty
+          when renewable generation makes everything harder to predict.
+        </p>
+        <p>
+          In practice this means: formulating MILP and stochastic programming models,
+          wrangling energy market data, and occasionally explaining to non-mathematicians
+          why "just use the average" is not a risk management strategy.
+        </p>
+        <div class="research-tags">
+          <span class="tag">Stochastic Optimisation</span>
+          <span class="tag">Energy Markets</span>
+          <span class="tag">MILP</span>
+          <span class="tag">Risk Management</span>
+          <span class="tag">Renewable Integration</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="about-divider"></div>
+
+    <!-- ─── TOOLBOX ────────────────────────────────────── -->
+    <section class="about-section">
+      <h2 class="section-heading">Toolbox</h2>
+      <div class="section-body">
+        <div class="toolbox-grid">
+
+          <div class="tool-group">
+            <h3 class="tool-group-label">Optimisation</h3>
+            <ul class="tool-list">
+              <li>Pyomo · CPLEX · Gurobi</li>
+              <li>MILP · Stochastic Programming</li>
+              <li>Robust Optimisation</li>
+            </ul>
+          </div>
+
+          <div class="tool-group">
+            <h3 class="tool-group-label">Languages</h3>
+            <ul class="tool-list">
+              <li>Python (primary)</li>
+              <li>R · MATLAB</li>
+              <li>JavaScript · TypeScript</li>
+            </ul>
+          </div>
+
+          <div class="tool-group">
+            <h3 class="tool-group-label">Python Stack</h3>
+            <ul class="tool-list">
+              <li>FastAPI · SQLAlchemy</li>
+              <li>Pandas · NumPy</li>
+              <li>Plotly · Dash</li>
+            </ul>
+          </div>
+
+          <div class="tool-group">
+            <h3 class="tool-group-label">Web & Deploy</h3>
+            <ul class="tool-list">
+              <li>Astro · Svelte</li>
+              <li>Vercel · GitHub Actions</li>
+              <li>Tailwind CSS</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <div class="about-divider"></div>
+
+    <!-- ─── CONTACT ────────────────────────────────────── -->
+    <section class="about-section">
+      <h2 class="section-heading">Get in Touch</h2>
+      <div class="section-body">
+        <p>
+          I'm always happy to talk about energy markets, optimisation, cycling routes in Munich,
+          or book recommendations. The best way to reach me is email.
+        </p>
+        <div class="contact-links">
+          <a href="mailto:hiligen723@gmail.com" class="contact-item">
+            <span class="contact-icon">✉</span>
+            <span class="contact-label">hiligen723@gmail.com</span>
+          </a>
+          <a href="https://github.com/GenLI3202" target="_blank" rel="noopener noreferrer" class="contact-item">
+            <span class="contact-icon">⌥</span>
+            <span class="contact-label">github.com/GenLI3202</span>
+          </a>
+          <a href="https://www.linkedin.com/in/gen-li-tum723" target="_blank" rel="noopener noreferrer" class="contact-item">
+            <span class="contact-icon">↗</span>
+            <span class="contact-label">linkedin.com/in/gen-li-tum723</span>
+          </a>
+          <a href="https://www.strava.com/athletes/119635546" target="_blank" rel="noopener noreferrer" class="contact-item">
+            <span class="contact-icon">🚴</span>
+            <span class="contact-label">Strava</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
   </div>
 </BaseLayout>
+
+<style>
+  .about-page {
+    padding-block: 4rem 6rem;
+    max-width: 680px;
+  }
+
+  /* ── Bio ────────────────────────────────────── */
+  .about-title {
+    font-family: var(--font-heading);
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: var(--fg);
+    margin-bottom: 2rem;
+  }
+
+  .bio-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .bio-body p {
+    font-size: var(--text-base);
+    line-height: 1.8;
+    color: var(--fg);
+  }
+
+  .bio-body a {
+    color: var(--fg);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--border-dark);
+    transition: color var(--transition), text-decoration-color var(--transition);
+  }
+
+  .bio-body a:hover {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+  }
+
+  /* ── Divider ─────────────────────────────────── */
+  .about-divider {
+    height: 1px;
+    background: var(--border);
+    margin-block: 3rem;
+  }
+
+  /* ── Sections ────────────────────────────────── */
+  .about-section {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  @media (max-width: 560px) {
+    .about-section {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+  }
+
+  .section-heading {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--fg-muted);
+    padding-top: 0.2rem;
+  }
+
+  .section-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .section-body p {
+    font-size: var(--text-base);
+    line-height: 1.8;
+    color: var(--fg);
+  }
+
+  .section-body a {
+    color: var(--fg);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--border-dark);
+    transition: color var(--transition), text-decoration-color var(--transition);
+  }
+
+  .section-body a:hover {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+  }
+
+  /* ── Research tags ───────────────────────────── */
+  .research-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.25rem;
+  }
+
+  .tag {
+    font-size: var(--text-xs);
+    color: var(--fg-muted);
+    border: 1px solid var(--border-dark);
+    border-radius: 0.25rem;
+    padding: 0.2rem 0.6rem;
+    letter-spacing: 0.03em;
+  }
+
+  /* ── Toolbox ─────────────────────────────────── */
+  .toolbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 2rem;
+  }
+
+  @media (max-width: 560px) {
+    .toolbox-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .tool-group-label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.02em;
+  }
+
+  .tool-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .tool-list li {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    line-height: 1.5;
+  }
+
+  /* ── Contact ─────────────────────────────────── */
+  .contact-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+  }
+
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: var(--fg-muted);
+    transition: color var(--transition);
+    width: fit-content;
+  }
+
+  .contact-item:hover {
+    color: var(--accent);
+  }
+
+  .contact-icon {
+    font-size: var(--text-base);
+    width: 1.25rem;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .contact-label {
+    font-size: var(--text-sm);
+  }
+</style>
