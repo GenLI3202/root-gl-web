@@ -387,6 +387,12 @@ import CharacterCarousel from "@/components/CharacterCarousel.astro";
     .music-bg { animation: none; }
   }
 
+  /* Dark mode: invert black-stroke SVGs so they show on dark background */
+  :global(.theme-dark) .cyclist-bg {
+    filter: invert(1);
+    opacity: 0.12;
+  }
+
   /* Reading */
   .reading-grid {
     display: flex;

@@ -327,6 +327,12 @@ const tabLabels: Record<string, Record<Locale, string>> = {
     .hobbies-track { transition: none; }
   }
 
+  /* Dark mode: invert black-stroke SVG so it shows on dark background */
+  :global(.theme-dark) .cyclist-bg {
+    filter: invert(1);
+    opacity: 0.12;
+  }
+
   /* ── Controls ────────────────────────────────────── */
   .scene-controls {
     display: flex;
