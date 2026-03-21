@@ -41,17 +41,9 @@ function isActive(href: string): boolean {
 
       <!-- Right controls -->
       <div class="nav-controls">
-        <!-- Language switcher -->
-        <div class="lang-switcher" role="group" aria-label="Language">
-          {SUPPORTED_LOCALES.map((lang) => (
-            <a
-              href={lang === "en" ? currentPath.replace(/^\/(zh|de)/, "") || "/" : `/${lang}${currentPath.replace(/^\/(zh|de|en)/, "") || "/"}`}
-              class:list={["lang-btn", { "lang-active": lang === locale }]}
-              aria-current={lang === locale ? "true" : undefined}
-            >
-              {lang.toUpperCase()}
-            </a>
-          ))}
+        <!-- Language switcher (Phase 9) -->
+        <div class="lang-switcher" role="group" aria-label="Language" title="Multilingual support coming soon">
+          <span class="lang-btn lang-active">EN</span>
         </div>
 
         <!-- Theme toggle -->

@@ -16,11 +16,6 @@ export default defineConfig({
       wrap: true,
     },
   },
-  i18n: {
-    defaultLocale: "en",
-    locales: ["en", "zh", "de"],
-    routing: {
-      prefixDefaultLocale: false,
-    },
-  },
+  // i18n routing configured in Phase 9
+
 });
