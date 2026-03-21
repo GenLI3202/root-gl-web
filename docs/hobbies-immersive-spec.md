@@ -5,6 +5,117 @@
 
 ---
 
+## 0. Design Philosophy & Context
+
+### Why this page is different
+
+Every other page on this site — the homepage, the blog, the projects — is calm, structured, academic. They follow the minimalist B&W design system faithfully: generous whitespace, Playfair Display headings, clean content-first layout. That's intentional.
+
+The Hobbies page should break from that rhythm — deliberately. This is where the person behind the PhD comes through: someone who rides 180 times a year, who grew up reading wuxia novels, who plays guitar late at night without any plans to perform. The design should feel like walking into a different room of the same house: the aesthetic language is consistent (same fonts, same red accent, same palette), but the energy is different — playful, kinetic, personal.
+
+The core metaphor is **turning a page**. Each hobby is its own world. You don't browse them as a list — you travel through them. Scroll down and you leave one world, transition through a moment of pure animation, and arrive in the next. Scroll back up and you return. The scroll is the narrative.
+
+### Design principles for this page
+
+1. **Scroll = time.** The user's scroll position is the animation's clock. Nothing plays on a timer. Nothing auto-advances. The user is in full control.
+2. **Transitions are earned.** The animation between sections isn't decoration — it *is* the transition. The bicycle pulling content away isn't a cute effect; it's a metaphor for the cyclist leaving the scene.
+3. **Each section has one visual metaphor.** Cycling: a figure in motion. Reading: an open book with two pages. Guitar: silence and space. Don't add more.
+4. **Warm, not whimsical.** The overall site tone is "academic minimalist with character." This page pushes toward character without tipping into cartoon. Line-art over illustration. Restraint in color (the same `#E63946` accent, not a rainbow).
+5. **Mobile is a real use case.** Gen's friends and club members will likely view this on a phone. The experience should degrade gracefully, not break.
+
+### What exists today (MVP)
+
+The current `/hobbies` page is a simple vertical layout: three sections stacked, with an SVG wheel and a book emoji as one-shot dividers. The content (stats, author cards, guitar text) is all correct and should be preserved. This spec describes how to replace the *layout and transitions* — not the content.
+
+### Collaboration model
+
+This redesign requires **two parallel workstreams**:
+
+| Workstream | Owner | Deliverable |
+|---|---|---|
+| **Design assets** | Design Agent | SVG cyclist, character illustrations, animation specs |
+| **Web implementation** | Dev (Claude Code) | GSAP integration, CSS 3D book, scene layout |
+
+The dev workstream is **blocked** until the design assets are ready. This document tells the Design Agent exactly what to produce. Once assets are delivered, implementation can begin immediately.
+
+---
+
+## 0.5. Design Assets Brief (for Design Agent)
+
+This section is a self-contained brief for whoever is producing the visual assets. Read this section independently of the rest of the spec.
+
+### Asset 1 — Animated Cyclist SVG
+
+**What it is**: A simple line-art figure riding a bicycle, used in the Cycling → Reading scene transition. As the user scrolls down, this figure rides across the screen from right to left, and the cycling content appears to get "pulled" behind it.
+
+**Style**:
+- Flat, minimal line-art — think editorial illustration, not cartoon
+- Stroke weight: 2–3px, monochrome
+- Colors: body/frame in `#6B6B6B` (the `--fg-muted` token), wheel rims in `#E63946` (the accent red)
+- No fill, no gradients — strokes only
+- Proportions: slightly stylized (larger head, cleaner geometry), not anatomically precise
+
+**Format**: SVG file. The bicycle wheels must be **separate `<g>` or `<circle>` elements** so they can be rotated independently by GSAP. The rider body (torso, arms, head) should be one group. Legs/pedals can be a third group if a pedaling motion is desired (optional).
+
+**Dimensions**: Viewbox approximately `0 0 200 120`. The figure should fit comfortably at 150–200px wide on screen.
+
+**Deliverable**: `cyclist.svg` — clean, readable SVG source with named groups:
+- `#wheel-front`
+- `#wheel-rear`
+- `#rider-body`
+- `#bike-frame`
+- (optional) `#pedals`
+
+**What NOT to do**: No text labels, no drop shadows, no color fills, no gradients, no raster images embedded in the SVG.
+
+---
+
+### Asset 2 — Literary Character Illustrations (×4)
+
+**What they are**: Portrait illustrations of four literary characters. In the Reading scene, as the user scrolls, these characters "pop out" from the sides of the screen one by one, each with a speech bubble containing their iconic quote.
+
+**Style**:
+- Grayscale illustration (no color) — except a subtle `#E63946` detail is acceptable (e.g., a small accent on clothing, a red book cover)
+- Editorial / graphic novel aesthetic — clean shapes, strong silhouette, expressiveness without realism
+- Each portrait shows the character from roughly waist-up, facing slightly toward center (toward their speech bubble)
+- Background: fully transparent
+
+**Format**: PNG with transparent background, 400×500px, ≤150KB each. Alternatively, SVG if the style allows it.
+
+**The four characters**:
+
+| # | Character | Source Work | Key Visual Traits | Quote (displayed in speech bubble) |
+|---|---|---|---|---|
+| 1 | **郭靖 Guo Jing** | 《射雕英雄传》Jin Yong | Stocky, honest face, Song dynasty warrior attire, holds a bow or fist gesture — embodiment of earnest heroism | 侠之大者，为国为民 |
+| 2 | **令狐冲 Linghu Chong** | 《笑傲江湖》Jin Yong | Lean and casual, robes slightly disheveled, holds a wine flask or sword loosely — carefree, unconventional | 独孤九剑，无招胜有招 |
+| 3 | **Emil Sinclair** | *Demian* — Hermann Hesse | Young European face, introspective expression, a bird or cracked egg motif in the background — Jungian awakening | Der Vogel kämpft sich aus dem Ei heraus. Das Ei ist die Welt. |
+| 4 | **叶文洁 Ye Wenjie** | 《三体》Liu Cixin | Middle-aged Chinese woman, calm and profound expression, background suggests radio antenna or stars — civilization-scale thinker | 给岁月以文明，而不是给文明以岁月 |
+
+**Placement context**: Each illustration will appear at the edge of the screen — characters 1 and 3 enter from the left, characters 2 and 4 from the right. The figure should be positioned in the image so that it "faces in" (toward the speech bubble and the center of the screen).
+
+**What NOT to do**: No color backgrounds, no name labels (the UI provides these), no copyright-infringing direct reproductions of existing fan-art — original interpretations only.
+
+---
+
+### Asset 3 — "Suction" Motion Spec
+
+**What it is**: A description (not a file) of how the content suction effect should feel, so the dev can tune the GSAP parameters correctly.
+
+**Reference aesthetic**: Imagine magnetic levitation in reverse — objects that were resting suddenly get pulled toward a moving source. They don't slide uniformly; the closest ones go first, then the next ones, then the farthest. Each object accelerates as it moves (ease-in).
+
+**Desired feel**:
+- The stat cards (3 of them) should follow the bicycle at staggered intervals: 0ms, 80ms, 160ms delay
+- Each card accelerates as it exits (ease-in, not linear)
+- As a card exits, it also slightly scales down (from 1.0 to 0.7) — as if receding into the distance behind the bike
+- Opacity fades from 1.0 → 0 in the last 30% of the card's travel distance
+- The text blocks (heading, intro paragraph) follow the cards with another 80ms delay each
+
+**Reverse (scroll up)**: The cards spring back. Easing reverses to ease-out. The order also reverses — the last thing to leave is the first thing to return. Like an elastic band snapping back.
+
+**Reference**: GSAP `stagger` with `from: "end"` on reverse. Think: `gsap.to(cards, { x: -1200, stagger: 0.08, ease: "power2.in" })`.
+
+---
+
 ## 1. Core UX Model
 
 ### Horizontal Paging
