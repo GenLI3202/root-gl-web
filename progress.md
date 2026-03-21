@@ -58,6 +58,9 @@
 
 - [x] **Vercel domain rename** — project renamed from `gen-web` → `root-ligen`; live at `root-ligen.vercel.app`
 - [x] **i18n: EN/ZH/DE trilingual routing** — Astro i18n config, `[locale]` dynamic routes, language switcher in Nav, `localeSwitchUrl()` with fallback logic, all page content translated
+- [x] **Hobbies horizontal panel layout** — three sections (Cycling/Reading/Guitar) slide horizontally via tab/arrow/swipe navigation; CSS transform-based, no GSAP dependency
+- [x] **Literary Characters Carousel** — 4 character cards (郭靖/令狐冲/Sinclair/叶文洁) with quotes, grayscale→color avatar hover, slide animations, touch swipe + keyboard support; embedded in Reading panel on EN/ZH/DE hobbies pages
+- [x] **Hobbies decorative assets** — cyclist-simple-line.svg in Cycling panel, music-notes.svg in Guitar panel (grayscale, low opacity)
 
 ## Remaining Work
 
@@ -73,7 +76,7 @@
 | Strava API | Auto-fetch cycling stats for Hobbies page |
 | OG images | Dynamic Satori generation |
 | View Transitions | `<ViewTransitions />` for page-to-page animation |
-| **Hobbies immersive redesign** | Horizontal scroll-driven, GSAP ScrollTrigger — full spec in `docs/hobbies-immersive-spec.md`. Blocked on: bicycle SVG + 4 character illustrations. ~25h work. |
+| **Hobbies GSAP immersive upgrade** | Full scroll-driven transitions (bike suction, CSS 3D book) — spec in `docs/hobbies-immersive-spec.md`, update plan in `docs/hobbies-update-plan.md`. Assets ready. ~20h remaining. |
 
 ## Architecture Decisions
 
@@ -93,6 +96,8 @@
 |----------|-----------|------|
 | `prefixDefaultLocale: false` for i18n | EN stays at `/`, ZH/DE get `/zh/`, `/de/` prefix — cleaner URLs for primary audience | 2026-03-21 |
 | Long content in page frontmatter (not JSON) | Bio paragraphs contain HTML links and are too long for JSON; locale-keyed objects in `.astro` frontmatter | 2026-03-21 |
+| Hobbies horizontal panels via CSS transform (not GSAP) | Delivers the panel-switching UX without a 25KB dependency; GSAP upgrade deferred to immersive spec | 2026-03-22 |
+| `CharacterCarousel` as a standalone Astro component | Shared between EN and ZH/DE hobbies pages; quotes are language-native, no translation needed | 2026-03-22 |
 
 ## Known Issues / Tech Debt
 

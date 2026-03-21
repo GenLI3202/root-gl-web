@@ -1,0 +1,361 @@
+---
+const characters = [
+  {
+    id: "guo-jing",
+    name: "郭靖",
+    nameEn: "Guo Jing",
+    work: "射雕英雄传",
+    author: "金庸 Jin Yong",
+    quote: "侠之大者，为国为民。",
+    translation: "The greatest of knights serves his country and its people.",
+    avatar: "/images/hobbies/guo-jing.png",
+    slideFrom: "left",
+  },
+  {
+    id: "linghu-chong",
+    name: "令狐冲",
+    nameEn: "Linghu Chong",
+    work: "笑傲江湖",
+    author: "金庸 Jin Yong",
+    quote: "无招胜有招，剑法不在招式，在乎一心。",
+    translation: "No move surpasses all moves. The sword lives in the mind, not the form.",
+    avatar: "/images/hobbies/linghu-chong.png",
+    slideFrom: "right",
+  },
+  {
+    id: "sinclair",
+    name: "Sinclair",
+    nameEn: "Sinclair",
+    work: "Demian",
+    author: "Hermann Hesse",
+    quote: "Der Vogel kämpft sich aus dem Ei. Wer geboren werden will, muss eine Welt zerstören.",
+    translation: "The bird fights its way out of the egg. He who would be born must first destroy a world.",
+    avatar: "/images/hobbies/sinclair.png",
+    slideFrom: "left",
+  },
+  {
+    id: "ye-wenjie",
+    name: "叶文洁",
+    nameEn: "Ye Wenjie",
+    work: "三体",
+    author: "刘慈欣 Liu Cixin",
+    quote: "给岁月以文明，给文明以岁月。",
+    translation: "To give civilization to the ages, and ages to civilization.",
+    avatar: "/images/hobbies/ye-wenjie.png",
+    slideFrom: "right",
+  },
+];
+---
+
+<div class="char-carousel" role="region" aria-label="Literary Characters" data-carousel>
+  <div class="carousel-track">
+    {characters.map((char, i) => (
+      <div
+        class="char-card"
+        data-index={i}
+        data-slide={char.slideFrom}
+        aria-hidden={i !== 0 ? "true" : "false"}
+      >
+        <div class="card-inner">
+          <img
+            src={char.avatar}
+            alt={char.nameEn}
+            class="char-avatar"
+            loading="lazy"
+            width="96"
+            height="120"
+          />
+          <div class="card-content">
+            <div class="char-meta">
+              <span class="char-name">{char.name}</span>
+              {char.name !== char.nameEn && <span class="char-name-en">{char.nameEn}</span>}
+              <span class="char-work">{char.work} · {char.author}</span>
+            </div>
+            <blockquote class="char-quote">
+              <span class="qmark" aria-hidden="true">❝</span>{char.quote}<span class="qmark" aria-hidden="true">❞</span>
+            </blockquote>
+            <p class="char-translation">{char.translation}</p>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div class="carousel-controls">
+    <button class="ctrl-btn prev" aria-label="Previous character" disabled>←</button>
+    <div class="dots" role="tablist">
+      {characters.map((c, i) => (
+        <button
+          class="dot"
+          role="tab"
+          aria-selected={i === 0 ? "true" : "false"}
+          aria-label={c.nameEn}
+          data-dot={i}
+        />
+      ))}
+    </div>
+    <button class="ctrl-btn next" aria-label="Next character">→</button>
+  </div>
+</div>
+
+<style>
+  .char-carousel {
+    border: 1.5px solid var(--border-dark);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--bg);
+    box-shadow: 0 6px 32px rgba(0, 0, 0, 0.18), 0 1px 4px rgba(0, 0, 0, 0.10);
+  }
+
+  /* Track */
+  .carousel-track {
+    position: relative;
+    min-height: 200px;
+  }
+
+  /* Cards */
+  .char-card {
+    position: absolute;
+    inset: 0;
+    padding: 1.5rem;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .char-card[aria-hidden="false"] {
+    position: relative;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .card-inner {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+  }
+  @media (max-width: 480px) {
+    .card-inner { flex-direction: column; gap: 0.875rem; }
+  }
+
+  /* Avatar */
+  .char-avatar {
+    flex-shrink: 0;
+    width: 96px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    filter: grayscale(100%);
+    transition: filter 0.3s ease;
+    display: block;
+    background: var(--bg);
+  }
+  .char-card[aria-hidden="false"] .char-avatar:hover {
+    filter: grayscale(0%);
+  }
+
+  /* Content */
+  .card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .char-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.625rem;
+  }
+  .char-name {
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--fg);
+    line-height: 1.2;
+  }
+  .char-name-en {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+  }
+  .char-work {
+    width: 100%;
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+  }
+
+  /* Quote */
+  .char-quote {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-style: italic;
+    color: var(--fg);
+    line-height: 1.55;
+  }
+  .qmark {
+    font-style: normal;
+    color: var(--accent);
+    opacity: 0.4;
+    font-size: 1.3em;
+    line-height: 0;
+    vertical-align: -0.25em;
+  }
+  .qmark:first-child { margin-right: 0.1em; }
+  .qmark:last-child  { margin-left: 0.1em; }
+
+  .char-translation {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    font-style: italic;
+    line-height: 1.6;
+    max-width: 52ch;
+  }
+
+  /* Controls */
+  .carousel-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    padding: 0.75rem 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .ctrl-btn {
+    width: 1.875rem;
+    height: 1.875rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--border-dark);
+    background: none;
+    color: var(--fg);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+  .ctrl-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .ctrl-btn:disabled { opacity: 0.28; cursor: not-allowed; }
+
+  .dots {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-pill);
+    border: none;
+    padding: 0;
+    background: var(--border-dark);
+    cursor: pointer;
+    transition: background 0.18s, transform 0.18s;
+  }
+  .dot[aria-selected="true"] {
+    background: var(--accent);
+    transform: scale(1.4);
+  }
+
+  /* Animations */
+  @media (prefers-reduced-motion: no-preference) {
+    .char-card.in-left  { animation: inLeft  0.38s cubic-bezier(0.22,1,0.36,1) forwards; }
+    .char-card.in-right { animation: inRight 0.38s cubic-bezier(0.22,1,0.36,1) forwards; }
+    .char-card.out-left  { animation: outLeft  0.26s ease-in forwards; }
+    .char-card.out-right { animation: outRight 0.26s ease-in forwards; }
+
+    @keyframes inLeft  { from { opacity:0; transform:translateX(-28px); } to { opacity:1; transform:none; } }
+    @keyframes inRight { from { opacity:0; transform:translateX(28px);  } to { opacity:1; transform:none; } }
+    @keyframes outLeft  { from { opacity:1; transform:none; } to { opacity:0; transform:translateX(-20px); } }
+    @keyframes outRight { from { opacity:1; transform:none; } to { opacity:0; transform:translateX(20px);  } }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .char-card.in-left, .char-card.in-right {
+      animation: fadeIn 0.25s ease forwards;
+    }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  }
+</style>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-carousel]');
+  if (root) {
+    const cards   = Array.from(root.querySelectorAll<HTMLElement>('.char-card'));
+    const dots    = Array.from(root.querySelectorAll<HTMLButtonElement>('.dot'));
+    const prevBtn = root.querySelector<HTMLButtonElement>('.prev')!;
+    const nextBtn = root.querySelector<HTMLButtonElement>('.next')!;
+    const dirs    = cards.map(c => c.dataset.slide as 'left' | 'right');
+
+    let cur = 0;
+    let busy = false;
+
+    // Init hidden state
+    cards.forEach((c, i) => {
+      if (i !== 0) { c.style.opacity = '0'; c.style.pointerEvents = 'none'; }
+    });
+
+    function updateControls() {
+      prevBtn.disabled = cur === 0;
+      nextBtn.disabled = cur === cards.length - 1;
+      dots.forEach((d, i) => d.setAttribute('aria-selected', String(i === cur)));
+    }
+
+    function go(target: number, fwd: boolean) {
+      if (busy || target === cur || target < 0 || target >= cards.length) return;
+      busy = true;
+
+      const outCard = cards[cur];
+      const inCard  = cards[target];
+      const outCls  = fwd ? 'out-left' : 'out-right';
+      const inCls   = fwd
+        ? (dirs[target] === 'left' ? 'in-left' : 'in-right')
+        : (dirs[target] === 'left' ? 'in-right' : 'in-left');
+
+      outCard.classList.add(outCls);
+      outCard.addEventListener('animationend', () => {
+        outCard.classList.remove(outCls);
+        outCard.setAttribute('aria-hidden', 'true');
+        outCard.style.opacity = '0';
+        outCard.style.pointerEvents = 'none';
+
+        inCard.setAttribute('aria-hidden', 'false');
+        inCard.style.opacity = '';
+        inCard.style.pointerEvents = '';
+        inCard.classList.add(inCls);
+        inCard.addEventListener('animationend', () => {
+          inCard.classList.remove(inCls);
+          busy = false;
+        }, { once: true });
+      }, { once: true });
+
+      cur = target;
+      updateControls();
+    }
+
+    prevBtn.addEventListener('click', () => go(cur - 1, false));
+    nextBtn.addEventListener('click', () => go(cur + 1, true));
+    dots.forEach((d, i) => d.addEventListener('click', () => go(i, i > cur)));
+
+    // Keyboard
+    root.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft')  go(cur - 1, false);
+      if (e.key === 'ArrowRight') go(cur + 1, true);
+    });
+
+    // Swipe
+    let tx = 0;
+    root.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+    root.addEventListener('touchend',   e => {
+      const dx = e.changedTouches[0].clientX - tx;
+      if (Math.abs(dx) > 40) dx < 0 ? go(cur + 1, true) : go(cur - 1, false);
+    });
+
+    updateControls();
+  }
+</script>
