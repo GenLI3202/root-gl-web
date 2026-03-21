@@ -28,11 +28,12 @@ const projects = [
   },
   {
     id: "accross",
-    title: "Accross Cycling Club",
+    title: "ACC ClubHub",
     description:
-      "Event registration and results platform for Munich's Accross Cycling Club.",
-    tags: ["Astro", "TypeScript"],
-    href: "https://accross-cc.de",
+      "Digital hub for Across Cycling Club Munich — media, events, gear guides, training science, and curated routes. Git-based CMS for easy content updates.",
+    tags: ["Astro", "Sveltia CMS", "TypeScript", "Python"],
+    href: "https://github.com/GenLI3202/acc_clubhub",
+    liveHref: "https://acc-clubhub.vercel.app/",
     image: "/images/projects/accross.png",
     gradient: "linear-gradient(135deg, #1a0a0a 0%, #4a1010 50%, #7b2020 100%)",
     size: "small",
@@ -82,6 +83,17 @@ const projects = [
               >
                 {project.badge && (
                   <span class="bento-badge">{project.badge}</span>
+                )}
+                {project.liveHref && (
+                  <a
+                    href={project.liveHref}
+                    class="bento-live"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onclick="event.stopPropagation()"
+                  >
+                    Live ↗
+                  </a>
                 )}
               </div>
 
@@ -237,6 +249,31 @@ const projects = [
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
+  }
+
+  /* ── Live badge ── */
+  .bento-live {
+    position: absolute;
+    bottom: 0.75rem;
+    right: 0.75rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-decoration: none;
+    transition: background var(--transition), color var(--transition);
+    z-index: 1;
+  }
+
+  .bento-live:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
   }
 
   /* ── Arrow ── */
