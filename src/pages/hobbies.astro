@@ -56,7 +56,19 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       </div>
     </section>
 
-    <div class="section-divider"></div>
+    <!-- ─── TRANSITION: wheel rolls away ────────────── -->
+    <div class="transition-divider" data-transition="wheel" aria-hidden="true">
+      <div class="wheel-track">
+        <svg class="wheel-svg" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="30" cy="30" r="27" stroke="currentColor" stroke-width="2.5"/>
+          <circle cx="30" cy="30" r="4.5" fill="currentColor"/>
+          <line x1="30" y1="3" x2="30" y2="57" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="3" y1="30" x2="57" y2="30" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="8.1" y1="8.1" x2="51.9" y2="51.9" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="51.9" y1="8.1" x2="8.1" y2="51.9" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </div>
+    </div>
 
     <!-- ─── READING ────────────────────────────────── -->
     <section class="hobby-section" id="reading">
@@ -127,7 +139,13 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
       </div>
     </section>
 
-    <div class="section-divider"></div>
+    <!-- ─── TRANSITION: book opens → guitar ─────────── -->
+    <div class="transition-divider" data-transition="book-guitar" aria-hidden="true">
+      <div class="book-guitar-stage">
+        <span class="anim-book">📖</span>
+        <span class="anim-guitar">🎸</span>
+      </div>
+    </div>
 
     <!-- ─── GUITAR ─────────────────────────────────── -->
     <section class="hobby-section" id="guitar">
@@ -382,10 +400,119 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
     font-style: italic;
   }
 
-  /* ── Section divider ──────────────────────────── */
-  .section-divider {
-    height: 1px;
-    background: var(--border);
-    margin-block: 3.5rem;
+  /* ── Transition dividers ─────────────────────────── */
+  .transition-divider {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 5rem;
+    margin-block: 2rem;
+    overflow: hidden;
+  }
+
+  /* ── Wheel ────────────────────────────────────────── */
+  .wheel-track {
+    color: var(--fg-muted);
+    width: 60px;
+    height: 60px;
+  }
+
+  .wheel-svg {
+    width: 60px;
+    height: 60px;
+    display: block;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-transition="wheel"].animate .wheel-track {
+      animation: wheel-translate 0.85s cubic-bezier(0.4, 0, 1, 1) forwards;
+    }
+    [data-transition="wheel"].animate .wheel-svg {
+      animation: wheel-spin 0.85s linear forwards;
+    }
+
+    @keyframes wheel-translate {
+      0%   { transform: translateX(0);      opacity: 1; }
+      70%  { opacity: 1; }
+      100% { transform: translateX(220px);  opacity: 0; }
+    }
+
+    @keyframes wheel-spin {
+      0%   { transform: rotate(0deg); }
+      100% { transform: rotate(720deg); }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-transition="wheel"].animate .wheel-track {
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+  }
+
+  /* ── Book → Guitar ────────────────────────────────── */
+  .book-guitar-stage {
+    position: relative;
+    width: 60px;
+    height: 60px;
+  }
+
+  .anim-book,
+  .anim-guitar {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    line-height: 1;
+  }
+
+  .anim-guitar {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-transition="book-guitar"].animate .anim-book {
+      animation: book-open 0.6s ease-in forwards;
+    }
+    [data-transition="book-guitar"].animate .anim-guitar {
+      animation: guitar-emerge 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.45s forwards;
+    }
+
+    @keyframes book-open {
+      0%   { transform: perspective(300px) rotateY(0deg)   scale(1);   opacity: 1; }
+      45%  { transform: perspective(300px) rotateY(-90deg) scale(0.8); opacity: 0.4; }
+      100% { transform: perspective(300px) rotateY(-180deg) scale(0);  opacity: 0; }
+    }
+
+    @keyframes guitar-emerge {
+      0%   { transform: scale(0.3) translateY(16px) rotate(-15deg); opacity: 0; }
+      70%  { transform: scale(1.12) translateY(-3px) rotate(4deg);  opacity: 1; }
+      100% { transform: scale(1)   translateY(0)    rotate(0deg);   opacity: 1; }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-transition="book-guitar"].animate .anim-book  { opacity: 0; transition: opacity 0.3s; }
+    [data-transition="book-guitar"].animate .anim-guitar { opacity: 1; transition: opacity 0.3s 0.3s; }
   }
 </style>
+
+<script>
+  const dividers = document.querySelectorAll<HTMLElement>('.transition-divider');
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate');
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.6 }
+  );
+
+  dividers.forEach((el) => observer.observe(el));
+</script>
