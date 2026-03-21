@@ -47,17 +47,14 @@
   - Patent badge for EV Optimizer
   - Projects: MAMODA Dashboard, EV Charging Optimizer (PCT WO2025026594), ACC ClubHub, This Website
 
-## In Progress
+## Completed Features (continued)
 
-- [ ] **Phase 5** — Hobbies page
-  - Cycling: Strava link, ACC Club link, photos, manual annual stats (Strava API later)
-  - Reading: 微信读书 link, favorite authors/books, currently reading
-  - Guitar: short text, optional photo
+- [x] **Phase 5** — Hobbies page (cycling stats + Strava/ACC links, reading author cards + 微信读书, guitar text; scroll-triggered wheel/book animations)
+- [x] **Phase 6** — About page (narrative bio, research section, toolbox grid, contact links)
+- [x] **Phase 7** — Dark mode polish (added missing `--radius-*` tokens, `color-scheme` hints, `::selection` highlight, no FOUC confirmed)
 
 ## Remaining Phases
 
-- [ ] **Phase 6** — About page (research, toolbox, interests, contact links)
-- [ ] **Phase 7** — Dark mode polish (verify no FOUC, full token coverage)
 - [ ] **Phase 8** — Production deployment (custom domain, Lighthouse audit)
 - [ ] **Phase 9** — i18n: EN/ZH/DE routing + GitHub Action auto-translation workflow
 
