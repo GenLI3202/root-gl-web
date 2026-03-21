@@ -1,0 +1,279 @@
+---
+import { t, getLocaleFromUrl, localizeUrl, SUPPORTED_LOCALES, type Locale } from "@/i18n";
+
+const locale = getLocaleFromUrl(Astro.url) as Locale;
+const currentPath = Astro.url.pathname;
+
+const navLinks = [
+  { key: "nav.posts",    href: "/posts/" },
+  { key: "nav.projects", href: "/projects/" },
+  { key: "nav.hobbies",  href: "/hobbies/" },
+  { key: "nav.about",    href: "/about/" },
+];
+
+function isActive(href: string): boolean {
+  const localized = locale !== "en" ? `/${locale}${href}` : href;
+  return currentPath === localized || currentPath.startsWith(localized.replace(/\/$/, ""));
+}
+---
+
+<header class="site-header">
+  <div class="nav-container">
+    <nav class="nav" aria-label="Main navigation">
+      <!-- Logo / Home -->
+      <a href={localizeUrl("/", locale)} class="nav-logo">
+        {t(locale, "nav.home")}
+      </a>
+
+      <!-- Nav links (desktop) -->
+      <ul class="nav-links" role="list">
+        {navLinks.map(({ key, href }) => (
+          <li>
+            <a
+              href={localizeUrl(href, locale)}
+              class:list={["nav-link", { active: isActive(href) }]}
+            >
+              {t(locale, key)}
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      <!-- Right controls -->
+      <div class="nav-controls">
+        <!-- Language switcher -->
+        <div class="lang-switcher" role="group" aria-label="Language">
+          {SUPPORTED_LOCALES.map((lang) => (
+            <a
+              href={lang === "en" ? currentPath.replace(/^\/(zh|de)/, "") || "/" : `/${lang}${currentPath.replace(/^\/(zh|de|en)/, "") || "/"}`}
+              class:list={["lang-btn", { "lang-active": lang === locale }]}
+              aria-current={lang === locale ? "true" : undefined}
+            >
+              {lang.toUpperCase()}
+            </a>
+          ))}
+        </div>
+
+        <!-- Theme toggle -->
+        <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme" type="button">
+          <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+
+        <!-- Mobile menu button -->
+        <button id="mobile-menu-btn" class="icon-btn mobile-only" aria-label="Open menu" aria-expanded="false" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile menu drawer -->
+    <div id="mobile-menu" class="mobile-menu" hidden>
+      <ul role="list">
+        {navLinks.map(({ key, href }) => (
+          <li>
+            <a
+              href={localizeUrl(href, locale)}
+              class:list={["mobile-link", { active: isActive(href) }]}
+            >
+              {t(locale, key)}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</header>
+
+<!-- Prevent FOUC: apply theme before first paint -->
+<script is:inline>
+  (function () {
+    const stored = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (stored === "dark" || (!stored && prefersDark)) {
+      document.documentElement.classList.add("theme-dark");
+    }
+  })();
+</script>
+
+<script>
+  // Theme toggle
+  const btn = document.getElementById("theme-toggle");
+  btn?.addEventListener("click", () => {
+    const isDark = document.documentElement.classList.toggle("theme-dark");
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+  });
+
+  // Mobile menu
+  const menuBtn = document.getElementById("mobile-menu-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+  menuBtn?.addEventListener("click", () => {
+    const isOpen = !mobileMenu?.hidden;
+    if (mobileMenu) mobileMenu.hidden = isOpen;
+    menuBtn.setAttribute("aria-expanded", String(!isOpen));
+  });
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    transition: background var(--transition);
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 3.5rem;
+    gap: 1.5rem;
+  }
+
+  /* Logo */
+  .nav-logo {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--fg);
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: color var(--transition);
+  }
+  .nav-logo:hover {
+    color: var(--accent);
+  }
+
+  /* Nav links */
+  .nav-links {
+    display: none;
+    list-style: none;
+    gap: 0.25rem;
+    align-items: center;
+  }
+
+  .nav-link {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--fg-muted);
+    text-decoration: none;
+    padding: 0.375rem 0.625rem;
+    border-radius: 4px;
+    transition: color var(--transition), background var(--transition);
+  }
+  .nav-link:hover {
+    color: var(--fg);
+    background: var(--surface);
+  }
+  .nav-link.active {
+    color: var(--accent);
+  }
+
+  /* Controls */
+  .nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  /* Language switcher */
+  .lang-switcher {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
+  }
+
+  .lang-btn {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--fg-muted);
+    text-decoration: none;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    transition: color var(--transition), background var(--transition);
+  }
+  .lang-btn:hover {
+    color: var(--fg);
+  }
+  .lang-btn.lang-active {
+    background: var(--bg);
+    color: var(--fg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Icon button */
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    color: var(--fg-muted);
+    cursor: pointer;
+    transition: color var(--transition), background var(--transition);
+  }
+  .icon-btn:hover {
+    color: var(--fg);
+    background: var(--surface);
+  }
+
+  /* Sun/moon icon visibility */
+  .icon-sun { display: none; }
+  .icon-moon { display: block; }
+  :global(.theme-dark) .icon-sun { display: block; }
+  :global(.theme-dark) .icon-moon { display: none; }
+
+  /* Mobile menu */
+  .mobile-only {
+    display: flex;
+  }
+
+  .mobile-menu {
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .mobile-menu[hidden] { display: none; }
+
+  .mobile-link {
+    display: block;
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: var(--fg-muted);
+    text-decoration: none;
+    padding: 0.625rem 0;
+    border-bottom: 1px solid var(--border);
+    transition: color var(--transition);
+  }
+  .mobile-link:hover,
+  .mobile-link.active {
+    color: var(--accent);
+  }
+
+  /* Desktop */
+  @media (min-width: 640px) {
+    .nav-links {
+      display: flex;
+    }
+    .mobile-only {
+      display: none;
+    }
+  }
+</style>

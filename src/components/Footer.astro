@@ -1,0 +1,68 @@
+---
+import { t, getLocaleFromUrl, type Locale } from "@/i18n";
+const locale = getLocaleFromUrl(Astro.url) as Locale;
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-inner">
+      <span class="footer-copy">
+        © {year} Gen Li · {t(locale, "footer.rights")}
+      </span>
+      <nav class="footer-links" aria-label="Social links">
+        <a href="https://github.com/GenLI3202" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://www.linkedin.com/in/gen-li-tum723" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <a href="mailto:gen.li@tum.de">Email</a>
+        <a href="/rss.xml">RSS</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: 5rem;
+    padding-block: 2rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .footer-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+    text-align: center;
+  }
+
+  .footer-copy {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .footer-links a {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    text-decoration: none;
+    transition: color var(--transition);
+  }
+
+  .footer-links a:hover {
+    color: var(--accent);
+  }
+
+  @media (min-width: 640px) {
+    .footer-inner {
+      flex-direction: row;
+      justify-content: space-between;
+      text-align: left;
+    }
+  }
+</style>
