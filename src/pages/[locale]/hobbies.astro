@@ -11,224 +11,425 @@ export async function getStaticPaths() {
 
 const { locale } = Astro.params as { locale: Locale };
 
-const authorCards: Record<Locale, { name: string; tag: string; note: string; recs: string }[]> = {
-  en: [],
-  zh: [
-    {
-      name: "金庸 Jin Yong",
-      tag: "武侠",
-      note: "从小读射雕。侠之大者，为国为民——这句话讲的是公民责任，而不是个人英雄主义。每隔几年重读，每次都有新的理解。",
-      recs: "《射雕英雄传》· 《笑傲江湖》· 《天龙八部》",
-    },
-    {
-      name: "刘慈欣 Liu Cixin",
-      tag: "科幻",
-      note: "给岁月以文明，给时光以生命。《三体》打破了我对尺度的认知——以最好的方式。硬科幻，却有真正的哲学分量。",
-      recs: "《三体》· 《流浪地球》· 《朝闻道》",
-    },
-    {
-      name: "Hermann Hesse",
-      tag: "文学",
-      note: "Der Vogel kämpft sich aus dem Ei heraus. 二十岁读《德米安》，二十五岁读《荒原狼》——两本书在不同年龄都带来了冲击。黑塞为那些在任何地方都感觉格格不入的人而写。",
-      recs: "Demian · Steppenwolf · Siddhartha",
-    },
-  ],
-  de: [
-    {
-      name: "金庸 Jin Yong",
-      tag: "Wuxia",
-      note: "Mit den Adlerhelden aufgewachsen. 侠之大者，为国为民 — Heldentum ist bürgerlich, nicht persönlich. Kehre alle paar Jahre zu diesen Romanen zurück und entdecke jedes Mal etwas Neues.",
-      recs: "《射雕英雄传》· 《笑傲江湖》· 《天龙八部》",
-    },
-    {
-      name: "刘慈欣 Liu Cixin",
-      tag: "Sci-Fi",
-      note: "给岁月以文明，给时光以生命。Die Drei-Körper-Trilogie hat mein Gefühl für Dimensionen gesprengt — auf die beste Art. Hard SF mit echtem philosophischem Gewicht.",
-      recs: "《三体》· 《流浪地球》· 《朝闻道》",
-    },
-    {
-      name: "Hermann Hesse",
-      tag: "Literatur",
-      note: "Der Vogel kämpft sich aus dem Ei heraus. Demian mit 20 gelesen, Steppenwolf mit 25 — beide trafen unterschiedlich. Hesse schreibt für Menschen, die sich überall leicht fehl am Platz fühlen.",
-      recs: "Demian · Steppenwolf · Siddhartha",
-    },
-  ],
-};
-
 const readingFooterLabel: Record<Locale, string> = {
   en: "",
   zh: "微信读书 ↗",
   de: "WeChat Reading ↗",
 };
+
+const tabLabels: Record<string, Record<Locale, string>> = {
+  cycling: { en: "Cycling", zh: "骑行", de: "Radfahren" },
+  reading: { en: "Reading", zh: "阅读", de: "Lesen" },
+  guitar:  { en: "Guitar",  zh: "吉他", de: "Gitarre" },
+};
 ---
 
 <BaseLayout title={t(locale, "hobbies.title")} locale={locale}>
-  <div class="hobbies-page container">
+  <div class="hobbies-page">
 
     <header class="hobbies-header">
       <h1 class="hobbies-title">{t(locale, "hobbies.title")}</h1>
       <p class="hobbies-intro">{t(locale, "hobbies.intro")}</p>
     </header>
 
-    <!-- ── CYCLING ──────────────────────────── -->
-    <section class="hobby-section" id="cycling">
-      <div class="hobby-label">
-        <span class="hobby-icon">🚴</span>
-        <span class="hobby-name">{t(locale, "hobbies.cycling.label")}</span>
-      </div>
-      <div class="hobby-body">
-        <p class="hobby-lead">{t(locale, "hobbies.cycling.lead")}</p>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <span class="stat-num">4 800<span class="stat-unit"> km</span></span>
-            <span class="stat-label">{t(locale, "hobbies.cycling.stat.distance")}</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-num">42 000<span class="stat-unit"> m</span></span>
-            <span class="stat-label">{t(locale, "hobbies.cycling.stat.elevation")}</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-num">180<span class="stat-unit"></span></span>
-            <span class="stat-label">{t(locale, "hobbies.cycling.stat.rides")}</span>
-          </div>
-        </div>
-        <p class="stat-note">{t(locale, "hobbies.cycling.stat.note")}</p>
-        <div class="hobby-links">
-          <a href="https://www.strava.com/athletes/119635546" target="_blank" rel="noopener noreferrer" class="hobby-link-btn">
-            {t(locale, "hobbies.cycling.strava")}
-          </a>
-          <a href="https://acc-clubhub.vercel.app/" target="_blank" rel="noopener noreferrer" class="hobby-link-btn hobby-link-btn--ghost">
-            {t(locale, "hobbies.cycling.acc")}
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <!-- wheel transition divider -->
-    <div class="transition-divider" data-transition="wheel" aria-hidden="true">
-      <div class="wheel-track">
-        <svg class="wheel-svg" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="30" cy="30" r="27" stroke="currentColor" stroke-width="2.5"/>
-          <circle cx="30" cy="30" r="4.5" fill="currentColor"/>
-          <line x1="30" y1="3" x2="30" y2="57" stroke="currentColor" stroke-width="1.5"/>
-          <line x1="3" y1="30" x2="57" y2="30" stroke="currentColor" stroke-width="1.5"/>
-          <line x1="8.1" y1="8.1" x2="51.9" y2="51.9" stroke="currentColor" stroke-width="1.5"/>
-          <line x1="51.9" y1="8.1" x2="8.1" y2="51.9" stroke="currentColor" stroke-width="1.5"/>
-        </svg>
-      </div>
+    <div class="scene-tabs" role="tablist" aria-label={t(locale, "hobbies.title")}>
+      <button class="scene-tab active" data-scene="0" role="tab" aria-selected="true">
+        <span class="tab-icon">🚴</span> {tabLabels.cycling[locale]}
+      </button>
+      <button class="scene-tab" data-scene="1" role="tab" aria-selected="false">
+        <span class="tab-icon">📖</span> {tabLabels.reading[locale]}
+      </button>
+      <button class="scene-tab" data-scene="2" role="tab" aria-selected="false">
+        <span class="tab-icon">🎸</span> {tabLabels.guitar[locale]}
+      </button>
     </div>
 
-    <!-- ── READING ──────────────────────────── -->
-    <section class="hobby-section" id="reading">
-      <div class="hobby-label">
-        <span class="hobby-icon">📖</span>
-        <span class="hobby-name">{t(locale, "hobbies.reading.label")}</span>
-      </div>
-      <div class="hobby-body">
-        <p class="hobby-lead">{t(locale, "hobbies.reading.lead")}</p>
-        <div class="reading-grid">
-          {authorCards[locale].map((card) => (
-            <div class="author-card">
-              <div class="author-meta">
-                <span class="author-name">{card.name}</span>
-                <span class="author-tag">{card.tag}</span>
+    <div class="hobbies-wrapper" aria-live="polite">
+      <div class="hobbies-track" data-track>
+
+        <!-- ─── CYCLING ──────────────────────────────────── -->
+        <section class="hobbies-scene" id="cycling" role="tabpanel" aria-label={tabLabels.cycling[locale]}>
+          <img src="/images/hobbies/cyclist-simple-line.svg" alt="" aria-hidden="true" class="cyclist-bg" />
+          <div class="scene-inner">
+            <p class="hobby-lead">{t(locale, "hobbies.cycling.lead")}</p>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <span class="stat-num">4 800<span class="stat-unit"> km</span></span>
+                <span class="stat-label">{t(locale, "hobbies.cycling.stat.distance")}</span>
               </div>
-              <p class="author-note">{card.note}</p>
-              <p class="author-recs">{card.recs}</p>
+              <div class="stat-card">
+                <span class="stat-num">42 000<span class="stat-unit"> m</span></span>
+                <span class="stat-label">{t(locale, "hobbies.cycling.stat.elevation")}</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-num">180<span class="stat-unit"> rides</span></span>
+                <span class="stat-label">{t(locale, "hobbies.cycling.stat.rides")}</span>
+              </div>
             </div>
-          ))}
-        </div>
-        <div class="reading-footer">
-          <p class="reading-app-note">{t(locale, "hobbies.reading.app")}</p>
-          <a href="https://weread.qq.com/" target="_blank" rel="noopener noreferrer" class="hobby-link-btn hobby-link-btn--ghost">
-            {readingFooterLabel[locale]}
-          </a>
-        </div>
-        <CharacterCarousel />
-      </div>
-    </section>
+            <p class="stat-note">{t(locale, "hobbies.cycling.stat.note")}</p>
+            <div class="hobby-links">
+              <a href="https://www.strava.com/athletes/119635546" target="_blank" rel="noopener noreferrer" class="hobby-link-btn">
+                {t(locale, "hobbies.cycling.strava")}
+              </a>
+              <a href="https://acc-clubhub.vercel.app/" target="_blank" rel="noopener noreferrer" class="hobby-link-btn hobby-link-btn--ghost">
+                {t(locale, "hobbies.cycling.acc")}
+              </a>
+            </div>
+          </div>
+        </section>
 
-    <!-- book → guitar transition divider -->
-    <div class="transition-divider" data-transition="book-guitar" aria-hidden="true">
-      <div class="book-guitar-stage">
-        <span class="anim-book">📖</span>
-        <span class="anim-guitar">🎸</span>
+        <!-- ─── READING ──────────────────────────────────── -->
+        <section class="hobbies-scene" id="reading" role="tabpanel" aria-label={tabLabels.reading[locale]} aria-hidden="true">
+          <img src="/images/hobbies/book.svg" alt="" aria-hidden="true" class="book-bg" />
+          <div class="scene-inner">
+            <p class="hobby-lead">{t(locale, "hobbies.reading.lead")}</p>
+            <div class="reading-footer">
+              <p class="reading-app-note">{t(locale, "hobbies.reading.app")}</p>
+              <a href="https://weread.qq.com/" target="_blank" rel="noopener noreferrer" class="hobby-link-btn hobby-link-btn--ghost">
+                {readingFooterLabel[locale]}
+              </a>
+            </div>
+            <CharacterCarousel />
+          </div>
+        </section>
+
+        <!-- ─── GUITAR ────────────────────────────────────── -->
+        <section class="hobbies-scene" id="guitar" role="tabpanel" aria-label={tabLabels.guitar[locale]} aria-hidden="true">
+          <img src="/images/hobbies/music-notes.svg" alt="" aria-hidden="true" class="music-bg" />
+          <div class="scene-inner">
+            <p class="hobby-lead">{t(locale, "hobbies.guitar.lead")}</p>
+          </div>
+        </section>
+
+      </div><!-- /track -->
+    </div><!-- /wrapper -->
+
+    <div class="scene-controls">
+      <button class="ctrl-btn ctrl-prev" aria-label="Previous section" disabled>←</button>
+      <div class="scene-dots">
+        <span class="scene-dot active" data-dot="0"></span>
+        <span class="scene-dot" data-dot="1"></span>
+        <span class="scene-dot" data-dot="2"></span>
       </div>
+      <button class="ctrl-btn ctrl-next" aria-label="Next section">→</button>
     </div>
-
-    <!-- ── GUITAR ──────────────────────────── -->
-    <section class="hobby-section" id="guitar">
-      <div class="hobby-label">
-        <span class="hobby-icon">🎸</span>
-        <span class="hobby-name">{t(locale, "hobbies.guitar.label")}</span>
-      </div>
-      <div class="hobby-body">
-        <p class="hobby-lead">{t(locale, "hobbies.guitar.lead")}</p>
-      </div>
-    </section>
 
   </div>
 </BaseLayout>
 
 <style>
-  /* Identical to src/pages/hobbies.astro — scoped so no conflict */
-  .hobbies-page { padding-block: 4rem 6rem; }
-  .hobbies-header { margin-bottom: 4rem; }
-  .hobbies-title { font-family: var(--font-heading); font-size: var(--text-3xl); font-weight: 700; line-height: 1.15; color: var(--fg); margin-bottom: 0.75rem; }
-  .hobbies-intro { font-size: var(--text-lg); color: var(--fg-muted); max-width: 52ch; }
-  .hobby-section { display: grid; grid-template-columns: 10rem 1fr; gap: 2rem; align-items: start; }
-  @media (max-width: 600px) { .hobby-section { grid-template-columns: 1fr; gap: 1rem; } }
-  .hobby-label { display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem; padding-top: 0.2rem; position: sticky; top: 5rem; }
-  .hobby-icon { font-size: 2rem; line-height: 1; }
-  .hobby-name { font-family: var(--font-heading); font-size: var(--text-xl); font-weight: 600; color: var(--fg); }
-  .hobby-body { display: flex; flex-direction: column; gap: 1.5rem; }
-  .hobby-lead { font-size: var(--text-base); line-height: 1.75; color: var(--fg); max-width: 65ch; }
+  /* Identical layout to src/pages/hobbies.astro */
+  .hobbies-page {
+    max-width: none;
+    margin-inline: calc(-1 * var(--page-px, 24px));
+    padding-block: 3rem 4rem;
+  }
+
+  .hobbies-header {
+    padding-inline: var(--page-px, 24px);
+    max-width: calc(720px + 2 * var(--page-px, 24px));
+    margin-inline: auto;
+    margin-bottom: 2rem;
+  }
+
+  .hobbies-title {
+    font-family: var(--font-heading);
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--fg);
+    margin-bottom: 0.625rem;
+  }
+
+  .hobbies-intro {
+    font-size: var(--text-lg);
+    color: var(--fg-muted);
+    max-width: 52ch;
+  }
+
+  .scene-tabs {
+    display: flex;
+    gap: 0.25rem;
+    padding-inline: var(--page-px, 24px);
+    max-width: calc(720px + 2 * var(--page-px, 24px));
+    margin-inline: auto;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .scene-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.625rem 1rem;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--fg-muted);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+
+  .scene-tab:hover { color: var(--fg); }
+  .scene-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-icon { font-size: 1rem; }
+
+  .hobbies-wrapper {
+    overflow: hidden;
+    position: relative;
+    height: 68svh;
+    min-height: 420px;
+    width: 85%;
+    margin-inline: auto;
+  }
+
+  .hobbies-track {
+    display: flex;
+    width: 300%;
+    height: 100%;
+    transition: transform 0.48s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+
+  .hobbies-scene {
+    width: 33.333%;
+    flex-shrink: 0;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .hobbies-scene::-webkit-scrollbar { display: none; }
+
+  .scene-inner {
+    max-width: 720px;
+    margin-inline: auto;
+    padding: 2.5rem var(--page-px, 24px) 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .hobby-lead {
+    font-size: var(--text-base);
+    line-height: 1.75;
+    color: var(--fg);
+    max-width: 65ch;
+  }
+
   .stats-grid { display: flex; gap: 1.25rem; flex-wrap: wrap; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1rem 1.5rem; display: flex; flex-direction: column; gap: 0.25rem; min-width: 130px; }
-  .stat-num { font-family: var(--font-heading); font-size: var(--text-2xl); font-weight: 700; color: var(--accent); line-height: 1.1; }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 130px;
+  }
+
+  .stat-num {
+    font-family: var(--font-heading);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+
   .stat-unit { font-size: var(--text-base); font-weight: 400; color: var(--fg-muted); }
   .stat-label { font-size: var(--text-sm); color: var(--fg-muted); letter-spacing: 0.02em; }
   .stat-note { font-size: var(--text-sm); color: var(--fg-muted); font-style: italic; }
+
   .hobby-links { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-  .hobby-link-btn { display: inline-block; padding: 0.5rem 1.1rem; border-radius: 0.375rem; font-size: var(--text-sm); font-weight: 500; text-decoration: none; transition: all var(--transition); background: var(--accent); color: #fff; border: 1.5px solid var(--accent); }
-  .hobby-link-btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+  .hobby-link-btn {
+    display: inline-block;
+    padding: 0.5rem 1.1rem;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.15s;
+    background: var(--accent);
+    color: #fff;
+    border: 1.5px solid var(--accent);
+  }
+  .hobby-link-btn:hover { opacity: 0.88; }
   .hobby-link-btn--ghost { background: transparent; color: var(--fg); border-color: var(--border-dark); }
   .hobby-link-btn--ghost:hover { border-color: var(--accent); color: var(--accent); }
-  .reading-grid { display: flex; flex-direction: column; gap: 1rem; }
-  .author-card { border-left: 3px solid var(--border-dark); padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem; transition: border-color var(--transition); }
-  .author-card:hover { border-left-color: var(--accent); }
-  .author-meta { display: flex; align-items: center; gap: 0.75rem; }
-  .author-name { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 600; color: var(--fg); }
-  .author-tag { font-size: var(--text-xs); color: var(--fg-muted); border: 1px solid var(--border-dark); border-radius: 0.25rem; padding: 0.1rem 0.5rem; letter-spacing: 0.04em; text-transform: uppercase; }
-  .author-note { font-size: var(--text-sm); line-height: 1.7; color: var(--fg); max-width: 60ch; }
-  .author-recs { font-size: var(--text-sm); color: var(--fg-muted); font-style: italic; }
-  .reading-footer { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; padding-top: 0.5rem; }
+
+  .reading-footer {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    padding-top: 0.25rem;
+  }
   .reading-app-note { font-size: var(--text-sm); color: var(--fg-muted); }
-  .transition-divider { display: flex; justify-content: center; align-items: center; height: 5rem; margin-block: 2rem; overflow: hidden; }
-  .wheel-track { color: var(--fg-muted); width: 60px; height: 60px; }
-  .wheel-svg { width: 60px; height: 60px; display: block; }
-  @media (prefers-reduced-motion: no-preference) {
-    [data-transition="wheel"].animate .wheel-track { animation: wheel-translate 0.85s cubic-bezier(0.4,0,1,1) forwards; }
-    [data-transition="wheel"].animate .wheel-svg { animation: wheel-spin 0.85s linear forwards; }
-    @keyframes wheel-translate { 0% { transform: translateX(0); opacity: 1; } 70% { opacity: 1; } 100% { transform: translateX(220px); opacity: 0; } }
-    @keyframes wheel-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(720deg); } }
+
+  /* ── Panel backgrounds ───────────────────────────── */
+  .cyclist-bg, .book-bg, .music-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
   }
-  .book-guitar-stage { position: relative; width: 60px; height: 60px; }
-  .anim-book, .anim-guitar { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; line-height: 1; }
-  .anim-guitar { opacity: 0; }
-  @media (prefers-reduced-motion: no-preference) {
-    [data-transition="book-guitar"].animate .anim-book { animation: book-open 0.6s ease-in forwards; }
-    [data-transition="book-guitar"].animate .anim-guitar { animation: guitar-emerge 0.55s cubic-bezier(0.34,1.56,0.64,1) 0.45s forwards; }
-    @keyframes book-open { 0% { transform: perspective(300px) rotateY(0deg) scale(1); opacity: 1; } 45% { transform: perspective(300px) rotateY(-90deg) scale(0.8); opacity: 0.4; } 100% { transform: perspective(300px) rotateY(-180deg) scale(0); opacity: 0; } }
-    @keyframes guitar-emerge { 0% { transform: scale(0.3) translateY(16px) rotate(-15deg); opacity: 0; } 70% { transform: scale(1.12) translateY(-3px) rotate(4deg); opacity: 1; } 100% { transform: scale(1) translateY(0) rotate(0deg); opacity: 1; } }
+
+  .cyclist-bg {
+    object-position: center 60%;
+    opacity: 0.09;
+    transform-origin: center 60%;
+    animation: cyclist-drift 14s ease-in-out infinite alternate;
   }
+
+  @keyframes cyclist-drift {
+    0%   { transform: scale(1.08) translateX(-2%); }
+    50%  { transform: scale(1.12) translateX(0%);  }
+    100% { transform: scale(1.08) translateX(2%);  }
+  }
+
+  #cycling[aria-hidden="true"] .cyclist-bg { animation-play-state: paused; }
+
+  .book-bg {
+    object-position: 41.67% center;
+    opacity: 0.09;
+  }
+
+  .music-bg {
+    object-position: center center;
+    opacity: 0.22;
+    transform-origin: center center;
+    animation: notes-float 7s ease-in-out infinite;
+  }
+
+  @keyframes notes-float {
+    0%   { transform: scale(1.05) translateY(0%)    rotate(-1deg); }
+    33%  { transform: scale(1.08) translateY(-2.5%) rotate(0.5deg); }
+    66%  { transform: scale(1.06) translateY(-1%)   rotate(-0.5deg); }
+    100% { transform: scale(1.05) translateY(0%)    rotate(-1deg); }
+  }
+
+  #guitar[aria-hidden="true"] .music-bg { animation-play-state: paused; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cyclist-bg, .music-bg { animation: none; }
+    .hobbies-track { transition: none; }
+  }
+
+  /* ── Controls ────────────────────────────────────── */
+  .scene-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    padding-inline: var(--page-px, 24px);
+  }
+
+  .ctrl-btn {
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--border-dark);
+    background: none;
+    color: var(--fg);
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .ctrl-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .ctrl-btn:disabled { opacity: 0.28; cursor: not-allowed; }
+
+  .scene-dots { display: flex; gap: 0.5rem; align-items: center; }
+
+  .scene-dot {
+    display: block;
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-pill);
+    background: var(--border-dark);
+    cursor: pointer;
+    transition: background 0.18s, transform 0.18s;
+  }
+  .scene-dot.active { background: var(--accent); transform: scale(1.35); }
 </style>
 
 <script>
-  const dividers = document.querySelectorAll<HTMLElement>('.transition-divider');
-  const observer = new IntersectionObserver(
-    (entries) => { entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('animate'); observer.unobserve(e.target); } }); },
-    { threshold: 0.6 }
-  );
-  dividers.forEach((el) => observer.observe(el));
+  const track    = document.querySelector<HTMLElement>('[data-track]')!;
+  const tabs     = Array.from(document.querySelectorAll<HTMLButtonElement>('.scene-tab'));
+  const dots     = Array.from(document.querySelectorAll<HTMLElement>('.scene-dot'));
+  const scenes   = Array.from(document.querySelectorAll<HTMLElement>('.hobbies-scene'));
+  const prevBtn  = document.querySelector<HTMLButtonElement>('.ctrl-prev')!;
+  const nextBtn  = document.querySelector<HTMLButtonElement>('.ctrl-next')!;
+
+  let cur = 0;
+
+  function goTo(index: number) {
+    if (index < 0 || index >= scenes.length) return;
+    scenes[index].scrollTop = 0;
+    track.style.transform = `translateX(${-index * (100 / 3)}%)`;
+    scenes.forEach((s, i) => s.setAttribute('aria-hidden', String(i !== index)));
+    tabs.forEach((t, i) => { t.classList.toggle('active', i === index); t.setAttribute('aria-selected', String(i === index)); });
+    dots.forEach((d, i) => d.classList.toggle('active', i === index));
+    prevBtn.disabled = index === 0;
+    nextBtn.disabled = index === scenes.length - 1;
+    cur = index;
+  }
+
+  tabs.forEach((tab, i) => tab.addEventListener('click', () => goTo(i)));
+  dots.forEach((dot, i) => dot.addEventListener('click', () => goTo(i)));
+  prevBtn.addEventListener('click', () => goTo(cur - 1));
+  nextBtn.addEventListener('click', () => goTo(cur + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft')  goTo(cur - 1);
+    if (e.key === 'ArrowRight') goTo(cur + 1);
+  });
+
+  const wrapper = document.querySelector<HTMLElement>('.hobbies-wrapper')!;
+  let wheelCooldown = false;
+  wrapper.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    const scene = scenes[cur];
+    const delta = e.deltaY;
+    if (Math.abs(delta) < 1) return;
+    const atTop    = scene.scrollTop <= 0;
+    const atBottom = scene.scrollTop + scene.clientHeight >= scene.scrollHeight - 2;
+    if ((delta > 0 && !atBottom) || (delta < 0 && !atTop)) {
+      e.preventDefault();
+      scene.scrollTop += delta;
+      return;
+    }
+    const canNext = delta > 0 && cur < scenes.length - 1;
+    const canPrev = delta < 0 && cur > 0;
+    if (!canNext && !canPrev) return;
+    e.preventDefault();
+    if (wheelCooldown) return;
+    wheelCooldown = true;
+    setTimeout(() => { wheelCooldown = false; }, 700);
+    delta > 0 ? goTo(cur + 1) : goTo(cur - 1);
+  }, { passive: false });
+
+  let touchStartX = 0;
+  wrapper.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  wrapper.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) dx < 0 ? goTo(cur + 1) : goTo(cur - 1);
+  });
+
+  goTo(0);
 </script>
