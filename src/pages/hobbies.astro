@@ -1,9 +1,391 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 ---
-<BaseLayout title="Hobbies">
-  <div class="container" style="padding-block: 4rem;">
-    <h1>Hobbies</h1>
-    <p style="color: var(--fg-muted); margin-top: 1rem;">Coming in Phase 5.</p>
+
+<BaseLayout title="Hobbies · Gen Li" description="Cycling, reading, and guitar — life beyond the whiteboard.">
+  <div class="hobbies-page container">
+
+    <!-- Page header -->
+    <header class="hobbies-header">
+      <h1 class="hobbies-title">Life Beyond the Whiteboard</h1>
+      <p class="hobbies-intro">
+        Optimisation keeps the mind sharp. Everything below keeps the rest of me alive.
+      </p>
+    </header>
+
+    <!-- ─── CYCLING ────────────────────────────────── -->
+    <section class="hobby-section" id="cycling">
+      <div class="hobby-label">
+        <span class="hobby-icon">🚴</span>
+        <span class="hobby-name">Cycling</span>
+      </div>
+
+      <div class="hobby-body">
+        <p class="hobby-lead">
+          Munich is best experienced at 28 km/h. I ride year-round — solo early mornings on the Isar,
+          and group rides with <strong>Accross Cycling Club Munich</strong>, where I serve as ride leader
+          and help build the club's software infrastructure.
+        </p>
+
+        <!-- Annual stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-num">4 800<span class="stat-unit"> km</span></span>
+            <span class="stat-label">Distance / year</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num">42 000<span class="stat-unit"> m</span></span>
+            <span class="stat-label">Elevation / year</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num">180<span class="stat-unit"> rides</span></span>
+            <span class="stat-label">Rides / year</span>
+          </div>
+        </div>
+
+        <p class="stat-note">Stats are approximate annual averages — not excuses to skip the next ride.</p>
+
+        <div class="hobby-links">
+          <a href="https://www.strava.com/athletes/119635546" target="_blank" rel="noopener noreferrer" class="hobby-link-btn">
+            View on Strava ↗
+          </a>
+          <a href="https://acc-clubhub.vercel.app/" target="_blank" rel="noopener noreferrer" class="hobby-link-btn hobby-link-btn--ghost">
+            ACC ClubHub ↗
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ─── READING ────────────────────────────────── -->
+    <section class="hobby-section" id="reading">
+      <div class="hobby-label">
+        <span class="hobby-icon">📖</span>
+        <span class="hobby-name">Reading</span>
+      </div>
+
+      <div class="hobby-body">
+        <p class="hobby-lead">
+          I grew up on wuxia and science fiction. The best books feel like they rearrange
+          something inside you — a sentence you come back to years later and understand differently.
+        </p>
+
+        <div class="reading-grid">
+          <!-- Author cards -->
+          <div class="author-card">
+            <div class="author-meta">
+              <span class="author-name">金庸 Jin Yong</span>
+              <span class="author-tag">Wuxia</span>
+            </div>
+            <p class="author-note">
+              Grew up with the Condor Heroes. 侠之大者，为国为民 — heroism is civic, not personal.
+              Return to these every few years and notice something new each time.
+            </p>
+            <p class="author-recs">《射雕英雄传》· 《笑傲江湖》· 《天龙八部》</p>
+          </div>
+
+          <div class="author-card">
+            <div class="author-meta">
+              <span class="author-name">刘慈欣 Liu Cixin</span>
+              <span class="author-tag">Sci-Fi</span>
+            </div>
+            <p class="author-note">
+              给岁月以文明，给时光以生命。The Three-Body trilogy broke my sense of scale —
+              in the best way possible. Hard SF with genuine philosophical weight.
+            </p>
+            <p class="author-recs">《三体》· 《流浪地球》· 《朝闻道》</p>
+          </div>
+
+          <div class="author-card">
+            <div class="author-meta">
+              <span class="author-name">Hermann Hesse</span>
+              <span class="author-tag">Literature</span>
+            </div>
+            <p class="author-note">
+              <em>Der Vogel kämpft sich aus dem Ei heraus.</em> Read Demian at 20,
+              Steppenwolf at 25 — both hit differently. Hesse writes for people who feel
+              slightly out of place wherever they are.
+            </p>
+            <p class="author-recs">Demian · Steppenwolf · Siddhartha</p>
+          </div>
+        </div>
+
+        <div class="reading-footer">
+          <p class="reading-app-note">
+            Currently reading on <strong>微信读书 (WeChat Reading)</strong> — the best
+            Chinese e-reader app, with decent annotation sync.
+          </p>
+          <a href="https://weread.qq.com/" target="_blank" rel="noopener noreferrer" class="hobby-link-btn hobby-link-btn--ghost">
+            微信读书 ↗
+          </a>
+        </div>
+
+        <p class="reading-carousel-teaser">
+          ✦ <em>Literary Characters Carousel coming soon — watch this space.</em>
+        </p>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ─── GUITAR ─────────────────────────────────── -->
+    <section class="hobby-section" id="guitar">
+      <div class="hobby-label">
+        <span class="hobby-icon">🎸</span>
+        <span class="hobby-name">Guitar</span>
+      </div>
+
+      <div class="hobby-body">
+        <p class="hobby-lead">
+          Acoustic guitar, mostly self-taught, mostly late at night. I've never composed anything —
+          it's not about output. It's about the twenty minutes after a long day when my hands
+          do something that doesn't involve a keyboard or a solver. Folk, fingerpicking, the odd
+          Hesse-adjacent singer-songwriter mood. Still learning. Probably always will be.
+        </p>
+      </div>
+    </section>
+
   </div>
 </BaseLayout>
+
+<style>
+  /* ── Page wrapper ────────────────────────────── */
+  .hobbies-page {
+    padding-block: 4rem 6rem;
+  }
+
+  /* ── Page header ─────────────────────────────── */
+  .hobbies-header {
+    margin-bottom: 4rem;
+  }
+
+  .hobbies-title {
+    font-family: var(--font-heading);
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--fg);
+    margin-bottom: 0.75rem;
+  }
+
+  .hobbies-intro {
+    font-size: var(--text-lg);
+    color: var(--fg-muted);
+    max-width: 52ch;
+  }
+
+  /* ── Section layout ───────────────────────────── */
+  .hobby-section {
+    display: grid;
+    grid-template-columns: 10rem 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  @media (max-width: 600px) {
+    .hobby-section {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+
+  /* ── Hobby label (left column) ────────────────── */
+  .hobby-label {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    padding-top: 0.2rem;
+    position: sticky;
+    top: 5rem;
+  }
+
+  .hobby-icon {
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .hobby-name {
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--fg);
+  }
+
+  /* ── Hobby body (right column) ────────────────── */
+  .hobby-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .hobby-lead {
+    font-size: var(--text-base);
+    line-height: 1.75;
+    color: var(--fg);
+    max-width: 65ch;
+  }
+
+  /* ── Stats (cycling) ──────────────────────────── */
+  .stats-grid {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 130px;
+  }
+
+  .stat-num {
+    font-family: var(--font-heading);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+
+  .stat-unit {
+    font-size: var(--text-base);
+    font-weight: 400;
+    color: var(--fg-muted);
+  }
+
+  .stat-label {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    letter-spacing: 0.02em;
+  }
+
+  .stat-note {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    font-style: italic;
+  }
+
+  /* ── Links ────────────────────────────────────── */
+  .hobby-links {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .hobby-link-btn {
+    display: inline-block;
+    padding: 0.5rem 1.1rem;
+    border-radius: 0.375rem;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    text-decoration: none;
+    transition: all var(--transition);
+    background: var(--accent);
+    color: #fff;
+    border: 1.5px solid var(--accent);
+  }
+
+  .hobby-link-btn:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+
+  .hobby-link-btn--ghost {
+    background: transparent;
+    color: var(--fg);
+    border-color: var(--border-dark);
+  }
+
+  .hobby-link-btn--ghost:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ── Reading grid ─────────────────────────────── */
+  .reading-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .author-card {
+    border-left: 3px solid var(--border-dark);
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    transition: border-color var(--transition);
+  }
+
+  .author-card:hover {
+    border-left-color: var(--accent);
+  }
+
+  .author-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .author-name {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--fg);
+  }
+
+  .author-tag {
+    font-size: var(--text-xs);
+    color: var(--fg-muted);
+    border: 1px solid var(--border-dark);
+    border-radius: 0.25rem;
+    padding: 0.1rem 0.5rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .author-note {
+    font-size: var(--text-sm);
+    line-height: 1.7;
+    color: var(--fg);
+    max-width: 60ch;
+  }
+
+  .author-recs {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    font-style: italic;
+  }
+
+  .reading-footer {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    padding-top: 0.5rem;
+  }
+
+  .reading-app-note {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+  }
+
+  .reading-carousel-teaser {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    font-style: italic;
+  }
+
+  /* ── Section divider ──────────────────────────── */
+  .section-divider {
+    height: 1px;
+    background: var(--border);
+    margin-block: 3.5rem;
+  }
+</style>
