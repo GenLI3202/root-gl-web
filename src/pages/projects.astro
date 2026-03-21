@@ -3,76 +3,100 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 
 const projects = [
   {
+    id: "mamoda",
     title: "MAMODA Web Dashboard",
     description:
-      "Interactive knowledge hub supporting sustainable mining decisions. Built a multi-objective optimization engine with stakeholder-guided decision-making, deployed as a full-stack web application with live Plotly visualizations.",
+      "Interactive knowledge hub for sustainable mining decisions. Multi-objective optimization with stakeholder-guided decision-making and live Plotly visualizations.",
     tags: ["Python", "FastAPI", "Plotly", "React"],
     href: "https://mamoda-web-dashboard.vercel.app/",
-    status: "live",
+    image: "/images/projects/mamoda.png",
+    // gradient used when no image
+    gradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+    size: "large", // spans 2 columns
   },
   {
-    title: "EV Charging Station Optimizer",
+    id: "ev-optimizer",
+    title: "EV Charging Optimizer",
     description:
-      "Stochastic MILP model for optimal EV charging infrastructure placement under grid uncertainty. Balances installation cost, peak-load risk, and accessibility across city-scale networks. PCT patent granted.",
-    tags: ["Python", "Pyomo", "CPLEX", "Stochastic Programming"],
+      "Stochastic MILP for optimal EV charging station placement under grid uncertainty. PCT patent granted.",
+    tags: ["Python", "Pyomo", "CPLEX"],
     href: "https://patentscope.wipo.int/search/en/detail.jsf?docId=WO2025026594",
-    status: "patent",
+    image: "/images/projects/ev-optimizer.png",
+    gradient: "linear-gradient(135deg, #0d1b2a 0%, #1b4332 50%, #2d6a4f 100%)",
     badge: "PCT WO2025026594",
+    size: "tall", // spans 2 rows
   },
   {
-    title: "Accross Cycling Club Platform",
+    id: "accross",
+    title: "Accross Cycling Club",
     description:
-      "Event registration and results platform for Munich's Accross Cycling Club. Handles ride scheduling, member management, and results publishing for weekly group rides year-round.",
+      "Event registration and results platform for Munich's Accross Cycling Club.",
     tags: ["Astro", "TypeScript"],
     href: "https://accross-cc.de",
-    status: "live",
+    image: "/images/projects/accross.png",
+    gradient: "linear-gradient(135deg, #1a0a0a 0%, #4a1010 50%, #7b2020 100%)",
+    size: "small",
   },
   {
-    title: "Personal Website (this site)",
+    id: "genli-dev",
+    title: "This Website",
     description:
-      "Built with Astro v5 and CSS Custom Properties. Black-and-white minimalist design with progressive disclosure, dark mode, and a trilingual system planned for EN/ZH/DE.",
+      "Astro v5, CSS Custom Properties, dark mode, trilingual (coming soon).",
     tags: ["Astro", "TypeScript", "CSS"],
     href: "https://github.com",
-    status: "open-source",
+    image: null,
+    gradient: "linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)",
+    size: "small",
   },
 ];
 ---
 
 <BaseLayout
   title="Projects"
-  description="Selected projects by Gen Li — energy systems optimization, web tooling, and cycling infrastructure."
+  description="Selected projects by Gen Li — energy systems optimization, web tooling, and cycling."
 >
   <div class="container projects-page">
     <h1 class="page-title">Projects</h1>
-    <p class="page-subtitle">
-      A mix of research software, web tools, and side projects.
-    </p>
+    <p class="page-subtitle">Research software, web tools, and side projects.</p>
 
-    <ul class="project-list" role="list">
+    <ul class="bento-grid" role="list">
       {
         projects.map((project) => (
-          <li class="project-card">
+          <li class={`bento-card bento-card--${project.size}`}>
             <a
               href={project.href}
-              class="project-link"
+              class="bento-link"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={project.title}
             >
-              <div class="project-left">
-                <div class="project-header">
-                  <h2 class="project-title">{project.title}</h2>
-                  {project.badge && (
-                    <span class="project-badge">{project.badge}</span>
-                  )}
-                </div>
-                <p class="project-desc">{project.description}</p>
-                <div class="project-tags">
+              {/* Visual area */}
+              <div
+                class="bento-visual"
+                style={
+                  `background: ${project.gradient};` +
+                  (project.image
+                    ? ` background-image: url(${project.image}); background-size: cover; background-position: center;`
+                    : "")
+                }
+              >
+                {project.badge && (
+                  <span class="bento-badge">{project.badge}</span>
+                )}
+              </div>
+
+              {/* Content area */}
+              <div class="bento-content">
+                <h2 class="bento-title">{project.title}</h2>
+                <p class="bento-desc">{project.description}</p>
+                <div class="bento-tags">
                   {project.tags.map((tag) => (
                     <span class="tag">{tag}</span>
                   ))}
                 </div>
               </div>
-              <span class="project-arrow" aria-hidden="true">→</span>
+
+              <span class="bento-arrow" aria-hidden="true">↗</span>
             </a>
           </li>
         ))
@@ -100,106 +124,149 @@ const projects = [
     margin-bottom: 3rem;
   }
 
-  .project-list {
+  /* ── Bento Grid ── */
+  .bento-grid {
     list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto;
+    gap: 1rem;
   }
 
-  .project-card {
-    border-bottom: 1px solid var(--border);
+  /* large: full width */
+  .bento-card--large {
+    grid-column: 1 / -1;
+  }
+
+  /* tall: 2 rows, 1 col — right side */
+  .bento-card--tall {
+    grid-column: 2;
+    grid-row: 2 / 4;
+  }
+
+  /* small: single cell */
+  .bento-card--small {
+    grid-column: 1;
+  }
+
+  .bento-card {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    background: var(--surface);
+    transition: border-color var(--transition), transform var(--transition),
+      box-shadow var(--transition);
+  }
+
+  .bento-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .bento-link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    text-decoration: none;
     position: relative;
   }
 
-  .project-card:first-child {
-    border-top: 1px solid var(--border);
+  /* ── Visual area ── */
+  .bento-visual {
+    position: relative;
+    width: 100%;
+    flex-shrink: 0;
   }
 
-  /* Accent left bar on hover */
-  .project-card::before {
-    content: "";
-    position: absolute;
-    left: -1.5rem;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: var(--accent);
-    opacity: 0;
-    transition: opacity var(--transition);
+  .bento-card--large .bento-visual {
+    height: 200px;
   }
 
-  .project-card:hover::before {
-    opacity: 1;
-  }
-
-  .project-link {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    padding-block: 1.5rem;
-    text-decoration: none;
-  }
-
-  .project-left {
+  .bento-card--tall .bento-visual {
     flex: 1;
+    min-height: 180px;
   }
 
-  .project-header {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.625rem;
-    margin-bottom: 0.5rem;
+  .bento-card--small .bento-visual {
+    height: 130px;
   }
 
-  .project-title {
+  .bento-badge {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-pill);
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  /* ── Content area ── */
+  .bento-content {
+    padding: 1.125rem;
+    flex-shrink: 0;
+  }
+
+  .bento-title {
     font-size: var(--text-base);
     font-weight: 600;
     color: var(--fg);
     font-family: var(--font-body);
+    margin-bottom: 0.375rem;
     transition: color var(--transition);
   }
 
-  .project-link:hover .project-title {
+  .bento-link:hover .bento-title {
     color: var(--accent);
   }
 
-  .project-badge {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    padding: 0.2rem 0.5rem;
-    border-radius: var(--radius-pill);
-    background: var(--accent-soft);
-    color: var(--accent);
-    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  }
-
-  .project-desc {
+  .bento-desc {
     font-size: var(--text-sm);
     color: var(--fg-muted);
-    line-height: 1.6;
+    line-height: 1.55;
     margin-bottom: 0.75rem;
   }
 
-  .project-tags {
+  .bento-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.375rem;
+    gap: 0.35rem;
   }
 
-  .project-arrow {
-    font-size: var(--text-lg);
-    color: var(--fg-muted);
-    flex-shrink: 0;
+  /* ── Arrow ── */
+  .bento-arrow {
+    position: absolute;
+    top: 0.875rem;
+    right: 0.875rem;
+    font-size: var(--text-base);
+    color: rgba(255, 255, 255, 0.6);
     opacity: 0;
-    transform: translateX(-4px);
-    transition: opacity var(--transition), transform var(--transition),
-      color var(--transition);
+    transform: translate(-3px, 3px);
+    transition: opacity var(--transition), transform var(--transition);
   }
 
-  .project-link:hover .project-arrow {
+  .bento-link:hover .bento-arrow {
     opacity: 1;
-    transform: translateX(0);
-    color: var(--accent);
+    transform: translate(0, 0);
+  }
+
+  /* ── Responsive: stack to 1 col on mobile ── */
+  @media (max-width: 560px) {
+    .bento-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .bento-card--large,
+    .bento-card--tall,
+    .bento-card--small {
+      grid-column: 1;
+      grid-row: auto;
+    }
   }
 </style>
