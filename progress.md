@@ -6,8 +6,8 @@
 
 - **Created**: 2026-03-21
 - **Tech Stack**: Astro v5 · TypeScript · Tailwind CSS · CSS Custom Properties
-- **Live URL**: https://gen-web-seven.vercel.app
-- **Status**: 🟢 Active — Phase 5 next
+- **Live URL**: https://root-ligen.vercel.app
+- **Status**: 🟢 Active
 
 ## Current Architecture
 
@@ -18,7 +18,8 @@
 | Components | Reusable UI elements | `src/components/Nav.astro`, `Footer.astro` |
 | Content | Blog posts (Markdown) | `src/content/posts/` |
 | Styles | Design tokens, global CSS | `src/styles/global.css` |
-| i18n | Locale utilities (EN only for MVP) | `src/i18n/index.ts` |
+| i18n | Locale utilities + JSON translations, `localeSwitchUrl()` | `src/i18n/index.ts`, `en/zh/de.json` |
+| Locale pages | Dynamic `[locale]` routes for ZH/DE (index, about, projects, hobbies) | `src/pages/[locale]/` |
 
 ## Completed Features
 
@@ -53,10 +54,14 @@
 - [x] **Phase 6** — About page (narrative bio, research section, toolbox grid, contact links)
 - [x] **Phase 7** — Dark mode polish (added missing `--radius-*` tokens, `color-scheme` hints, `::selection` highlight, no FOUC confirmed)
 
-## Remaining Phases
+## Completed Features (continued)
 
-- [ ] **Phase 8** — Production deployment (custom domain, Lighthouse audit)
-- [ ] **Phase 9** — i18n: EN/ZH/DE routing + GitHub Action auto-translation workflow
+- [x] **Vercel domain rename** — project renamed from `gen-web` → `root-ligen`; live at `root-ligen.vercel.app`
+- [x] **i18n: EN/ZH/DE trilingual routing** — Astro i18n config, `[locale]` dynamic routes, language switcher in Nav, `localeSwitchUrl()` with fallback logic, all page content translated
+
+## Remaining Work
+
+- [ ] **Lighthouse / performance audit** — run after content stabilises
 
 ## Backlog (confirmed, non-urgent)
 
@@ -82,7 +87,14 @@
 | Bento Box for Projects | Projects are not a time-series list; visual grid suits diverse project types | 2026-03-21 |
 | Cover-link pattern (no nested `<a>`) | Avoids invalid HTML and browser rendering inconsistencies | 2026-03-21 |
 
+## Architecture Decisions (continued)
+
+| Decision | Rationale | Date |
+|----------|-----------|------|
+| `prefixDefaultLocale: false` for i18n | EN stays at `/`, ZH/DE get `/zh/`, `/de/` prefix — cleaner URLs for primary audience | 2026-03-21 |
+| Long content in page frontmatter (not JSON) | Bio paragraphs contain HTML links and are too long for JSON; locale-keyed objects in `.astro` frontmatter | 2026-03-21 |
+
 ## Known Issues / Tech Debt
 
 - Project bento cards use CSS gradients as image placeholders (no real screenshots yet)
-- Dark mode exists but needs full polish pass (Phase 7)
+- esbuild parses typographic quotes (`"` U+201C) as string terminators in TS frontmatter — use `「」` or `''` instead
