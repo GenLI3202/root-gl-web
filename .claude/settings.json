@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if git diff HEAD~1 HEAD --name-only 2>/dev/null | grep -q '^progress\\.md$'; then exit 0; fi; echo '{\"systemMessage\": \"⚠️  progress.md was not updated in the last commit. Run the progress-update workflow before ending your session.\"}'",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
