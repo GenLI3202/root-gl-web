@@ -1,0 +1,183 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { t, SUPPORTED_LOCALES, DEFAULT_LOCALE, type Locale } from "@/i18n";
+
+export async function getStaticPaths() {
+  return SUPPORTED_LOCALES.filter((l) => l !== DEFAULT_LOCALE).map((locale) => ({
+    params: { locale },
+  }));
+}
+
+const { locale } = Astro.params as { locale: Locale };
+
+const bio: Record<Locale, string[]> = {
+  en: [],
+  zh: [
+    "我是李根（Gen Li）— 慕尼黑工业大学数学系博士候选人，专注于能源系统与运筹学的交叉领域。我的日常工作是构建数学模型，探索电力市场的运行规律，并研究如何让它们更高效地运转。",
+    "博士阶段之前，我在<a href='https://www.siemens.com' target='_blank' rel='noopener noreferrer'>西门子股份公司</a>负责优化电动汽车充电基础设施（相关成果已获<a href='https://patentscope.wipo.int/search/en/detail.jsf?docId=WO2025026594' target='_blank' rel='noopener noreferrer'>PCT国际专利</a>），并在RENAIO Assets从事能源投资组合风险管理。贯穿这些经历的主线是：复杂系统、不确定性，以及偶尔不收敛的混合整数规划。",
+    "我在中国长大，本科就读于吉林大学，在慕尼黑生活已足够长，足以对周二清晨的伊萨尔河最佳骑行路线颇有心得。业余时间，我负责<a href='https://acc-clubhub.vercel.app/' target='_blank' rel='noopener noreferrer'>Accross骑行俱乐部慕尼黑站</a>的软件建设，读武侠小说，弹木吉他——水平有限，热情不减。",
+    "这个网站是我记录思考的地方——优化问题、书籍，偶尔还有骑行感悟。如果有任何内容让你产生共鸣，欢迎联系。",
+  ],
+  de: [
+    "Ich bin Gen Li — Doktorand in der Mathematik an der <a href='https://www.tum.de' target='_blank' rel='noopener noreferrer'>TU München</a>, mit dem Schwerpunkt auf der Schnittstelle von Energiesystemen und Operations Research. Meine tägliche Arbeit besteht darin, mathematische Modelle zu entwickeln, die helfen zu verstehen, wie Strommärkte funktionieren — und wie sie besser gestaltet werden können.",
+    "Vor dem Doktorat war ich bei Siemens AG mit der Optimierung von Ladeinfrastrukturen für Elektrofahrzeuge beschäftigt (das Ergebnis ist ein <a href='https://patentscope.wipo.int/search/en/detail.jsf?docId=WO2025026594' target='_blank' rel='noopener noreferrer'>PCT-Patent</a>) und bei RENAIO Assets im Risikomanagement für Energieportfolios tätig. Der rote Faden: komplexe Systeme, Unsicherheit, und gelegentlich ein MILP, das partout nicht konvergieren will.",
+    "Ich bin in China aufgewachsen, habe in Changchun studiert und lebe mittlerweile lange genug in München, um fundierte Meinungen über die beste Isarradroute an einem Dienstagmorgen zu haben. Neben der Arbeit kümmere ich mich um die Softwareinfrastruktur des <a href='https://acc-clubhub.vercel.app/' target='_blank' rel='noopener noreferrer'>Accross Cycling Club München</a>, lese zu viele Wuxia-Romane und spiele Akustikgitarre — mäßig gut, aber mit viel Enthusiasmus.",
+    "Diese Website ist mein Ort zum Nachdenken — über Optimierungsprobleme, Bücher und gelegentliche Radausflüge. Falls hier etwas Anklang findet, schreiben Sie mir gerne.",
+  ],
+};
+
+const research: Record<Locale, string[]> = {
+  en: [],
+  zh: [
+    "我的博士研究在慕尼黑工业大学<a href='https://www.cem.tum.de' target='_blank' rel='noopener noreferrer'>能源市场中心（CEM）</a>开展，聚焦于电力市场中的随机与鲁棒优化——具体而言，是在可再生能源波动加剧预测难度的背景下，如何在不确定条件下做出调度和定价决策。",
+    "在实践中，这意味着：建立混合整数线性规划（MILP）和随机规划模型、处理能源市场数据，以及偶尔向非数学背景的同事解释——为什么「直接用均值」并不是一种风险管理策略。",
+  ],
+  de: [
+    "Meine Promotion findet am TUM <a href='https://www.cem.tum.de' target='_blank' rel='noopener noreferrer'>Center for Energy Markets</a> statt. Der Fokus liegt auf stochastischer und robuster Optimierung in Strommärkten — konkret: wie man Dispatch- und Preisentscheidungen unter Unsicherheit trifft, wenn volatile Erneuerbare die Vorhersage erschweren.",
+    "In der Praxis bedeutet das: MILP- und stochastische Programmiermodelle formulieren, Energiemarktdaten aufbereiten und gelegentlich erklären, warum 'einfach den Durchschnitt nehmen' keine Risikomanagementstrategie ist.",
+  ],
+};
+
+const researchTags: Record<Locale, string[]> = {
+  en: [],
+  zh: ["随机优化", "能源市场", "混合整数规划", "风险管理", "可再生能源并网"],
+  de: ["Stochastische Optimierung", "Energiemärkte", "MILP", "Risikomanagement", "Erneuerbare Energien"],
+};
+
+const toolboxLabels: Record<Locale, Record<string, string>> = {
+  en: {},
+  zh: { opt: "优化工具", lang: "编程语言", python: "Python生态", web: "网络与部署" },
+  de: { opt: "Optimierung", lang: "Programmiersprachen", python: "Python-Stack", web: "Web & Deployment" },
+};
+
+const labels = toolboxLabels[locale];
+---
+
+<BaseLayout title={t(locale, "about.title")} locale={locale}>
+  <div class="about-page container">
+
+    <section class="about-bio">
+      <h1 class="about-title">{t(locale, "about.title")}</h1>
+      <div class="bio-body">
+        {bio[locale].map((p) => (
+          <p set:html={p} />
+        ))}
+      </div>
+    </section>
+
+    <div class="about-divider"></div>
+
+    <section class="about-section">
+      <h2 class="section-heading">{t(locale, "about.research.title")}</h2>
+      <div class="section-body">
+        {research[locale].map((p) => (
+          <p set:html={p} />
+        ))}
+        <div class="research-tags">
+          {researchTags[locale].map((tag) => (
+            <span class="tag">{tag}</span>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <div class="about-divider"></div>
+
+    <section class="about-section">
+      <h2 class="section-heading">{t(locale, "about.toolbox.title")}</h2>
+      <div class="section-body">
+        <div class="toolbox-grid">
+          <div class="tool-group">
+            <h3 class="tool-group-label">{labels.opt || "Optimisation"}</h3>
+            <ul class="tool-list">
+              <li>Pyomo · CPLEX · Gurobi</li>
+              <li>MILP · Stochastic Programming</li>
+              <li>Robust Optimisation</li>
+            </ul>
+          </div>
+          <div class="tool-group">
+            <h3 class="tool-group-label">{labels.lang || "Languages"}</h3>
+            <ul class="tool-list">
+              <li>Python (primary)</li>
+              <li>R · MATLAB</li>
+              <li>JavaScript · TypeScript</li>
+            </ul>
+          </div>
+          <div class="tool-group">
+            <h3 class="tool-group-label">{labels.python || "Python Stack"}</h3>
+            <ul class="tool-list">
+              <li>FastAPI · SQLAlchemy</li>
+              <li>Pandas · NumPy</li>
+              <li>Plotly · Dash</li>
+            </ul>
+          </div>
+          <div class="tool-group">
+            <h3 class="tool-group-label">{labels.web || "Web & Deploy"}</h3>
+            <ul class="tool-list">
+              <li>Astro · Svelte</li>
+              <li>Vercel · GitHub Actions</li>
+              <li>Tailwind CSS</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="about-divider"></div>
+
+    <section class="about-section">
+      <h2 class="section-heading">{t(locale, "about.contact.title")}</h2>
+      <div class="section-body">
+        <p>{t(locale, "about.contact.note")}</p>
+        <div class="contact-links">
+          <a href="mailto:hiligen723@gmail.com" class="contact-item">
+            <span class="contact-icon">✉</span>
+            <span class="contact-label">hiligen723@gmail.com</span>
+          </a>
+          <a href="https://github.com/GenLI3202" target="_blank" rel="noopener noreferrer" class="contact-item">
+            <span class="contact-icon">⌥</span>
+            <span class="contact-label">github.com/GenLI3202</span>
+          </a>
+          <a href="https://www.linkedin.com/in/gen-li-tum723" target="_blank" rel="noopener noreferrer" class="contact-item">
+            <span class="contact-icon">↗</span>
+            <span class="contact-label">linkedin.com/in/gen-li-tum723</span>
+          </a>
+          <a href="https://www.strava.com/athletes/119635546" target="_blank" rel="noopener noreferrer" class="contact-item">
+            <span class="contact-icon">🚴</span>
+            <span class="contact-label">Strava</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</BaseLayout>
+
+<style>
+  .about-page { padding-block: 4rem 6rem; max-width: 680px; }
+  .about-title { font-family: var(--font-heading); font-size: var(--text-3xl); font-weight: 700; color: var(--fg); margin-bottom: 2rem; }
+  .bio-body { display: flex; flex-direction: column; gap: 1.25rem; }
+  .bio-body p { font-size: var(--text-base); line-height: 1.8; color: var(--fg); }
+  .bio-body a { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-dark); transition: color var(--transition), text-decoration-color var(--transition); }
+  .bio-body a:hover { color: var(--accent); text-decoration-color: var(--accent); }
+  .about-divider { height: 1px; background: var(--border); margin-block: 3rem; }
+  .about-section { display: grid; grid-template-columns: 9rem 1fr; gap: 2rem; align-items: start; }
+  @media (max-width: 560px) { .about-section { grid-template-columns: 1fr; gap: 0.75rem; } }
+  .section-heading { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 600; color: var(--fg-muted); padding-top: 0.2rem; }
+  .section-body { display: flex; flex-direction: column; gap: 1rem; }
+  .section-body p { font-size: var(--text-base); line-height: 1.8; color: var(--fg); }
+  .section-body a { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-dark); transition: color var(--transition), text-decoration-color var(--transition); }
+  .section-body a:hover { color: var(--accent); text-decoration-color: var(--accent); }
+  .research-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem; }
+  .tag { font-size: var(--text-xs); color: var(--fg-muted); border: 1px solid var(--border-dark); border-radius: 0.25rem; padding: 0.2rem 0.6rem; letter-spacing: 0.03em; }
+  .toolbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem 2rem; }
+  @media (max-width: 560px) { .toolbox-grid { grid-template-columns: 1fr; } }
+  .tool-group-label { font-size: var(--text-sm); font-weight: 600; color: var(--fg); margin-bottom: 0.5rem; }
+  .tool-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+  .tool-list li { font-size: var(--text-sm); color: var(--fg-muted); line-height: 1.5; }
+  .contact-links { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.25rem; }
+  .contact-item { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--fg-muted); transition: color var(--transition); width: fit-content; }
+  .contact-item:hover { color: var(--accent); }
+  .contact-icon { font-size: var(--text-base); width: 1.25rem; text-align: center; flex-shrink: 0; }
+  .contact-label { font-size: var(--text-sm); }
+</style>

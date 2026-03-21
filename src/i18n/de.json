@@ -1,11 +1,43 @@
 {
-  "nav.home": "Gen Li",
-  "nav.posts": "Beiträge",
+  "nav.home":     "Gen Li",
+  "nav.posts":    "Beiträge",
   "nav.projects": "Projekte",
-  "nav.hobbies": "Hobbys",
-  "nav.about": "Über mich",
-  "footer.built": "Erstellt mit Astro",
+  "nav.hobbies":  "Hobbys",
+  "nav.about":    "Über mich",
+
+  "footer.built":  "Erstellt mit Astro",
   "footer.rights": "Alle Rechte vorbehalten",
-  "theme.toggle": "Theme wechseln",
-  "lang.switch": "Sprache"
+  "theme.toggle":  "Theme wechseln",
+  "lang.switch":   "Sprache",
+
+  "index.tagline":       "Doktorand an der TU München. Energiesysteme tagsüber optimieren, nachts Radfahrer durch München führen.",
+  "index.writing.title": "Aktuelle Beiträge",
+  "index.writing.link":  "Alle Beiträge →",
+  "index.projects.title":"Ausgewählte Projekte",
+  "index.projects.link": "Alle Projekte →",
+
+  "about.title":          "Über mich",
+  "about.research.title": "Forschung",
+  "about.toolbox.title":  "Werkzeugkasten",
+  "about.contact.title":  "Kontakt",
+  "about.contact.note":   "Ich freue mich über Nachrichten zu Energiemärkten, Optimierung, Münchner Fahrradrouten oder Buchempfehlungen. Am besten per E-Mail.",
+
+  "projects.title":    "Projekte",
+  "projects.subtitle": "Forschungssoftware, Web-Tools und Nebenprojekte.",
+
+  "hobbies.title":         "Leben jenseits des Whiteboards",
+  "hobbies.intro":         "Optimierung hält den Geist scharf. Alles hier unten hält den Rest von mir am Leben.",
+  "hobbies.cycling.label": "Radfahren",
+  "hobbies.reading.label": "Lesen",
+  "hobbies.guitar.label":  "Gitarre",
+  "hobbies.cycling.lead":  "München erlebt man am besten bei 28 km/h. Ich fahre das ganze Jahr — solo an frühen Morgen an der Isar und bei Gruppenausfahrten mit dem Accross Cycling Club München, wo ich als Fahrtenleiter fungiere und die Softwareinfrastruktur des Clubs betreue.",
+  "hobbies.cycling.strava":"Auf Strava ansehen ↗",
+  "hobbies.cycling.acc":   "ACC ClubHub ↗",
+  "hobbies.cycling.stat.distance": "Distanz / Jahr",
+  "hobbies.cycling.stat.elevation":"Höhenmeter / Jahr",
+  "hobbies.cycling.stat.rides":    "Ausfahrten / Jahr",
+  "hobbies.cycling.stat.note":     "Ungefähre Jahresdurchschnitte — keine Ausrede, die nächste Ausfahrt zu verpassen.",
+  "hobbies.reading.lead":  "Ich bin mit Wuxia-Romanen und Science-Fiction aufgewachsen. Die besten Bücher arrangieren etwas in einem um — ein Satz, zu dem man Jahre später zurückkehrt und den man plötzlich anders versteht.",
+  "hobbies.reading.app":   "Aktuell lese ich in der WeChat Reading App (微信读书) — die beste chinesische E-Reader-App, mit brauchbarer Annotationssynchronisierung.",
+  "hobbies.guitar.lead":   "Akustikgitarre, größtenteils autodidaktisch, meist spät abends. Ich habe nie etwas komponiert — darum geht es nicht. Es geht um die zwanzig Minuten nach einem langen Tag, in denen meine Hände etwas tun, das nichts mit einer Tastatur oder einem Solver zu tun hat. Folk, Fingerpicking, gelegentlich Hesse-ähnliche Songwriter-Stimmung. Noch am Lernen. Wahrscheinlich für immer."
 }

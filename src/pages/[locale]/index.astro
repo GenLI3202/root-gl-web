@@ -1,0 +1,242 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import { t, SUPPORTED_LOCALES, DEFAULT_LOCALE, type Locale } from "@/i18n";
+
+export async function getStaticPaths() {
+  return SUPPORTED_LOCALES.filter((l) => l !== DEFAULT_LOCALE).map((locale) => ({
+    params: { locale },
+  }));
+}
+
+const { locale } = Astro.params as { locale: Locale };
+
+const allPosts = await getCollection("posts", ({ data }) => !data.draft);
+const recentPosts = allPosts
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 5);
+
+function formatDate(date: Date): string {
+  const localeMap: Record<Locale, string> = { en: "en-GB", zh: "zh-CN", de: "de-DE" };
+  return date.toLocaleDateString(localeMap[locale], {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+const projects = [
+  {
+    title: "MAMODA Web Dashboard",
+    description:
+      locale === "zh"
+        ? "可持续采矿决策的交互式知识平台，融合多目标优化与利益相关方引导决策。"
+        : "Interaktive Wissensplattform für nachhaltige Bergbauentscheidungen mit Multi-Ziel-Optimierung.",
+    tags: ["Python", "FastAPI", "Plotly"],
+    href: "https://mamoda-web-dashboard.vercel.app/",
+  },
+  {
+    title: "Accross Cycling Club",
+    description:
+      locale === "zh"
+        ? "慕尼黑Accross骑行俱乐部的活动报名与成绩管理平台，基于Astro构建。"
+        : "Event-Anmeldungs- und Ergebnisplattform für den Accross Cycling Club München. Mit Astro entwickelt.",
+    tags: ["Astro", "TypeScript"],
+    href: "#",
+  },
+  {
+    title: "EV Charging Optimizer",
+    description:
+      locale === "zh"
+        ? "基于随机混合整数规划的电动汽车充电站选址优化模型，PCT专利WO2025026594。"
+        : "Stochastisches MILP-Modell für optimale EV-Ladestation-Platzierung. PCT-Patent WO2025026594.",
+    tags: ["Python", "Pyomo", "CPLEX"],
+    href: "https://patentscope.wipo.int/search/en/detail.jsf?docId=WO2025026594",
+  },
+];
+
+const identityTags: Record<Locale, { label: string; title: string }[]> = {
+  en: [],
+  zh: [
+    { label: "⚡ 能源研究", title: "能源系统优化" },
+    { label: "🚴 骑行者", title: "Accross骑行俱乐部慕尼黑" },
+    { label: "📖 读书人", title: "科幻、武侠、文学" },
+    { label: "🎸 吉他", title: "民谣木吉他" },
+  ],
+  de: [
+    { label: "⚡ Energieforschung", title: "Energiesystemoptimierung" },
+    { label: "🚴 Radfahrer", title: "Accross Cycling Club München" },
+    { label: "📖 Leser", title: "Sci-Fi, Wuxia, Literatur" },
+    { label: "🎸 Gitarre", title: "Akustikgitarre" },
+  ],
+};
+---
+
+<BaseLayout locale={locale}>
+  <!-- ── Hero ─────────────────────────────── -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <h1 class="hero-name">Gen Li</h1>
+        <p class="hero-tagline">{t(locale, "index.tagline")}</p>
+        <div class="hero-tags">
+          {identityTags[locale].map(({ label, title }) => (
+            <span class="identity-tag" title={title}>{label}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Recent Posts ──────────────────────── -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">{t(locale, "index.writing.title")}</h2>
+        <a href="/posts/" class="section-link">{t(locale, "index.writing.link")}</a>
+      </div>
+
+      {recentPosts.length === 0 ? (
+        <p class="empty-state">Posts coming soon.</p>
+      ) : (
+        <ul class="post-list" role="list">
+          {recentPosts.map((post) => (
+            <li class="post-item">
+              <a href={`/posts/${post.id}/`} class="post-link">
+                <span class="post-title">{post.data.title}</span>
+                <span class="post-date">{formatDate(post.data.pubDate)}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ── Selected Projects ─────────────────── -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">{t(locale, "index.projects.title")}</h2>
+        <a href={`/${locale}/projects/`} class="section-link">{t(locale, "index.projects.link")}</a>
+      </div>
+
+      <ul class="project-list" role="list">
+        {projects.map((project) => (
+          <li class="project-card">
+            <a href={project.href} class="project-link" target="_blank" rel="noopener noreferrer">
+              <div class="project-content">
+                <h3 class="project-title">{project.title}</h3>
+                <p class="project-desc">{project.description}</p>
+                <div class="project-tags">
+                  {project.tags.map((tag) => (
+                    <span class="tag">{tag}</span>
+                  ))}
+                </div>
+              </div>
+              <span class="project-arrow" aria-hidden="true">→</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero { padding-top: 5rem; padding-bottom: 4rem; }
+  .hero-inner { max-width: 560px; }
+  .hero-name {
+    font-size: var(--text-hero);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.25rem;
+  }
+  .hero-tagline {
+    font-size: var(--text-lg);
+    color: var(--fg-muted);
+    line-height: 1.7;
+    margin-bottom: 1.75rem;
+  }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .identity-tag {
+    font-size: var(--text-sm);
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--fg-muted);
+    cursor: default;
+    transition: border-color var(--transition), color var(--transition);
+  }
+  .identity-tag:hover { border-color: var(--accent); color: var(--fg); }
+  .section { padding-block: 3rem; }
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+  }
+  .section-title { font-size: var(--text-xl); font-family: var(--font-heading); font-weight: 600; }
+  .section-link {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color var(--transition);
+  }
+  .section-link:hover { color: var(--accent); }
+  .divider { border: none; border-top: 1px solid var(--border); }
+  .empty-state { color: var(--fg-muted); font-style: italic; }
+  .post-list { list-style: none; }
+  .post-item { border-bottom: 1px solid var(--border); }
+  .post-item:first-child { border-top: 1px solid var(--border); }
+  .post-link {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.875rem;
+    text-decoration: none;
+  }
+  .post-title { font-size: var(--text-base); font-weight: 500; color: var(--fg); transition: color var(--transition); }
+  .post-link:hover .post-title { color: var(--accent); }
+  .post-date { font-size: var(--text-sm); color: var(--fg-muted); white-space: nowrap; flex-shrink: 0; }
+  .project-list { list-style: none; display: flex; flex-direction: column; }
+  .project-card { border-bottom: 1px solid var(--border); }
+  .project-card:first-child { border-top: 1px solid var(--border); }
+  .project-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 1.25rem;
+    text-decoration: none;
+  }
+  .project-content { flex: 1; }
+  .project-title {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--fg);
+    font-family: var(--font-body);
+    margin-bottom: 0.375rem;
+    transition: color var(--transition);
+  }
+  .project-link:hover .project-title { color: var(--accent); }
+  .project-desc { font-size: var(--text-sm); color: var(--fg-muted); line-height: 1.5; margin-bottom: 0.625rem; }
+  .project-tags { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+  .project-arrow {
+    font-size: var(--text-lg);
+    color: var(--fg-muted);
+    flex-shrink: 0;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity var(--transition), transform var(--transition), color var(--transition);
+  }
+  .project-link:hover .project-arrow { opacity: 1; transform: translateX(0); color: var(--accent); }
+</style>

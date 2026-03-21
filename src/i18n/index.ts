@@ -24,3 +24,31 @@ export function localizeUrl(path: string, locale: Locale): string {
   if (locale === DEFAULT_LOCALE) return path;
   return `/${locale}${path.startsWith("/") ? path : `/${path}`}`;
 }
+
+/** Pages that have proper localized versions */
+const LOCALIZED_PAGES = ["/", "/about/", "/projects/", "/hobbies/"];
+
+/**
+ * Returns the URL to switch to a different locale, staying on the
+ * same page if a localized version exists, otherwise going to the homepage.
+ */
+export function localeSwitchUrl(
+  currentPath: string,
+  currentLocale: Locale,
+  targetLocale: Locale
+): string {
+  // Strip current locale prefix to get the base path
+  const base =
+    currentLocale !== DEFAULT_LOCALE
+      ? currentPath.replace(`/${currentLocale}`, "") || "/"
+      : currentPath;
+
+  // Normalize trailing slash
+  const normalized = base.endsWith("/") ? base : `${base}/`;
+
+  const hasLocalizedVersion = LOCALIZED_PAGES.some(
+    (p) => normalized === p || normalized.startsWith(p)
+  );
+
+  return localizeUrl(hasLocalizedVersion ? base : "/", targetLocale);
+}

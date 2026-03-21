@@ -1,0 +1,142 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { t, SUPPORTED_LOCALES, DEFAULT_LOCALE, type Locale } from "@/i18n";
+
+export async function getStaticPaths() {
+  return SUPPORTED_LOCALES.filter((l) => l !== DEFAULT_LOCALE).map((locale) => ({
+    params: { locale },
+  }));
+}
+
+const { locale } = Astro.params as { locale: Locale };
+
+const projectDesc: Record<string, Record<Locale, string>> = {
+  mamoda: {
+    en: "",
+    zh: "可持续采矿决策的交互式知识平台，融合多目标优化与利益相关方引导决策和实时Plotly可视化。",
+    de: "Interaktive Wissensplattform für nachhaltige Bergbauentscheidungen mit Multi-Ziel-Optimierung und Live-Plotly-Visualisierungen.",
+  },
+  "ev-optimizer": {
+    en: "",
+    zh: "基于随机混合整数规划的电动汽车充电站选址优化模型，已获PCT国际专利。",
+    de: "Stochastisches MILP für optimale EV-Ladestation-Platzierung unter Netzunsicherheit. PCT-Patent erteilt.",
+  },
+  accross: {
+    en: "",
+    zh: "慕尼黑Accross骑行俱乐部的数字平台，涵盖媒体、活动、装备、训练与路线。基于Git的CMS，内容更新便捷。",
+    de: "Digitales Hub für den Accross Cycling Club München — Medien, Events, Ausrüstung, Training und Routen. Git-basiertes CMS für einfache Inhaltspflege.",
+  },
+  "genli-dev": {
+    en: "",
+    zh: "Astro v5构建，CSS自定义属性，深色模式，三语支持（开发中）。",
+    de: "Astro v5, CSS Custom Properties, Dark Mode, dreisprachig (in Entwicklung).",
+  },
+};
+
+const projects = [
+  {
+    id: "mamoda",
+    title: "MAMODA Web Dashboard",
+    description: projectDesc["mamoda"][locale],
+    tags: ["Python", "FastAPI", "Plotly", "React"],
+    href: "https://mamoda-web-dashboard.vercel.app/",
+    image: null,
+    gradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+    size: "large",
+  },
+  {
+    id: "ev-optimizer",
+    title: "EV Charging Optimizer",
+    description: projectDesc["ev-optimizer"][locale],
+    tags: ["Python", "Pyomo", "CPLEX"],
+    href: "https://patentscope.wipo.int/search/en/detail.jsf?docId=WO2025026594",
+    image: null,
+    gradient: "linear-gradient(135deg, #0d1b2a 0%, #1b4332 50%, #2d6a4f 100%)",
+    badge: "PCT WO2025026594",
+    size: "tall",
+  },
+  {
+    id: "accross",
+    title: "ACC ClubHub",
+    description: projectDesc["accross"][locale],
+    tags: ["Astro", "Sveltia CMS", "TypeScript", "Python"],
+    href: "https://github.com/GenLI3202/acc_clubhub",
+    liveHref: "https://acc-clubhub.vercel.app/",
+    image: null,
+    gradient: "linear-gradient(135deg, #1a0a0a 0%, #4a1010 50%, #7b2020 100%)",
+    size: "small",
+  },
+  {
+    id: "genli-dev",
+    title: "This Website",
+    description: projectDesc["genli-dev"][locale],
+    tags: ["Astro", "TypeScript", "CSS"],
+    href: "https://github.com/GenLI3202/gen-web",
+    image: null,
+    gradient: "linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)",
+    size: "small",
+  },
+];
+---
+
+<BaseLayout title={t(locale, "projects.title")} locale={locale}>
+  <div class="container projects-page">
+    <h1 class="page-title">{t(locale, "projects.title")}</h1>
+    <p class="page-subtitle">{t(locale, "projects.subtitle")}</p>
+
+    <ul class="bento-grid" role="list">
+      {projects.map((project) => (
+        <li class={`bento-card bento-card--${project.size}`}>
+          <a href={project.href} class="bento-cover-link" target="_blank" rel="noopener noreferrer" aria-label={project.title} />
+          <div class="bento-visual" style={`background: ${project.gradient};`}>
+            {project.badge && <span class="bento-badge">{project.badge}</span>}
+            {project.liveHref && (
+              <a href={project.liveHref} class="bento-live" target="_blank" rel="noopener noreferrer">
+                Live ↗
+              </a>
+            )}
+          </div>
+          <div class="bento-content">
+            <h2 class="bento-title">{project.title}</h2>
+            <p class="bento-desc">{project.description}</p>
+            <div class="bento-tags">
+              {project.tags.map((tag) => <span class="tag">{tag}</span>)}
+            </div>
+          </div>
+          <span class="bento-arrow" aria-hidden="true">↗</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  .projects-page { padding-block: 4rem; }
+  .page-title { font-size: var(--text-2xl); font-family: var(--font-heading); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+  .page-subtitle { font-size: var(--text-base); color: var(--fg-muted); margin-bottom: 3rem; }
+  .bento-grid { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .bento-card--large { grid-column: 1 / -1; }
+  .bento-card--tall { grid-column: 2; grid-row: 2 / 4; }
+  .bento-card--small { grid-column: 1; }
+  .bento-card { border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; background: var(--surface); position: relative; display: flex; flex-direction: column; transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition); }
+  .bento-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+  .bento-cover-link { position: absolute; inset: 0; z-index: 0; }
+  .bento-visual { position: relative; width: 100%; flex-shrink: 0; z-index: 0; }
+  .bento-card--large .bento-visual { height: 200px; }
+  .bento-card--tall .bento-visual { flex: 1; min-height: 180px; }
+  .bento-card--small .bento-visual { height: 130px; }
+  .bento-badge { position: absolute; top: 0.75rem; left: 0.75rem; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em; padding: 0.25rem 0.6rem; border-radius: var(--radius-pill); background: rgba(0,0,0,0.55); color: #fff; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius-sm); }
+  .bento-content { padding: 1.125rem; flex-shrink: 0; }
+  .bento-title { font-size: var(--text-base); font-weight: 600; color: var(--fg); font-family: var(--font-body); margin-bottom: 0.375rem; transition: color var(--transition); }
+  .bento-card:hover .bento-title { color: var(--accent); }
+  .bento-desc { font-size: var(--text-sm); color: var(--fg-muted); line-height: 1.55; margin-bottom: 0.75rem; }
+  .bento-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .bento-live { position: absolute; bottom: 0.75rem; right: 0.75rem; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; padding: 0.2rem 0.55rem; border-radius: var(--radius-pill); background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2); text-decoration: none; transition: background var(--transition), color var(--transition); z-index: 2; }
+  .bento-live:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .bento-arrow { position: absolute; top: 0.875rem; right: 0.875rem; font-size: var(--text-base); color: rgba(255,255,255,0.6); opacity: 0; transform: translate(-3px,3px); transition: opacity var(--transition), transform var(--transition); }
+  .bento-card:hover .bento-arrow { opacity: 1; transform: translate(0,0); }
+  @media (max-width: 560px) {
+    .bento-grid { grid-template-columns: 1fr; }
+    .bento-card--large, .bento-card--tall, .bento-card--small { grid-column: 1; grid-row: auto; }
+  }
+</style>

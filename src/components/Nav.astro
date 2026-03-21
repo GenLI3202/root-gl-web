@@ -1,5 +1,5 @@
 ---
-import { t, getLocaleFromUrl, localizeUrl, SUPPORTED_LOCALES, type Locale } from "@/i18n";
+import { t, getLocaleFromUrl, localizeUrl, localeSwitchUrl, SUPPORTED_LOCALES, type Locale } from "@/i18n";
 
 const locale = getLocaleFromUrl(Astro.url) as Locale;
 const currentPath = Astro.url.pathname;
@@ -41,9 +41,15 @@ function isActive(href: string): boolean {
 
       <!-- Right controls -->
       <div class="nav-controls">
-        <!-- Language switcher (Phase 9) -->
-        <div class="lang-switcher" role="group" aria-label="Language" title="Multilingual support coming soon">
-          <span class="lang-btn lang-active">EN</span>
+        <!-- Language switcher -->
+        <div class="lang-switcher" role="group" aria-label="Language">
+          {(["en", "zh", "de"] as const).map((lang) => {
+            const href = localeSwitchUrl(currentPath, locale, lang);
+            const labels = { en: "EN", zh: "中", de: "DE" };
+            return locale === lang
+              ? <span class="lang-btn lang-active">{labels[lang]}</span>
+              : <a href={href} class="lang-btn" hreflang={lang}>{labels[lang]}</a>;
+          })}
         </div>
 
         <!-- Theme toggle -->

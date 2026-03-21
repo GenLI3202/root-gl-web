@@ -1,0 +1,232 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { t, SUPPORTED_LOCALES, DEFAULT_LOCALE, type Locale } from "@/i18n";
+
+export async function getStaticPaths() {
+  return SUPPORTED_LOCALES.filter((l) => l !== DEFAULT_LOCALE).map((locale) => ({
+    params: { locale },
+  }));
+}
+
+const { locale } = Astro.params as { locale: Locale };
+
+const authorCards: Record<Locale, { name: string; tag: string; note: string; recs: string }[]> = {
+  en: [],
+  zh: [
+    {
+      name: "金庸 Jin Yong",
+      tag: "武侠",
+      note: "从小读射雕。侠之大者，为国为民——这句话讲的是公民责任，而不是个人英雄主义。每隔几年重读，每次都有新的理解。",
+      recs: "《射雕英雄传》· 《笑傲江湖》· 《天龙八部》",
+    },
+    {
+      name: "刘慈欣 Liu Cixin",
+      tag: "科幻",
+      note: "给岁月以文明，给时光以生命。《三体》打破了我对尺度的认知——以最好的方式。硬科幻，却有真正的哲学分量。",
+      recs: "《三体》· 《流浪地球》· 《朝闻道》",
+    },
+    {
+      name: "Hermann Hesse",
+      tag: "文学",
+      note: "Der Vogel kämpft sich aus dem Ei heraus. 二十岁读《德米安》，二十五岁读《荒原狼》——两本书在不同年龄都带来了冲击。黑塞为那些在任何地方都感觉格格不入的人而写。",
+      recs: "Demian · Steppenwolf · Siddhartha",
+    },
+  ],
+  de: [
+    {
+      name: "金庸 Jin Yong",
+      tag: "Wuxia",
+      note: "Mit den Adlerhelden aufgewachsen. 侠之大者，为国为民 — Heldentum ist bürgerlich, nicht persönlich. Kehre alle paar Jahre zu diesen Romanen zurück und entdecke jedes Mal etwas Neues.",
+      recs: "《射雕英雄传》· 《笑傲江湖》· 《天龙八部》",
+    },
+    {
+      name: "刘慈欣 Liu Cixin",
+      tag: "Sci-Fi",
+      note: "给岁月以文明，给时光以生命。Die Drei-Körper-Trilogie hat mein Gefühl für Dimensionen gesprengt — auf die beste Art. Hard SF mit echtem philosophischem Gewicht.",
+      recs: "《三体》· 《流浪地球》· 《朝闻道》",
+    },
+    {
+      name: "Hermann Hesse",
+      tag: "Literatur",
+      note: "Der Vogel kämpft sich aus dem Ei heraus. Demian mit 20 gelesen, Steppenwolf mit 25 — beide trafen unterschiedlich. Hesse schreibt für Menschen, die sich überall leicht fehl am Platz fühlen.",
+      recs: "Demian · Steppenwolf · Siddhartha",
+    },
+  ],
+};
+
+const readingFooterLabel: Record<Locale, string> = {
+  en: "",
+  zh: "微信读书 ↗",
+  de: "WeChat Reading ↗",
+};
+---
+
+<BaseLayout title={t(locale, "hobbies.title")} locale={locale}>
+  <div class="hobbies-page container">
+
+    <header class="hobbies-header">
+      <h1 class="hobbies-title">{t(locale, "hobbies.title")}</h1>
+      <p class="hobbies-intro">{t(locale, "hobbies.intro")}</p>
+    </header>
+
+    <!-- ── CYCLING ──────────────────────────── -->
+    <section class="hobby-section" id="cycling">
+      <div class="hobby-label">
+        <span class="hobby-icon">🚴</span>
+        <span class="hobby-name">{t(locale, "hobbies.cycling.label")}</span>
+      </div>
+      <div class="hobby-body">
+        <p class="hobby-lead">{t(locale, "hobbies.cycling.lead")}</p>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-num">4 800<span class="stat-unit"> km</span></span>
+            <span class="stat-label">{t(locale, "hobbies.cycling.stat.distance")}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num">42 000<span class="stat-unit"> m</span></span>
+            <span class="stat-label">{t(locale, "hobbies.cycling.stat.elevation")}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num">180<span class="stat-unit"></span></span>
+            <span class="stat-label">{t(locale, "hobbies.cycling.stat.rides")}</span>
+          </div>
+        </div>
+        <p class="stat-note">{t(locale, "hobbies.cycling.stat.note")}</p>
+        <div class="hobby-links">
+          <a href="https://www.strava.com/athletes/119635546" target="_blank" rel="noopener noreferrer" class="hobby-link-btn">
+            {t(locale, "hobbies.cycling.strava")}
+          </a>
+          <a href="https://acc-clubhub.vercel.app/" target="_blank" rel="noopener noreferrer" class="hobby-link-btn hobby-link-btn--ghost">
+            {t(locale, "hobbies.cycling.acc")}
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- wheel transition divider -->
+    <div class="transition-divider" data-transition="wheel" aria-hidden="true">
+      <div class="wheel-track">
+        <svg class="wheel-svg" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="30" cy="30" r="27" stroke="currentColor" stroke-width="2.5"/>
+          <circle cx="30" cy="30" r="4.5" fill="currentColor"/>
+          <line x1="30" y1="3" x2="30" y2="57" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="3" y1="30" x2="57" y2="30" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="8.1" y1="8.1" x2="51.9" y2="51.9" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="51.9" y1="8.1" x2="8.1" y2="51.9" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ── READING ──────────────────────────── -->
+    <section class="hobby-section" id="reading">
+      <div class="hobby-label">
+        <span class="hobby-icon">📖</span>
+        <span class="hobby-name">{t(locale, "hobbies.reading.label")}</span>
+      </div>
+      <div class="hobby-body">
+        <p class="hobby-lead">{t(locale, "hobbies.reading.lead")}</p>
+        <div class="reading-grid">
+          {authorCards[locale].map((card) => (
+            <div class="author-card">
+              <div class="author-meta">
+                <span class="author-name">{card.name}</span>
+                <span class="author-tag">{card.tag}</span>
+              </div>
+              <p class="author-note">{card.note}</p>
+              <p class="author-recs">{card.recs}</p>
+            </div>
+          ))}
+        </div>
+        <div class="reading-footer">
+          <p class="reading-app-note">{t(locale, "hobbies.reading.app")}</p>
+          <a href="https://weread.qq.com/" target="_blank" rel="noopener noreferrer" class="hobby-link-btn hobby-link-btn--ghost">
+            {readingFooterLabel[locale]}
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- book → guitar transition divider -->
+    <div class="transition-divider" data-transition="book-guitar" aria-hidden="true">
+      <div class="book-guitar-stage">
+        <span class="anim-book">📖</span>
+        <span class="anim-guitar">🎸</span>
+      </div>
+    </div>
+
+    <!-- ── GUITAR ──────────────────────────── -->
+    <section class="hobby-section" id="guitar">
+      <div class="hobby-label">
+        <span class="hobby-icon">🎸</span>
+        <span class="hobby-name">{t(locale, "hobbies.guitar.label")}</span>
+      </div>
+      <div class="hobby-body">
+        <p class="hobby-lead">{t(locale, "hobbies.guitar.lead")}</p>
+      </div>
+    </section>
+
+  </div>
+</BaseLayout>
+
+<style>
+  /* Identical to src/pages/hobbies.astro — scoped so no conflict */
+  .hobbies-page { padding-block: 4rem 6rem; }
+  .hobbies-header { margin-bottom: 4rem; }
+  .hobbies-title { font-family: var(--font-heading); font-size: var(--text-3xl); font-weight: 700; line-height: 1.15; color: var(--fg); margin-bottom: 0.75rem; }
+  .hobbies-intro { font-size: var(--text-lg); color: var(--fg-muted); max-width: 52ch; }
+  .hobby-section { display: grid; grid-template-columns: 10rem 1fr; gap: 2rem; align-items: start; }
+  @media (max-width: 600px) { .hobby-section { grid-template-columns: 1fr; gap: 1rem; } }
+  .hobby-label { display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem; padding-top: 0.2rem; position: sticky; top: 5rem; }
+  .hobby-icon { font-size: 2rem; line-height: 1; }
+  .hobby-name { font-family: var(--font-heading); font-size: var(--text-xl); font-weight: 600; color: var(--fg); }
+  .hobby-body { display: flex; flex-direction: column; gap: 1.5rem; }
+  .hobby-lead { font-size: var(--text-base); line-height: 1.75; color: var(--fg); max-width: 65ch; }
+  .stats-grid { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1rem 1.5rem; display: flex; flex-direction: column; gap: 0.25rem; min-width: 130px; }
+  .stat-num { font-family: var(--font-heading); font-size: var(--text-2xl); font-weight: 700; color: var(--accent); line-height: 1.1; }
+  .stat-unit { font-size: var(--text-base); font-weight: 400; color: var(--fg-muted); }
+  .stat-label { font-size: var(--text-sm); color: var(--fg-muted); letter-spacing: 0.02em; }
+  .stat-note { font-size: var(--text-sm); color: var(--fg-muted); font-style: italic; }
+  .hobby-links { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .hobby-link-btn { display: inline-block; padding: 0.5rem 1.1rem; border-radius: 0.375rem; font-size: var(--text-sm); font-weight: 500; text-decoration: none; transition: all var(--transition); background: var(--accent); color: #fff; border: 1.5px solid var(--accent); }
+  .hobby-link-btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .hobby-link-btn--ghost { background: transparent; color: var(--fg); border-color: var(--border-dark); }
+  .hobby-link-btn--ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .reading-grid { display: flex; flex-direction: column; gap: 1rem; }
+  .author-card { border-left: 3px solid var(--border-dark); padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem; transition: border-color var(--transition); }
+  .author-card:hover { border-left-color: var(--accent); }
+  .author-meta { display: flex; align-items: center; gap: 0.75rem; }
+  .author-name { font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 600; color: var(--fg); }
+  .author-tag { font-size: var(--text-xs); color: var(--fg-muted); border: 1px solid var(--border-dark); border-radius: 0.25rem; padding: 0.1rem 0.5rem; letter-spacing: 0.04em; text-transform: uppercase; }
+  .author-note { font-size: var(--text-sm); line-height: 1.7; color: var(--fg); max-width: 60ch; }
+  .author-recs { font-size: var(--text-sm); color: var(--fg-muted); font-style: italic; }
+  .reading-footer { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; padding-top: 0.5rem; }
+  .reading-app-note { font-size: var(--text-sm); color: var(--fg-muted); }
+  .transition-divider { display: flex; justify-content: center; align-items: center; height: 5rem; margin-block: 2rem; overflow: hidden; }
+  .wheel-track { color: var(--fg-muted); width: 60px; height: 60px; }
+  .wheel-svg { width: 60px; height: 60px; display: block; }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-transition="wheel"].animate .wheel-track { animation: wheel-translate 0.85s cubic-bezier(0.4,0,1,1) forwards; }
+    [data-transition="wheel"].animate .wheel-svg { animation: wheel-spin 0.85s linear forwards; }
+    @keyframes wheel-translate { 0% { transform: translateX(0); opacity: 1; } 70% { opacity: 1; } 100% { transform: translateX(220px); opacity: 0; } }
+    @keyframes wheel-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(720deg); } }
+  }
+  .book-guitar-stage { position: relative; width: 60px; height: 60px; }
+  .anim-book, .anim-guitar { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; line-height: 1; }
+  .anim-guitar { opacity: 0; }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-transition="book-guitar"].animate .anim-book { animation: book-open 0.6s ease-in forwards; }
+    [data-transition="book-guitar"].animate .anim-guitar { animation: guitar-emerge 0.55s cubic-bezier(0.34,1.56,0.64,1) 0.45s forwards; }
+    @keyframes book-open { 0% { transform: perspective(300px) rotateY(0deg) scale(1); opacity: 1; } 45% { transform: perspective(300px) rotateY(-90deg) scale(0.8); opacity: 0.4; } 100% { transform: perspective(300px) rotateY(-180deg) scale(0); opacity: 0; } }
+    @keyframes guitar-emerge { 0% { transform: scale(0.3) translateY(16px) rotate(-15deg); opacity: 0; } 70% { transform: scale(1.12) translateY(-3px) rotate(4deg); opacity: 1; } 100% { transform: scale(1) translateY(0) rotate(0deg); opacity: 1; } }
+  }
+</style>
+
+<script>
+  const dividers = document.querySelectorAll<HTMLElement>('.transition-divider');
+  const observer = new IntersectionObserver(
+    (entries) => { entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('animate'); observer.unobserve(e.target); } }); },
+    { threshold: 0.6 }
+  );
+  dividers.forEach((el) => observer.observe(el));
+</script>
