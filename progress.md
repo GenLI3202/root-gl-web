@@ -81,6 +81,7 @@
 | OG images | Dynamic Satori generation |
 | View Transitions | `<ViewTransitions />` for page-to-page animation |
 | **Hobbies GSAP immersive upgrade** | Full scroll-driven transitions (bike suction, CSS 3D book) — spec in `docs/hobbies-immersive-spec.md`, update plan in `docs/hobbies-update-plan.md`. Assets ready. ~20h remaining. |
+| **Post comments** | Comment section at the end of each blog post. Options: Giscus (GitHub Discussions, no backend), Cusdis (lightweight, self-hostable), or custom. Giscus preferred — zero infra, fits dev audience. |
 
 ## Architecture Decisions
 
