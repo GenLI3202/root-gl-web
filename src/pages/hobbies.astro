@@ -348,14 +348,13 @@ import CharacterCarousel from "@/components/CharacterCarousel.astro";
     object-position: center 60%;
     opacity: 0.09;
     transform-origin: center 60%;
-    animation: cyclist-ride 4s ease-in-out infinite alternate;
+    animation: cyclist-drift 14s ease-in-out infinite alternate;
   }
 
-  @keyframes cyclist-ride {
-    0%   { transform: scale(1.08) translateX(-9%)  rotate(0deg);    filter: blur(0px);   }
-    40%  { transform: scale(1.14) translateX(-2%)  rotate(-1.5deg); filter: blur(1.8px); }
-    60%  { transform: scale(1.14) translateX(2%)   rotate(-1.5deg); filter: blur(1.8px); }
-    100% { transform: scale(1.08) translateX(9%)   rotate(0deg);    filter: blur(0px);   }
+  @keyframes cyclist-drift {
+    0%   { transform: scale(1.08) translateX(-2%); }
+    50%  { transform: scale(1.12) translateX(0%);  }
+    100% { transform: scale(1.08) translateX(2%);  }
   }
 
   #cycling[aria-hidden="true"] .cyclist-bg { animation-play-state: paused; }

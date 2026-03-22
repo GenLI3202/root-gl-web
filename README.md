@@ -2,7 +2,7 @@
 
 Personal website for Gen Li: PhD researcher at TU Munich (energy systems optimization), Accross Cycling Club manager, reader, and guitarist.
 
-Live: **[gen-web-seven.vercel.app](https://gen-web-seven.vercel.app)** *(custom domain pending)*
+Live: **[root-ligen.vercel.app](https://root-ligen.vercel.app)**
 
 ---
 
@@ -52,14 +52,21 @@ gen-web/
 │   ├── fonts/                  # Self-hosted fonts (Noto Sans SC - future)
 │   ├── images/projects/        # Project screenshots (drop PNGs here)
 │   └── favicon.svg
+├── public/
+│   └── images/
+│       └── hobbies/            # Character portraits + decorative SVGs
 ├── src/
 │   ├── components/
-│   │   ├── Nav.astro           # Sticky nav, theme toggle, mobile hamburger
-│   │   └── Footer.astro        # GitHub · LinkedIn · Email · RSS
+│   │   ├── Nav.astro           # Sticky nav, theme toggle, lang switcher, mobile hamburger
+│   │   ├── Footer.astro        # GitHub · LinkedIn · Email · RSS
+│   │   └── CharacterCarousel.astro  # Literary character cards (Reading panel)
 │   ├── content/
 │   │   └── posts/              # Blog posts as Markdown files
 │   ├── i18n/
-│   │   └── index.ts            # Locale utilities (EN default, ZH/DE Phase 9)
+│   │   ├── index.ts            # Locale utilities + localeSwitchUrl()
+│   │   ├── en.json             # English strings
+│   │   ├── zh.json             # Chinese strings
+│   │   └── de.json             # German strings
 │   ├── layouts/
 │   │   ├── BaseLayout.astro    # HTML shell, SEO meta, OG tags
 │   │   └── PostLayout.astro    # Blog post wrapper with reading time
@@ -69,13 +76,16 @@ gen-web/
 │   │   │   ├── index.astro     # Posts list (year-grouped)
 │   │   │   └── [...slug].astro # Post detail
 │   │   ├── projects.astro      # Bento box project grid
-│   │   ├── hobbies.astro       # Cycling, reading, guitar (Phase 5)
-│   │   ├── about.astro         # About page (Phase 6)
-│   │   └── rss.xml.ts          # RSS feed
+│   │   ├── hobbies.astro       # Horizontal panels: Cycling / Reading / Guitar (EN)
+│   │   ├── about.astro         # About page
+│   │   ├── rss.xml.ts          # RSS feed
+│   │   └── [locale]/           # ZH/DE locale routes (mirrors EN pages)
 │   └── styles/
 │       └── global.css          # Design tokens (CSS Custom Properties)
-├── implementation-plan.md      # Full design spec + backlog
-├── progress.md                 # Phase tracker
+├── docs/
+│   ├── hobbies-update-plan.md  # Hobbies enhancement plan
+│   └── hobbies-immersive-spec.md  # GSAP immersive upgrade spec (backlog)
+├── progress.md                 # Phase tracker (single source of truth)
 └── AGENTS.md                   # Coding rules for AI agents
 ```
 
@@ -126,10 +136,10 @@ Post body here.
 | 2 — Homepage | ✅ Done | Hero, recent posts, selected projects |
 | 3 — Blog | ✅ Done | Posts list, post detail, RSS |
 | 4 — Projects | ✅ Done | Bento box grid |
-| 5 — Hobbies | 🔲 Next | Cycling, reading, guitar |
-| 6 — About | 🔲 | Personal narrative, toolbox |
-| 7 — Dark mode | 🔲 | Polish toggle, no FOUC |
-| 8 — Production | 🔲 | Custom domain, Lighthouse |
-| 9 — i18n | 🔲 | EN/ZH/DE routing + GitHub Action auto-translation |
+| 5 — Hobbies | ✅ Done | Horizontal panels, animated backgrounds, character carousel |
+| 6 — About | ✅ Done | Personal narrative, toolbox, contact |
+| 7 — Dark mode | ✅ Done | Full polish, no FOUC |
+| 8 — Production | 🟡 Partial | Live at root-ligen.vercel.app · Lighthouse pending |
+| 9 — i18n | ✅ Done | EN/ZH/DE routing, all pages translated |
 
-**Backlog**: Posts filter by tag, sort by name/date · Strava API · OG images · View Transitions
+**Backlog**: Posts filter by tag · Strava API · OG images · View Transitions · GSAP immersive hobbies upgrade

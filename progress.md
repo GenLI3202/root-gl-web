@@ -62,6 +62,10 @@
 - [x] **Literary Characters Carousel** — 4 character cards (郭靖/令狐冲/Sinclair/叶文洁) with quotes, grayscale→color avatar hover, slide animations, touch swipe + keyboard support; embedded in Reading panel on EN/ZH/DE hobbies pages
 - [x] **Hobbies decorative assets** — cyclist-simple-line.svg in Cycling panel, music-notes.svg in Guitar panel (grayscale, low opacity)
 
+## Completed Features (continued)
+
+- [x] **Hobbies dark-mode cyclist fix** — `filter: invert(1)` on cyclist-bg so black-stroke SVG shows on dark background
+
 ## Remaining Work
 
 - [ ] **Lighthouse / performance audit** — run after content stabilises
