@@ -65,6 +65,8 @@
 ## Completed Features (continued)
 
 - [x] **Hobbies dark-mode cyclist fix** — `filter: invert(1)` on cyclist-bg so black-stroke SVG shows on dark background
+- [x] **View Transitions** — `<ViewTransitions />` added to `BaseLayout.astro` for smooth page-to-page navigation
+- [x] **GitHub repo** — published to `GenLI3202/root-gl-web` with MIT licence; all backlog items tracked as issues
 
 ## Remaining Work
 
@@ -79,7 +81,7 @@
 | Project screenshots | Drop PNGs in `public/images/projects/<id>.png` |
 | Strava API | Auto-fetch cycling stats for Hobbies page |
 | OG images | Dynamic Satori generation |
-| View Transitions | `<ViewTransitions />` for page-to-page animation |
+| ~~View Transitions~~ | ~~`<ViewTransitions />` for page-to-page animation~~ — ✅ Done |
 | **Hobbies GSAP immersive upgrade** | Full scroll-driven transitions (bike suction, CSS 3D book) — spec in `docs/hobbies-immersive-spec.md`, update plan in `docs/hobbies-update-plan.md`. Assets ready. ~20h remaining. |
 | **Post comments** | Comment section at the end of each blog post. Options: Giscus (GitHub Discussions, no backend), Cusdis (lightweight, self-hostable), or custom. Giscus preferred — zero infra, fits dev audience. |
 
