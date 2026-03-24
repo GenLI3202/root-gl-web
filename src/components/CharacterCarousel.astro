@@ -284,8 +284,10 @@ const characters = [
 </style>
 
 <script>
-  const root = document.querySelector<HTMLElement>('[data-carousel]');
-  if (root) {
+  function initCarousel() {
+    const root = document.querySelector<HTMLElement>('[data-carousel]');
+    if (!root) return;
+
     const cards   = Array.from(root.querySelectorAll<HTMLElement>('.char-card'));
     const dots    = Array.from(root.querySelectorAll<HTMLButtonElement>('.dot'));
     const prevBtn = root.querySelector<HTMLButtonElement>('.prev')!;
@@ -295,7 +297,6 @@ const characters = [
     let cur = 0;
     let busy = false;
 
-    // Init hidden state
     cards.forEach((c, i) => {
       if (i !== 0) { c.style.opacity = '0'; c.style.pointerEvents = 'none'; }
     });
@@ -342,13 +343,11 @@ const characters = [
     nextBtn.addEventListener('click', () => go(cur + 1, true));
     dots.forEach((d, i) => d.addEventListener('click', () => go(i, i > cur)));
 
-    // Keyboard
     root.addEventListener('keydown', e => {
       if (e.key === 'ArrowLeft')  go(cur - 1, false);
       if (e.key === 'ArrowRight') go(cur + 1, true);
     });
 
-    // Swipe
     let tx = 0;
     root.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
     root.addEventListener('touchend',   e => {
@@ -358,4 +357,6 @@ const characters = [
 
     updateControls();
   }
+
+  document.addEventListener('astro:page-load', initCarousel);
 </script>
