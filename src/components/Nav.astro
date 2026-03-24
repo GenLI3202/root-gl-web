@@ -3,6 +3,7 @@ import { t, getLocaleFromUrl, localizeUrl, localeSwitchUrl, SUPPORTED_LOCALES, t
 
 const locale = getLocaleFromUrl(Astro.url) as Locale;
 const currentPath = Astro.url.pathname;
+const showLangSwitcher = !currentPath.startsWith("/posts");
 
 const navLinks = [
   { key: "nav.posts",    href: "/posts/",    localize: false },
@@ -41,8 +42,8 @@ function isActive(href: string): boolean {
 
       <!-- Right controls -->
       <div class="nav-controls">
-        <!-- Language switcher -->
-        <div class="lang-switcher" role="group" aria-label="Language">
+        <!-- Language switcher (hidden on /posts/) -->
+        {showLangSwitcher && <div class="lang-switcher" role="group" aria-label="Language">
           {(["en", "zh", "de"] as const).map((lang) => {
             const href = localeSwitchUrl(currentPath, locale, lang);
             const labels = { en: "EN", zh: "中", de: "DE" };
@@ -50,7 +51,7 @@ function isActive(href: string): boolean {
               ? <span class="lang-btn lang-active">{labels[lang]}</span>
               : <a href={href} class="lang-btn" hreflang={lang}>{labels[lang]}</a>;
           })}
-        </div>
+        </div>}
 
         <!-- Theme toggle -->
         <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme" type="button">
