@@ -35,10 +35,10 @@ const projects = [
 ];
 
 const identityTags = [
-  { label: "⚡ Energy Research", title: "Energy systems optimization" },
-  { label: "🚴 Cyclist", title: "Accross Cycling Club Munich" },
-  { label: "📖 Reader", title: "Sci-fi, Wuxia, Literature" },
-  { label: "🎸 Guitar", title: "Acoustic guitar" },
+  { label: "⚡ Energy Research", title: "Energy systems optimization", href: "/about/" },
+  { label: "🚴 Cyclist", title: "Accross Cycling Club Munich", href: "/hobbies/" },
+  { label: "📖 Reader", title: "Sci-fi, Wuxia, Literature", href: "/hobbies/" },
+  { label: "🎸 Guitar", title: "Acoustic guitar", href: "/hobbies/" },
 ];
 ---
 
@@ -54,8 +54,8 @@ const identityTags = [
           crossing the Alps by bike on weekends.
         </p>
         <div class="hero-tags">
-          {identityTags.map(({ label, title }) => (
-            <span class="identity-tag" title={title}>{label}</span>
+          {identityTags.map(({ label, title, href }) => (
+            <a class="identity-tag" href={href} title={title}>{label}</a>
           ))}
         </div>
       </div>
@@ -159,7 +159,7 @@ const identityTags = [
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--fg-muted);
-    cursor: default;
+    text-decoration: none;
     transition: border-color var(--transition), color var(--transition);
   }
 
