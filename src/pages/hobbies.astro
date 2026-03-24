@@ -517,105 +517,81 @@ import CharacterCarousel from "@/components/CharacterCarousel.astro";
 </style>
 
 <script>
-  const track    = document.querySelector<HTMLElement>('[data-track]')!;
-  const tabs     = Array.from(document.querySelectorAll<HTMLButtonElement>('.scene-tab'));
-  const dots     = Array.from(document.querySelectorAll<HTMLElement>('.scene-dot'));
-  const scenes   = Array.from(document.querySelectorAll<HTMLElement>('.hobbies-scene'));
-  const prevBtn  = document.querySelector<HTMLButtonElement>('.ctrl-prev')!;
-  const nextBtn  = document.querySelector<HTMLButtonElement>('.ctrl-next')!;
+  function initHobbies() {
+    const track    = document.querySelector<HTMLElement>('[data-track]');
+    const tabs     = Array.from(document.querySelectorAll<HTMLButtonElement>('.scene-tab'));
+    const dots     = Array.from(document.querySelectorAll<HTMLElement>('.scene-dot'));
+    const scenes   = Array.from(document.querySelectorAll<HTMLElement>('.hobbies-scene'));
+    const prevBtn  = document.querySelector<HTMLButtonElement>('.ctrl-prev');
+    const nextBtn  = document.querySelector<HTMLButtonElement>('.ctrl-next');
+    const wrapper  = document.querySelector<HTMLElement>('.hobbies-wrapper');
 
-  let cur = 0;
+    if (!track || !prevBtn || !nextBtn || !wrapper || scenes.length === 0) return;
 
-  function goTo(index: number) {
-    if (index < 0 || index >= scenes.length) return;
+    let cur = 0;
 
-    // Reset incoming scene to top
-    scenes[index].scrollTop = 0;
+    function goTo(index: number) {
+      if (index < 0 || index >= scenes.length) return;
 
-    // Translate track
-    track.style.transform = `translateX(${-index * (100 / 3)}%)`;
+      scenes[index].scrollTop = 0;
+      track.style.transform = `translateX(${-index * (100 / 3)}%)`;
+      scenes.forEach((s, i) => s.setAttribute('aria-hidden', String(i !== index)));
+      tabs.forEach((t, i) => {
+        t.classList.toggle('active', i === index);
+        t.setAttribute('aria-selected', String(i === index));
+      });
+      dots.forEach((d, i) => d.classList.toggle('active', i === index));
+      prevBtn.disabled = index === 0;
+      nextBtn.disabled = index === scenes.length - 1;
+      cur = index;
+    }
 
-    // Update aria
-    scenes.forEach((s, i) => s.setAttribute('aria-hidden', String(i !== index)));
+    tabs.forEach((tab, i) => tab.addEventListener('click', () => goTo(i)));
+    dots.forEach((dot, i) => dot.addEventListener('click', () => goTo(i)));
+    prevBtn.addEventListener('click', () => goTo(cur - 1));
+    nextBtn.addEventListener('click', () => goTo(cur + 1));
 
-    // Update tabs
-    tabs.forEach((t, i) => {
-      t.classList.toggle('active', i === index);
-      t.setAttribute('aria-selected', String(i === index));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft')  goTo(cur - 1);
+      if (e.key === 'ArrowRight') goTo(cur + 1);
     });
 
-    // Update dots
-    dots.forEach((d, i) => d.classList.toggle('active', i === index));
+    let wheelCooldown = false;
+    wrapper.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      const scene = scenes[cur];
+      const delta = e.deltaY;
+      if (Math.abs(delta) < 1) return;
 
-    // Update buttons
-    prevBtn.disabled = index === 0;
-    nextBtn.disabled = index === scenes.length - 1;
+      const atTop    = scene.scrollTop <= 0;
+      const atBottom = scene.scrollTop + scene.clientHeight >= scene.scrollHeight - 2;
 
-    cur = index;
+      if ((delta > 0 && !atBottom) || (delta < 0 && !atTop)) {
+        e.preventDefault();
+        scene.scrollTop += delta;
+        return;
+      }
+
+      const canNext = delta > 0 && cur < scenes.length - 1;
+      const canPrev = delta < 0 && cur > 0;
+      if (!canNext && !canPrev) return;
+
+      e.preventDefault();
+      if (wheelCooldown) return;
+      wheelCooldown = true;
+      setTimeout(() => { wheelCooldown = false; }, 700);
+      delta > 0 ? goTo(cur + 1) : goTo(cur - 1);
+    }, { passive: false });
+
+    let touchStartX = 0;
+    wrapper.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    wrapper.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 50) dx < 0 ? goTo(cur + 1) : goTo(cur - 1);
+    });
+
+    goTo(0);
   }
 
-  // Tab clicks
-  tabs.forEach((tab, i) => tab.addEventListener('click', () => goTo(i)));
-
-  // Dot clicks
-  dots.forEach((dot, i) => dot.addEventListener('click', () => goTo(i)));
-
-  // Arrow buttons
-  prevBtn.addEventListener('click', () => goTo(cur - 1));
-  nextBtn.addEventListener('click', () => goTo(cur + 1));
-
-  // Keyboard
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft')  goTo(cur - 1);
-    if (e.key === 'ArrowRight') goTo(cur + 1);
-  });
-
-  // Mouse wheel → scroll within scene first, switch panel at boundary,
-  // allow page scroll when no more panels in that direction
-  const wrapper = document.querySelector<HTMLElement>('.hobbies-wrapper')!;
-  let wheelCooldown = false;
-  wrapper.addEventListener('wheel', (e) => {
-    // Only handle vertical scroll; let horizontal trackpad swipes pass through
-    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-    const scene = scenes[cur];
-    const delta = e.deltaY;
-    if (Math.abs(delta) < 1) return;
-
-    const atTop    = scene.scrollTop <= 0;
-    const atBottom = scene.scrollTop + scene.clientHeight >= scene.scrollHeight - 2;
-
-    // Scene has room to scroll internally → handle it
-    if ((delta > 0 && !atBottom) || (delta < 0 && !atTop)) {
-      e.preventDefault();
-      scene.scrollTop += delta;
-      return;
-    }
-
-    // At scene boundary — check if there's a panel to switch to
-    const canNext = delta > 0 && cur < scenes.length - 1;
-    const canPrev = delta < 0 && cur > 0;
-
-    if (!canNext && !canPrev) {
-      // No panel to go to — let page scroll naturally
-      return;
-    }
-
-    // Switch panel
-    e.preventDefault();
-    if (wheelCooldown) return;
-    wheelCooldown = true;
-    setTimeout(() => { wheelCooldown = false; }, 700);
-    delta > 0 ? goTo(cur + 1) : goTo(cur - 1);
-  }, { passive: false });
-
-  // Touch swipe
-  let touchStartX = 0;
-  wrapper.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
-  wrapper.addEventListener('touchend', (e) => {
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) > 50) dx < 0 ? goTo(cur + 1) : goTo(cur - 1);
-  });
-
-  // Init
-  goTo(0);
+  document.addEventListener('astro:page-load', initHobbies);
 </script>

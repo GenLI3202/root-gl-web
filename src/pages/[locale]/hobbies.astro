@@ -375,67 +375,73 @@ const tabLabels: Record<string, Record<Locale, string>> = {
 </style>
 
 <script>
-  const track    = document.querySelector<HTMLElement>('[data-track]')!;
-  const tabs     = Array.from(document.querySelectorAll<HTMLButtonElement>('.scene-tab'));
-  const dots     = Array.from(document.querySelectorAll<HTMLElement>('.scene-dot'));
-  const scenes   = Array.from(document.querySelectorAll<HTMLElement>('.hobbies-scene'));
-  const prevBtn  = document.querySelector<HTMLButtonElement>('.ctrl-prev')!;
-  const nextBtn  = document.querySelector<HTMLButtonElement>('.ctrl-next')!;
+  function initHobbies() {
+    const track    = document.querySelector<HTMLElement>('[data-track]');
+    const tabs     = Array.from(document.querySelectorAll<HTMLButtonElement>('.scene-tab'));
+    const dots     = Array.from(document.querySelectorAll<HTMLElement>('.scene-dot'));
+    const scenes   = Array.from(document.querySelectorAll<HTMLElement>('.hobbies-scene'));
+    const prevBtn  = document.querySelector<HTMLButtonElement>('.ctrl-prev');
+    const nextBtn  = document.querySelector<HTMLButtonElement>('.ctrl-next');
+    const wrapper  = document.querySelector<HTMLElement>('.hobbies-wrapper');
 
-  let cur = 0;
+    if (!track || !prevBtn || !nextBtn || !wrapper || scenes.length === 0) return;
 
-  function goTo(index: number) {
-    if (index < 0 || index >= scenes.length) return;
-    scenes[index].scrollTop = 0;
-    track.style.transform = `translateX(${-index * (100 / 3)}%)`;
-    scenes.forEach((s, i) => s.setAttribute('aria-hidden', String(i !== index)));
-    tabs.forEach((t, i) => { t.classList.toggle('active', i === index); t.setAttribute('aria-selected', String(i === index)); });
-    dots.forEach((d, i) => d.classList.toggle('active', i === index));
-    prevBtn.disabled = index === 0;
-    nextBtn.disabled = index === scenes.length - 1;
-    cur = index;
+    let cur = 0;
+
+    function goTo(index: number) {
+      if (index < 0 || index >= scenes.length) return;
+      scenes[index].scrollTop = 0;
+      track.style.transform = `translateX(${-index * (100 / 3)}%)`;
+      scenes.forEach((s, i) => s.setAttribute('aria-hidden', String(i !== index)));
+      tabs.forEach((t, i) => { t.classList.toggle('active', i === index); t.setAttribute('aria-selected', String(i === index)); });
+      dots.forEach((d, i) => d.classList.toggle('active', i === index));
+      prevBtn.disabled = index === 0;
+      nextBtn.disabled = index === scenes.length - 1;
+      cur = index;
+    }
+
+    tabs.forEach((tab, i) => tab.addEventListener('click', () => goTo(i)));
+    dots.forEach((dot, i) => dot.addEventListener('click', () => goTo(i)));
+    prevBtn.addEventListener('click', () => goTo(cur - 1));
+    nextBtn.addEventListener('click', () => goTo(cur + 1));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft')  goTo(cur - 1);
+      if (e.key === 'ArrowRight') goTo(cur + 1);
+    });
+
+    let wheelCooldown = false;
+    wrapper.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      const scene = scenes[cur];
+      const delta = e.deltaY;
+      if (Math.abs(delta) < 1) return;
+      const atTop    = scene.scrollTop <= 0;
+      const atBottom = scene.scrollTop + scene.clientHeight >= scene.scrollHeight - 2;
+      if ((delta > 0 && !atBottom) || (delta < 0 && !atTop)) {
+        e.preventDefault();
+        scene.scrollTop += delta;
+        return;
+      }
+      const canNext = delta > 0 && cur < scenes.length - 1;
+      const canPrev = delta < 0 && cur > 0;
+      if (!canNext && !canPrev) return;
+      e.preventDefault();
+      if (wheelCooldown) return;
+      wheelCooldown = true;
+      setTimeout(() => { wheelCooldown = false; }, 700);
+      delta > 0 ? goTo(cur + 1) : goTo(cur - 1);
+    }, { passive: false });
+
+    let touchStartX = 0;
+    wrapper.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    wrapper.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 50) dx < 0 ? goTo(cur + 1) : goTo(cur - 1);
+    });
+
+    goTo(0);
   }
 
-  tabs.forEach((tab, i) => tab.addEventListener('click', () => goTo(i)));
-  dots.forEach((dot, i) => dot.addEventListener('click', () => goTo(i)));
-  prevBtn.addEventListener('click', () => goTo(cur - 1));
-  nextBtn.addEventListener('click', () => goTo(cur + 1));
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft')  goTo(cur - 1);
-    if (e.key === 'ArrowRight') goTo(cur + 1);
-  });
-
-  const wrapper = document.querySelector<HTMLElement>('.hobbies-wrapper')!;
-  let wheelCooldown = false;
-  wrapper.addEventListener('wheel', (e) => {
-    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-    const scene = scenes[cur];
-    const delta = e.deltaY;
-    if (Math.abs(delta) < 1) return;
-    const atTop    = scene.scrollTop <= 0;
-    const atBottom = scene.scrollTop + scene.clientHeight >= scene.scrollHeight - 2;
-    if ((delta > 0 && !atBottom) || (delta < 0 && !atTop)) {
-      e.preventDefault();
-      scene.scrollTop += delta;
-      return;
-    }
-    const canNext = delta > 0 && cur < scenes.length - 1;
-    const canPrev = delta < 0 && cur > 0;
-    if (!canNext && !canPrev) return;
-    e.preventDefault();
-    if (wheelCooldown) return;
-    wheelCooldown = true;
-    setTimeout(() => { wheelCooldown = false; }, 700);
-    delta > 0 ? goTo(cur + 1) : goTo(cur - 1);
-  }, { passive: false });
-
-  let touchStartX = 0;
-  wrapper.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
-  wrapper.addEventListener('touchend', (e) => {
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) > 50) dx < 0 ? goTo(cur + 1) : goTo(cur - 1);
-  });
-
-  goTo(0);
+  document.addEventListener('astro:page-load', initHobbies);
 </script>
