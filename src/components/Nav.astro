@@ -5,10 +5,10 @@ const locale = getLocaleFromUrl(Astro.url) as Locale;
 const currentPath = Astro.url.pathname;
 
 const navLinks = [
-  { key: "nav.posts",    href: "/posts/" },
-  { key: "nav.projects", href: "/projects/" },
-  { key: "nav.hobbies",  href: "/hobbies/" },
-  { key: "nav.about",    href: "/about/" },
+  { key: "nav.posts",    href: "/posts/",    localize: false },
+  { key: "nav.projects", href: "/projects/", localize: true },
+  { key: "nav.hobbies",  href: "/hobbies/",  localize: true },
+  { key: "nav.about",    href: "/about/",    localize: true },
 ];
 
 function isActive(href: string): boolean {
@@ -27,10 +27,10 @@ function isActive(href: string): boolean {
 
       <!-- Nav links (desktop) -->
       <ul class="nav-links" role="list">
-        {navLinks.map(({ key, href }) => (
+        {navLinks.map(({ key, href, localize }) => (
           <li>
             <a
-              href={localizeUrl(href, locale)}
+              href={localize ? localizeUrl(href, locale) : href}
               class:list={["nav-link", { active: isActive(href) }]}
             >
               {t(locale, key)}
