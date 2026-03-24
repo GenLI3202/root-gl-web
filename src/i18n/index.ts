@@ -28,6 +28,9 @@ export function localizeUrl(path: string, locale: Locale): string {
 /** Pages that have proper localized versions */
 const LOCALIZED_PAGES = ["/", "/about/", "/projects/", "/hobbies/"];
 
+/** Pages that are locale-agnostic — always stay at the same URL when switching language */
+const LOCALE_AGNOSTIC_PAGES = ["/posts/"];
+
 /**
  * Returns the URL to switch to a different locale, staying on the
  * same page if a localized version exists, otherwise going to the homepage.
@@ -45,6 +48,11 @@ export function localeSwitchUrl(
 
   // Normalize trailing slash
   const normalized = base.endsWith("/") ? base : `${base}/`;
+
+  // Locale-agnostic pages (e.g. /posts/) — always return the same URL
+  if (LOCALE_AGNOSTIC_PAGES.some((p) => normalized === p || normalized.startsWith(p))) {
+    return normalized;
+  }
 
   const hasLocalizedVersion = LOCALIZED_PAGES.some(
     (p) => normalized === p || normalized.startsWith(p)
