@@ -4,7 +4,8 @@ description: "A continuously-updated working glossary of battery energy storage 
 pubDate: 2026-06-15
 updatedDate: 2026-06-15
 tags: ["bess", "energy-storage", "wiki", "reference"]
-featured: true
+featured: false
+draft: true
 ---
 
 <!--
