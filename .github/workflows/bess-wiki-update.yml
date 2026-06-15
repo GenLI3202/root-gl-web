@@ -1,0 +1,52 @@
+name: Update BESS Wiki
+
+# Distills raw session notes dropped into wiki-inbox/ into the living glossary at
+# src/content/posts/bess-wiki.md, then commits the result so Vercel redeploys.
+#
+# Setup (one time):
+#   - Repo secret  ANTHROPIC_API_KEY  — your Anthropic API key
+#   - Repo variable ANTHROPIC_MODEL   — the model id to use (latest Claude Opus recommended)
+# Until both are set the job exits early with a clear message, so it is safe to merge.
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # every day at 06:00 UTC
+  workflow_dispatch: {} # allow manual runs for testing
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bess-wiki-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install the Anthropic SDK
+        run: npm install --no-save @anthropic-ai/sdk
+
+      - name: Distill inbox notes into the wiki
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
+        run: node scripts/update-wiki.mjs
+
+      - name: Commit and push if changed
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "chore(wiki): daily BESS wiki update from session notes"
+            git push
+          else
+            echo "No wiki changes today."
+          fi
