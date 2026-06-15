@@ -1,3 +1,7 @@
+# DEACTIVATED — this file ends in `.disabled`, so GitHub Actions ignores it and
+# it never runs (no scheduled or manual runs). To reactivate, rename it back to
+# `bess-wiki-update.yml` and configure the secret/variable noted below.
+
 name: Update BESS Wiki
 
 # Distills raw session notes dropped into wiki-inbox/ into the living glossary at
