@@ -1,7 +1,8 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
-import { t, SUPPORTED_LOCALES, DEFAULT_LOCALE, type Locale } from "@/i18n";
+import { t, localizeUrl, SUPPORTED_LOCALES, DEFAULT_LOCALE, type Locale } from "@/i18n";
+import { formatPostDate, getPostUrl, getPostsForLocale } from "@/utils/posts";
 
 export async function getStaticPaths() {
   return SUPPORTED_LOCALES.filter((l) => l !== DEFAULT_LOCALE).map((locale) => ({
@@ -12,18 +13,7 @@ export async function getStaticPaths() {
 const { locale } = Astro.params as { locale: Locale };
 
 const allPosts = await getCollection("posts", ({ data }) => !data.draft);
-const recentPosts = allPosts
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 5);
-
-function formatDate(date: Date): string {
-  const localeMap: Record<Locale, string> = { en: "en-GB", zh: "zh-CN", de: "de-DE" };
-  return date.toLocaleDateString(localeMap[locale], {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
+const recentPosts = getPostsForLocale(allPosts, locale).slice(0, 5);
 
 const projects = [
   {
@@ -93,7 +83,9 @@ const identityTags: Record<Locale, { label: string; title: string; href: string 
     <div class="container">
       <div class="section-header">
         <h2 class="section-title">{t(locale, "index.writing.title")}</h2>
-        <a href="/posts/" class="section-link">{t(locale, "index.writing.link")}</a>
+        <a href={localizeUrl("/posts/", locale)} class="section-link">
+          {t(locale, "index.writing.link")}
+        </a>
       </div>
 
       {recentPosts.length === 0 ? (
@@ -102,9 +94,9 @@ const identityTags: Record<Locale, { label: string; title: string; href: string 
         <ul class="post-list" role="list">
           {recentPosts.map((post) => (
             <li class="post-item">
-              <a href={`/posts/${post.id}/`} class="post-link">
+              <a href={getPostUrl(post)} class="post-link">
                 <span class="post-title">{post.data.title}</span>
-                <span class="post-date">{formatDate(post.data.pubDate)}</span>
+                <span class="post-date">{formatPostDate(post.data.pubDate, locale)}</span>
               </a>
             </li>
           ))}

@@ -2,10 +2,16 @@
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import PostIndex from "@/components/PostIndex.astro";
 import { getCollection } from "astro:content";
-import { DEFAULT_LOCALE } from "@/i18n";
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES, type Locale } from "@/i18n";
 import { getPostLabels, getPostsForLocale, getPostsIndexUrl } from "@/utils/posts";
 
-const locale = DEFAULT_LOCALE;
+export async function getStaticPaths() {
+  return SUPPORTED_LOCALES.filter((locale) => locale !== DEFAULT_LOCALE).map((locale) => ({
+    params: { locale },
+  }));
+}
+
+const { locale } = Astro.params as { locale: Locale };
 const allPosts = await getCollection("posts", ({ data }) => !data.draft);
 const posts = getPostsForLocale(allPosts, locale);
 const labels = getPostLabels(locale);

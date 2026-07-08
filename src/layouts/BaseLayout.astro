@@ -10,14 +10,18 @@ interface Props {
   title?: string;
   description?: string;
   ogImage?: string;
+  locale?: Locale;
+  translationLinks?: Partial<Record<Locale, string>>;
 }
 
-const locale = getLocaleFromUrl(Astro.url) as Locale;
+const inferredLocale = getLocaleFromUrl(Astro.url) as Locale;
 
 const {
   title = "Gen Li",
   description = "PhD Researcher at TU Munich. Energy systems optimization, cycling club manager, and occasional guitarist.",
   ogImage = "/og-default.png",
+  locale = inferredLocale,
+  translationLinks = {},
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -68,7 +72,7 @@ const fullTitle = title === "Gen Li" ? title : `${title} — Gen Li`;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </head>
   <body>
-    <Nav />
+    <Nav locale={locale} translationLinks={translationLinks} />
     <main id="main-content">
       <slot />
     </main>

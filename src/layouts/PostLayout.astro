@@ -1,41 +1,68 @@
 ---
 import BaseLayout from "./BaseLayout.astro";
 import type { CollectionEntry } from "astro:content";
+import {
+  formatPostDate,
+  getPostLabels,
+  getPostLocale,
+  getPostsIndexUrl,
+  type TranslationLinks,
+} from "@/utils/posts";
 
 interface Props {
   post: CollectionEntry<"posts">;
   readingTime?: string;
+  translationLinks?: TranslationLinks;
 }
 
-const { post, readingTime } = Astro.props;
+const { post, readingTime, translationLinks = {} } = Astro.props;
 const { title, description, pubDate, updatedDate, tags } = post.data;
-
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
+const locale = getPostLocale(post);
+const labels = getPostLabels(locale);
+const primaryTag = tags[0] ?? "Writing";
+const secondaryTags = tags.slice(1);
 ---
 
-<BaseLayout title={title} description={description}>
-  <article class="container post-article">
-    <header class="post-header">
+<BaseLayout
+  title={title}
+  description={description}
+  locale={locale}
+  translationLinks={translationLinks}
+>
+  <article class="post-report">
+    <header class="report-hero">
+      <div class="report-kicker">
+        <span>{labels.report}</span>
+        <span>{primaryTag}</span>
+      </div>
       <h1 class="post-title">{title}</h1>
-      <div class="post-meta">
-        <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
-        {readingTime && <span class="meta-sep">·</span>}
-        {readingTime && <span>{readingTime}</span>}
+      {description && <p class="post-deck">{description}</p>}
+
+      <dl class="report-meta">
+        <div>
+          <dt>{labels.published}</dt>
+          <dd>
+            <time datetime={pubDate.toISOString()}>{formatPostDate(pubDate, locale, "long")}</time>
+          </dd>
+        </div>
         {
-          updatedDate && (
-            <>
-              <span class="meta-sep">·</span>
-              <span class="updated">Updated {formatDate(updatedDate)}</span>
-            </>
+          readingTime && (
+            <div>
+              <dt>{labels.readTime}</dt>
+              <dd>{readingTime}</dd>
+            </div>
           )
         }
-      </div>
+        {
+          updatedDate && (
+            <div>
+              <dt>{labels.updated}</dt>
+              <dd>{formatPostDate(updatedDate, locale, "long")}</dd>
+            </div>
+          )
+        }
+      </dl>
+
       {
         tags.length > 0 && (
           <div class="post-tags">
@@ -47,55 +74,168 @@ function formatDate(date: Date): string {
       }
     </header>
 
-    <hr class="post-divider" />
+    <div class="report-layout">
+      <aside class="report-sidebar" aria-label="Report navigation">
+        <div class="sidebar-section">
+          <p class="sidebar-label">{labels.inThisReport}</p>
+          <ol id="post-toc" class="toc-list" data-empty={labels.noSections}>
+            <li class="toc-empty">{labels.sectionsPending}</li>
+          </ol>
+        </div>
 
-    <div class="prose">
-      <slot />
+        {
+          secondaryTags.length > 0 && (
+            <div class="sidebar-section">
+              <p class="sidebar-label">{labels.topics}</p>
+              <div class="sidebar-tags">
+                {secondaryTags.map((tag) => (
+                  <span>{tag}</span>
+                ))}
+              </div>
+            </div>
+          )
+        }
+      </aside>
+
+      <div class="report-main">
+        <div class="prose report-prose">
+          <slot />
+        </div>
+
+        <footer class="post-footer">
+          <a href={getPostsIndexUrl(locale)} class="back-link">← {labels.allPosts}</a>
+        </footer>
+      </div>
     </div>
-
-    <hr class="post-divider" />
-
-    <footer class="post-footer">
-      <a href="/posts/" class="back-link">← All posts</a>
-    </footer>
   </article>
 </BaseLayout>
 
-<style>
-  .post-article {
-    padding-block: 4rem;
-    max-width: 720px;
+<script>
+  function slugifyHeading(text) {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\u00C0-\uFFFF]+/g, "-")
+      .replace(/^-+|-+$/g, "");
   }
 
-  .post-header {
-    margin-bottom: 2rem;
+  function hydrateReportToc() {
+    const toc = document.querySelector("#post-toc");
+    const headings = Array.from(document.querySelectorAll(".report-prose h2"));
+
+    if (!(toc instanceof HTMLOListElement)) return;
+
+    toc.innerHTML = "";
+
+    if (headings.length === 0) {
+      const emptyItem = document.createElement("li");
+      emptyItem.className = "toc-empty";
+      emptyItem.textContent = toc.dataset.empty ?? "No sections.";
+      toc.append(emptyItem);
+      return;
+    }
+
+    headings.forEach((heading, index) => {
+      if (!(heading instanceof HTMLHeadingElement)) return;
+      if (!heading.id) heading.id = slugifyHeading(heading.textContent ?? "");
+
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = `#${heading.id}`;
+      link.textContent = heading.textContent ?? `Section ${index + 1}`;
+      item.append(link);
+      toc.append(item);
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", hydrateReportToc);
+  document.addEventListener("astro:page-load", hydrateReportToc);
+</script>
+
+<style>
+  .post-report {
+    max-width: 1120px;
+    margin-inline: auto;
+    padding: 4rem var(--container-pad);
+  }
+
+  .report-hero {
+    border-bottom: 1px solid var(--fg);
+    margin-bottom: 3rem;
+    padding-bottom: 2.25rem;
+  }
+
+  .report-kicker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .report-kicker span {
+    border: 1px solid var(--border-dark);
+    border-radius: var(--radius-pill);
+    color: var(--fg-muted);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 0.25rem 0.65rem;
+    text-transform: uppercase;
+  }
+
+  .report-kicker span:first-child {
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   .post-title {
-    font-size: var(--text-2xl);
     font-family: var(--font-heading);
+    font-size: clamp(2.35rem, 7vw, 5.25rem);
     font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
+    line-height: 0.98;
+    margin-bottom: 1.25rem;
+    max-width: 980px;
+  }
+
+  .post-deck {
+    color: var(--fg);
+    font-size: clamp(1.15rem, 2.4vw, 1.65rem);
+    line-height: 1.45;
+    margin-bottom: 2rem;
+    max-width: 820px;
+  }
+
+  .report-meta {
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     margin-bottom: 1rem;
+    max-width: 820px;
   }
 
-  .post-meta {
-    font-size: var(--text-sm);
+  .report-meta div {
+    border-bottom: 1px solid var(--border);
+    padding-block: 0.85rem;
+  }
+
+  .report-meta div + div {
+    border-left: 1px solid var(--border);
+    padding-left: 1rem;
+  }
+
+  .report-meta dt {
     color: var(--fg-muted);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    align-items: center;
-    margin-bottom: 0.875rem;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.2rem;
+    text-transform: uppercase;
   }
 
-  .meta-sep {
-    opacity: 0.4;
-  }
-
-  .updated {
-    font-style: italic;
+  .report-meta dd {
+    color: var(--fg);
+    font-size: var(--text-sm);
+    font-weight: 500;
   }
 
   .post-tags {
@@ -104,14 +244,92 @@ function formatDate(date: Date): string {
     gap: 0.375rem;
   }
 
-  .post-divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin-block: 2rem;
+  .report-layout {
+    align-items: start;
+    display: grid;
+    gap: 3.5rem;
+    grid-template-columns: minmax(180px, 240px) minmax(0, 760px);
+  }
+
+  .report-sidebar {
+    position: sticky;
+    top: 5rem;
+  }
+
+  .sidebar-section {
+    border-top: 1px solid var(--fg);
+    padding-block: 1rem 1.5rem;
+  }
+
+  .sidebar-section + .sidebar-section {
+    border-top-color: var(--border);
+  }
+
+  .sidebar-label {
+    color: var(--fg-muted);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.85rem;
+    text-transform: uppercase;
+  }
+
+  .toc-list {
+    display: grid;
+    gap: 0.15rem;
+    list-style: none;
+  }
+
+  :global(.toc-list a) {
+    border-left: 2px solid transparent;
+    color: var(--fg-muted);
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: 1.35;
+    padding: 0.4rem 0 0.4rem 0.75rem;
+    text-decoration: none !important;
+    transition: border-color var(--transition), color var(--transition);
+  }
+
+  :global(.toc-list a:hover) {
+    border-left-color: var(--accent);
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .toc-empty {
+    color: var(--fg-muted);
+    font-size: var(--text-sm);
+    font-style: italic;
+  }
+
+  .sidebar-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .sidebar-tags span {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    color: var(--fg-muted);
+    font-size: var(--text-xs);
+    padding: 0.2rem 0.55rem;
+  }
+
+  .report-main {
+    min-width: 0;
+  }
+
+  .report-prose {
+    max-width: 760px;
   }
 
   .post-footer {
-    margin-top: 1rem;
+    border-top: 1px solid var(--border);
+    margin-top: 3rem;
+    padding-top: 1.5rem;
   }
 
   .back-link {
@@ -123,5 +341,110 @@ function formatDate(date: Date): string {
 
   .back-link:hover {
     color: var(--accent);
+  }
+
+  :global(.report-prose > p:first-child) {
+    font-size: 1.22em;
+    line-height: 1.65;
+  }
+
+  :global(.report-prose h2) {
+    border-top: 1px solid var(--fg);
+    font-family: var(--font-body);
+    font-size: clamp(1.45rem, 3vw, 2.1rem);
+    letter-spacing: 0;
+    margin-top: 3.25rem;
+    padding-top: 1rem;
+  }
+
+  :global(.report-prose h3) {
+    font-family: var(--font-body);
+    font-size: var(--text-lg);
+    letter-spacing: 0;
+  }
+
+  :global(.report-prose blockquote) {
+    border-left: 0;
+    border-top: 2px solid var(--accent);
+    color: var(--fg);
+    font-family: var(--font-heading);
+    font-size: clamp(1.45rem, 3vw, 2rem);
+    font-style: normal;
+    line-height: 1.35;
+    padding: 1rem 0 0;
+  }
+
+  :global(.report-prose img) {
+    border: 1px solid var(--border);
+    border-radius: 0;
+  }
+
+  :global(html:lang(zh)) .post-title {
+    font-family: var(--font-cjk-heading);
+    font-size: clamp(2.15rem, 4.4vw, 3.75rem);
+    font-weight: 700;
+    line-height: 1.16;
+    max-width: 860px;
+  }
+
+  :global(html:lang(zh)) .post-deck {
+    font-size: clamp(1.08rem, 2.1vw, 1.45rem);
+    line-height: 1.75;
+    max-width: 760px;
+  }
+
+  :global(html:lang(zh) .report-prose) {
+    font-size: var(--text-lg);
+    line-height: 1.95;
+  }
+
+  :global(html:lang(zh) .report-prose > p:first-child) {
+    font-size: 1.16em;
+    line-height: 1.85;
+  }
+
+  :global(html:lang(zh) .report-prose h2) {
+    font-family: var(--font-cjk-heading);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  :global(html:lang(zh) .report-prose blockquote) {
+    font-family: var(--font-cjk);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 860px) {
+    .post-report {
+      padding-block: 3rem;
+    }
+
+    .report-meta {
+      grid-template-columns: 1fr;
+    }
+
+    .report-meta div + div {
+      border-left: 0;
+      padding-left: 0;
+    }
+
+    .report-layout {
+      gap: 2rem;
+      grid-template-columns: 1fr;
+    }
+
+    .report-sidebar {
+      position: static;
+    }
+
+    .sidebar-section {
+      padding-bottom: 1rem;
+    }
+
+    .toc-list {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

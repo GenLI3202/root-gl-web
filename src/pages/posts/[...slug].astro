@@ -1,24 +1,30 @@
 ---
 import PostLayout from "@/layouts/PostLayout.astro";
 import { getCollection, render } from "astro:content";
+import { DEFAULT_LOCALE } from "@/i18n";
+import {
+  estimateReadingTime,
+  getPostSlug,
+  getPostTranslationLinks,
+  getPostsForLocale,
+} from "@/utils/posts";
 
 export async function getStaticPaths() {
-  const posts = await getCollection("posts", ({ data }) => !data.draft);
+  const allPosts = await getCollection("posts", ({ data }) => !data.draft);
+  const posts = getPostsForLocale(allPosts, DEFAULT_LOCALE);
+
   return posts.map((post) => ({
-    params: { slug: post.id },
-    props: { post },
+    params: { slug: getPostSlug(post) },
+    props: { allPosts, post },
   }));
 }
 
-const { post } = Astro.props;
+const { allPosts, post } = Astro.props;
 const { Content } = await render(post);
-
-// Rough reading time estimate
-const wordCount = post.body?.split(/\s+/).length ?? 0;
-const minutes = Math.max(1, Math.round(wordCount / 200));
-const readingTime = `${minutes} min read`;
+const readingTime = estimateReadingTime(post.body, DEFAULT_LOCALE);
+const translationLinks = getPostTranslationLinks(allPosts, post);
 ---
 
-<PostLayout post={post} readingTime={readingTime}>
+<PostLayout post={post} readingTime={readingTime} translationLinks={translationLinks}>
   <Content />
 </PostLayout>

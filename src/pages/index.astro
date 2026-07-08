@@ -1,17 +1,12 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
+import { DEFAULT_LOCALE } from "@/i18n";
+import { formatPostDate, getPostUrl, getPostsForLocale } from "@/utils/posts";
 
 // Fetch featured posts (most recent 5)
 const allPosts = await getCollection("posts", ({ data }) => !data.draft);
-const recentPosts = allPosts
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 5);
-
-// Format date
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
+const recentPosts = getPostsForLocale(allPosts, DEFAULT_LOCALE).slice(0, 5);
 
 const projects = [
   {
@@ -76,9 +71,9 @@ const identityTags = [
         <ul class="post-list" role="list">
           {recentPosts.map((post) => (
             <li class="post-item">
-              <a href={`/posts/${post.id}/`} class="post-link">
+              <a href={getPostUrl(post)} class="post-link">
                 <span class="post-title">{post.data.title}</span>
-                <span class="post-date">{formatDate(post.data.pubDate)}</span>
+                <span class="post-date">{formatPostDate(post.data.pubDate, DEFAULT_LOCALE)}</span>
               </a>
             </li>
           ))}

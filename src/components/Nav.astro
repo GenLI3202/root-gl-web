@@ -1,12 +1,21 @@
 ---
 import { t, getLocaleFromUrl, localizeUrl, localeSwitchUrl, SUPPORTED_LOCALES, type Locale } from "@/i18n";
 
-const locale = getLocaleFromUrl(Astro.url) as Locale;
+interface Props {
+  locale?: Locale;
+  translationLinks?: Partial<Record<Locale, string>>;
+}
+
+const {
+  locale = getLocaleFromUrl(Astro.url) as Locale,
+  translationLinks = {},
+} = Astro.props;
 const currentPath = Astro.url.pathname;
-const showLangSwitcher = !currentPath.startsWith("/posts");
+const basePath = currentPath.replace(/^\/(zh|de)(?=\/)/, "");
+const isPostDetail = /^\/posts\/[^/]+\/?$/.test(basePath);
 
 const navLinks = [
-  { key: "nav.posts",    href: "/posts/",    localize: false },
+  { key: "nav.posts",    href: "/posts/",    localize: true },
   { key: "nav.projects", href: "/projects/", localize: true },
   { key: "nav.hobbies",  href: "/hobbies/",  localize: true },
   { key: "nav.about",    href: "/about/",    localize: true },
@@ -15,6 +24,13 @@ const navLinks = [
 function isActive(href: string): boolean {
   const localized = locale !== "en" ? `/${locale}${href}` : href;
   return currentPath === localized || currentPath.startsWith(localized.replace(/\/$/, ""));
+}
+
+function getSwitchUrl(targetLocale: Locale): string {
+  const translatedUrl = translationLinks[targetLocale];
+  if (translatedUrl) return translatedUrl;
+  if (isPostDetail) return localizeUrl("/posts/", targetLocale);
+  return localeSwitchUrl(currentPath, locale, targetLocale);
 }
 ---
 
@@ -42,16 +58,16 @@ function isActive(href: string): boolean {
 
       <!-- Right controls -->
       <div class="nav-controls">
-        <!-- Language switcher (hidden on /posts/) -->
-        {showLangSwitcher && <div class="lang-switcher" role="group" aria-label="Language">
+        <!-- Language switcher -->
+        <div class="lang-switcher" role="group" aria-label="Language">
           {(["en", "zh", "de"] as const).map((lang) => {
-            const href = localeSwitchUrl(currentPath, locale, lang);
+            const href = getSwitchUrl(lang);
             const labels = { en: "EN", zh: "中", de: "DE" };
             return locale === lang
               ? <span class="lang-btn lang-active">{labels[lang]}</span>
               : <a href={href} class="lang-btn" hreflang={lang}>{labels[lang]}</a>;
           })}
-        </div>}
+        </div>
 
         <!-- Theme toggle -->
         <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme" type="button">
@@ -75,10 +91,10 @@ function isActive(href: string): boolean {
     <!-- Mobile menu drawer -->
     <div id="mobile-menu" class="mobile-menu" hidden>
       <ul role="list">
-        {navLinks.map(({ key, href }) => (
+        {navLinks.map(({ key, href, localize }) => (
           <li>
             <a
-              href={localizeUrl(href, locale)}
+              href={localize ? localizeUrl(href, locale) : href}
               class:list={["mobile-link", { active: isActive(href) }]}
             >
               {t(locale, key)}

@@ -67,6 +67,11 @@
 - [x] **Hobbies dark-mode cyclist fix** — `filter: invert(1)` on cyclist-bg so black-stroke SVG shows on dark background
 - [x] **View Transitions** — `<ViewTransitions />` added to `BaseLayout.astro` for smooth page-to-page navigation
 - [x] **GitHub repo** — published to `GenLI3202/root-gl-web` with MIT licence; all backlog items tracked as issues
+- [x] **Intersolar 2026 blog draft** — added a public-safe EMS/LEMS post with image notes
+- [x] **Report-style post template** — default blog posts now use a report header, sticky TOC, and wider analysis layout
+- [x] **Intersolar 2026 illustration pass** — replaced available image notes with provided figures, left EV session text-only, and cleaned TOC link styling
+- [x] **Localized blog i18n** — posts now support EN/ZH routes, translation links, localized report chrome, and Chinese typography
+- [x] **Chinese report title tuning** — reduced oversized ZH hero title and switched report headings from serif to sans-serif typography
 
 ## Remaining Work
 
