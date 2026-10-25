@@ -7,8 +7,10 @@
 //   2. STRAVA_CLIENT_ID=… STRAVA_CLIENT_SECRET=… npm run authorize:strava -- "<that address>"
 //      Exchanges the code and prints the refresh token to store as STRAVA_REFRESH_TOKEN.
 //
-// Scope defaults to activity:read_all. Pass --scope=activity:read to leave out
-// activities set to "Only You" at the source. The sync skips those either way.
+// Scope defaults to activity:read: activities visible to Everyone or Followers, with the
+// privacy zones set in Strava applied to the tracks. --scope=activity:read_all also returns
+// activities set to "Only You" and unmasked tracks; the sync skips the former but would
+// publish the latter, so use it only together with STRAVA_PRIVACY_ZONE.
 
 const AUTHORIZE_URL = "https://www.strava.com/oauth/authorize";
 const TOKEN_URL = "https://www.strava.com/oauth/token";
@@ -16,7 +18,7 @@ const REDIRECT_URI = "http://localhost";
 
 const { STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET } = process.env;
 const args = process.argv.slice(2);
-const scope = args.find((a) => a.startsWith("--scope="))?.slice("--scope=".length) ?? "activity:read_all";
+const scope = args.find((a) => a.startsWith("--scope="))?.slice("--scope=".length) ?? "activity:read";
 const redirected = args.find((a) => !a.startsWith("--"));
 
 if (!STRAVA_CLIENT_ID) {

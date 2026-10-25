@@ -1,10 +1,14 @@
 // Daily Strava sync for the Hobbies → Cycling page.
 //
-// Pulls every ride from the Strava API and writes one compact record per ride to
-// src/data/cycling.json (date, km, elevation, moving seconds). Only totals are written:
-// no names, descriptions, locations, or routes, and activities set to "Only You" are
-// skipped. The page builds its charts from this file at build time, so a commit of a
-// changed file is enough to redeploy.
+// Pulls every ride from the Strava API and writes two files:
+//   src/data/cycling.json            one record per ride (date, km, elevation, moving seconds),
+//                                    read at build time for the stats and charts
+//   public/data/cycling-routes.json  simplified GPS tracks of outdoor rides, fetched by the
+//                                    route map in the browser
+// No names, descriptions, or place names are written, and activities set to "Only You" are
+// skipped. Routes lose the first and last TRIM_METERS of every ride, and the optional
+// STRAVA_PRIVACY_ZONE removes everything near a point (your home). A commit of changed
+// files is enough to redeploy.
 // Invoked by .github/workflows/cycling-update.yml, or locally with `npm run update:cycling`.
 //
 // Required env:
@@ -13,10 +17,13 @@
 //                          activity:read_all; the token shown on the API settings page
 //                          has scope "read" only and cannot list activities)
 // Optional env:
-//   STRAVA_TOKEN_OUT — file that receives the new refresh token when Strava replaces it
+//   STRAVA_TOKEN_OUT     — file that receives the new refresh token when Strava replaces it
+//   STRAVA_PRIVACY_ZONE  — "lat,lon,radiusMeters"; no route point or line within that
+//                          radius of the point is written (repository secret in CI)
 
 import fs from "node:fs";
 import path from "node:path";
+import { decodePolyline, encodePolyline } from "../src/utils/polyline.mjs";
 
 const TOKEN_URL = "https://www.strava.com/oauth/token";
 const ACTIVITIES_URL = "https://www.strava.com/api/v3/athlete/activities";
@@ -26,9 +33,21 @@ const RIDE_TYPES = new Set(["Ride", "GravelRide", "MountainBikeRide", "VirtualRi
 // Shorter recordings are accidental starts and GPS glitches
 const MIN_METERS = 1000;
 const OUT_PATH = path.join(process.cwd(), "src/data/cycling.json");
+const ROUTES_PATH = path.join(process.cwd(), "public/data/cycling-routes.json");
+// Outdoor riding only: virtual rides draw game worlds, trainer rides have no track
+const ROUTE_TYPES = new Set(["Ride", "GravelRide", "MountainBikeRide"]);
+const TRIM_METERS = 500;
+const SIMPLIFY_METERS = 15;
+const EARTH_RADIUS = 6_371_000;
+const METERS_PER_DEGREE = (EARTH_RADIUS * Math.PI) / 180;
 
-const { STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, STRAVA_REFRESH_TOKEN, STRAVA_TOKEN_OUT } =
-  process.env;
+const {
+  STRAVA_CLIENT_ID,
+  STRAVA_CLIENT_SECRET,
+  STRAVA_REFRESH_TOKEN,
+  STRAVA_TOKEN_OUT,
+  STRAVA_PRIVACY_ZONE,
+} = process.env;
 if (!STRAVA_CLIENT_ID || !STRAVA_CLIENT_SECRET || !STRAVA_REFRESH_TOKEN) {
   console.error(
     "STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET and STRAVA_REFRESH_TOKEN must be set. " +
@@ -101,16 +120,135 @@ function toRide(activity) {
   };
 }
 
+/** "lat,lon,radius" → { lat, lon, radius }, or null when unset */
+function parseZone(value) {
+  if (!value) return null;
+  const [lat, lon, radius] = value.split(",").map(Number);
+  if (![lat, lon, radius].every(Number.isFinite) || radius <= 0) {
+    console.error('STRAVA_PRIVACY_ZONE must look like "48.1371,11.5754,1500" (lat,lon,meters).');
+    process.exit(1);
+  }
+  return { lat, lon, radius };
+}
+
+const zone = parseZone(STRAVA_PRIVACY_ZONE);
+
+function distance([lat1, lon1], [lat2, lon2]) {
+  const rad = Math.PI / 180;
+  const a =
+    Math.sin(((lat2 - lat1) * rad) / 2) ** 2 +
+    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(((lon2 - lon1) * rad) / 2) ** 2;
+  return 2 * EARTH_RADIUS * Math.asin(Math.sqrt(a));
+}
+
+/** Distance from point p to segment a–b, all in planar meters */
+function planarSegmentDistance(p, a, b) {
+  const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
+  const lengthSquared = dx * dx + dy * dy;
+  const t = lengthSquared ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / lengthSquared)) : 0;
+  return Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy));
+}
+
+/** Drop the first and last `meters` of a track */
+function trimEnds(points, meters) {
+  let start = 0;
+  for (let walked = 0; start < points.length - 1 && walked < meters; start++) {
+    walked += distance(points[start], points[start + 1]);
+  }
+  let end = points.length - 1;
+  for (let walked = 0; end > start && walked < meters; end--) {
+    walked += distance(points[end], points[end - 1]);
+  }
+  return points.slice(start, end + 1);
+}
+
+/** Cut a track wherever it enters the privacy zone, including straight chords across it */
+function outsideZone(points) {
+  if (!zone) return [points];
+  const center = [zone.lat, zone.lon];
+  const local = ([lat, lon]) => [
+    (lon - zone.lon) * Math.cos((zone.lat * Math.PI) / 180) * METERS_PER_DEGREE,
+    (lat - zone.lat) * METERS_PER_DEGREE,
+  ];
+  const segments = [];
+  let current = [];
+  for (const point of points) {
+    const inside = distance(point, center) <= zone.radius;
+    const crosses =
+      current.length > 0 &&
+      planarSegmentDistance([0, 0], local(current[current.length - 1]), local(point)) <= zone.radius;
+    if (inside || crosses) {
+      if (current.length) segments.push(current);
+      current = [];
+    }
+    if (!inside) current.push(point);
+  }
+  if (current.length) segments.push(current);
+  return segments;
+}
+
+/** Douglas–Peucker with the tolerance in meters */
+function simplify(points, tolerance) {
+  if (points.length < 3) return points;
+  const lat0 = (points[0][0] * Math.PI) / 180;
+  const xy = points.map(([lat, lon]) => [lon * Math.cos(lat0) * METERS_PER_DEGREE, lat * METERS_PER_DEGREE]);
+  const last = points.length - 1;
+  const keep = new Uint8Array(points.length);
+  keep[0] = keep[last] = 1;
+  const stack = [[0, last]];
+  while (stack.length) {
+    const [from, to] = stack.pop();
+    let far = 0;
+    let farIndex = -1;
+    for (let i = from + 1; i < to; i++) {
+      const d = planarSegmentDistance(xy[i], xy[from], xy[to]);
+      if (d > far) [far, farIndex] = [d, i];
+    }
+    if (far > tolerance) {
+      keep[farIndex] = 1;
+      stack.push([from, farIndex], [farIndex, to]);
+    }
+  }
+  return points.filter((_, i) => keep[i]);
+}
+
+/** Outdoor ride → route record with encoded track pieces, or null when nothing is left */
+function toRoute(activity, ride) {
+  if (!ROUTE_TYPES.has(activity.sport_type ?? activity.type) || activity.trainer) return null;
+  const encoded = activity.map?.summary_polyline;
+  if (!encoded) return null;
+  const pieces = outsideZone(trimEnds(decodePolyline(encoded), TRIM_METERS))
+    .map((piece) => simplify(piece, SIMPLIFY_METERS))
+    .filter((piece) => piece.length >= 2);
+  if (!pieces.length) return null;
+  return { d: ride.d, km: ride.km, p: pieces.map((piece) => encodePolyline(piece)) };
+}
+
+/** One record per line keeps the daily diff down to the new rides */
+function toJson(key, records) {
+  const lines = records.map((r) => `    ${JSON.stringify(r)}`).join(",\n");
+  return `{\n  "${key}": [${records.length ? `\n${lines}\n  ` : ""}]\n}\n`;
+}
+
+function writeIfChanged(file, json) {
+  const before = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null;
+  if (json === before) return false;
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, json);
+  return true;
+}
+
 const previous = fs.existsSync(OUT_PATH) ? fs.readFileSync(OUT_PATH, "utf8") : null;
 const previousCount = previous ? JSON.parse(previous).rides?.length ?? 0 : 0;
 
 const accessToken = await getAccessToken();
 const activities = await fetchActivities(accessToken);
-const rides = activities
-  .map(toRide)
-  .filter(Boolean)
-  .sort((a, b) => a.start.localeCompare(b.start))
-  .map(({ d, km, m, s }) => ({ d, km, m, s }));
+const entries = activities
+  .map((activity) => ({ activity, ride: toRide(activity) }))
+  .filter((entry) => entry.ride)
+  .sort((a, b) => a.ride.start.localeCompare(b.ride.start));
+const rides = entries.map(({ ride: { d, km, m, s } }) => ({ d, km, m, s }));
+const routes = entries.map(({ activity, ride }) => toRoute(activity, ride)).filter(Boolean);
 
 // An empty answer for an athlete who had rides means the call went wrong, not that rides vanished
 if (rides.length === 0 && previousCount > 0) {
@@ -118,16 +256,14 @@ if (rides.length === 0 && previousCount > 0) {
   process.exit(1);
 }
 
-// One ride per line keeps the daily diff down to the new rides
-const json = `{\n  "rides": [\n${rides.map((r) => `    ${JSON.stringify(r)}`).join(",\n")}\n  ]\n}\n`;
-
-if (json === previous) {
+const ridesChanged = writeIfChanged(OUT_PATH, toJson("rides", rides));
+const routesChanged = writeIfChanged(ROUTES_PATH, toJson("routes", routes));
+if (!ridesChanged && !routesChanged) {
   console.log("Cycling data unchanged.");
 } else {
-  fs.writeFileSync(OUT_PATH, json);
   const km = rides.reduce((sum, r) => sum + r.km, 0);
   console.log(
-    `Wrote ${path.relative(process.cwd(), OUT_PATH)}: ${rides.length} rides ` +
-      `from ${activities.length} activities, ${Math.round(km)} km total.`
+    `Wrote ${rides.length} rides (${Math.round(km)} km total) and ${routes.length} routes ` +
+      `from ${activities.length} activities.`
   );
 }

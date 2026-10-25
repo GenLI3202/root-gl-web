@@ -1,7 +1,8 @@
 name: Update cycling data
 
-# Pulls rides from Strava into src/data/cycling.json, then commits the result so
-# Vercel redeploys. Only per-ride totals are stored (see scripts/update-cycling.mjs).
+# Pulls rides from Strava into src/data/cycling.json and public/data/cycling-routes.json,
+# then commits the result so Vercel redeploys. Only totals and trimmed, simplified tracks
+# are stored (see scripts/update-cycling.mjs).
 #
 # Setup (one time, details in docs/strava-sync.md):
 #   - Repo secret  STRAVA_CLIENT_ID      — Client ID of the Strava API app
@@ -12,6 +13,8 @@ name: Update cycling data
 #                                          the refresh token at any time and the old one
 #                                          stops working; with this secret the job stores
 #                                          the new one itself.
+#   - Repo secret  STRAVA_PRIVACY_ZONE   — optional, "lat,lon,radiusMeters" around your home;
+#                                          nothing inside it is published on the route map
 # Until the secrets are set the job fails with a clear message and commits nothing.
 
 on:
@@ -41,6 +44,7 @@ jobs:
           STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
           STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
           STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
+          STRAVA_PRIVACY_ZONE: ${{ secrets.STRAVA_PRIVACY_ZONE }}
           STRAVA_TOKEN_OUT: ${{ runner.temp }}/strava-refresh-token
         run: node scripts/update-cycling.mjs
 
@@ -58,10 +62,11 @@ jobs:
 
       - name: Commit and push if changed
         run: |
-          if [[ -n "$(git status --porcelain src/data/cycling.json)" ]]; then
+          FILES="src/data/cycling.json public/data/cycling-routes.json"
+          if [[ -n "$(git status --porcelain $FILES)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add src/data/cycling.json
+            git add $FILES
             git commit -m "chore(cycling): daily Strava data update"
             git push
           else
