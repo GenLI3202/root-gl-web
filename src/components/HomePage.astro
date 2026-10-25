@@ -17,7 +17,6 @@ interface HomeCopy {
   hello: string;
   nameLine: string;
   intro: string;
-  notebook: string;
   lately: string;
   updated: string;
   sealNote: string;
@@ -42,8 +41,6 @@ const COPY: Record<Locale, HomeCopy> = {
       "software that makes a site's batteries, PV, EV chargers and grid connection work as one. " +
       "Lately I'm also hooked on energy management for AI data-center campuses. On weekends " +
       "I'm on a bike somewhere south of Munich.",
-    notebook:
-      "This site is my notebook: research notes, rides, books, and the occasional guitar evening.",
     lately: "Lately",
     updated: "updated",
     sealNote: "my name, stamped",
@@ -56,7 +53,6 @@ const COPY: Record<Locale, HomeCopy> = {
       "<span class='marker'>本地能量管理系统（LEMS）</span>，" +
       "也就是让一个场站里的储能、光伏、充电桩和并网点协同工作的那套软件。" +
       "最近还迷上了 AI 数据中心园区的能量管理。周末多半在慕尼黑以南的某条路上骑车。",
-    notebook: "这个网站是我的笔记本：研究、骑行、读书，偶尔还有一晚吉他。",
     lately: "最近",
     updated: "更新于",
     sealNote: "我的名章",
@@ -71,8 +67,6 @@ const COPY: Record<Locale, HomeCopy> = {
       "Netzanschluss eines Standorts zusammenspielen lässt. Seit Kurzem beschäftigt mich auch " +
       "das Energiemanagement von KI-Rechenzentrumsparks. Am Wochenende sitze ich irgendwo " +
       "südlich von München auf dem Rad.",
-    notebook:
-      "Diese Seite ist mein Notizbuch: Forschung, Ausfahrten, Bücher und ab und zu ein Gitarrenabend.",
     lately: "Gerade",
     updated: "aktualisiert",
     sealNote: "mein Namensstempel",
@@ -172,7 +166,6 @@ function isExternal(href: string): boolean {
     </div>
 
     <p class="hero-intro" set:html={copy.intro} />
-    <p class="hero-notebook">{copy.notebook}</p>
 
     <MunichClock locale={locale} />
 
@@ -339,13 +332,6 @@ function isExternal(href: string): boolean {
   .hero-intro {
     font-size: var(--text-lg);
     line-height: 1.75;
-    max-width: 38rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .hero-notebook {
-    font-size: var(--text-base);
-    color: var(--fg-muted);
     max-width: 38rem;
     margin-bottom: 1.5rem;
   }
