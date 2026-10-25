@@ -1,0 +1,9 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import HobbiesIndex from "@/components/HobbiesIndex.astro";
+import { t, DEFAULT_LOCALE } from "@/i18n";
+---
+
+<BaseLayout title={t(DEFAULT_LOCALE, "hobbies.title")} locale={DEFAULT_LOCALE}>
+  <HobbiesIndex locale={DEFAULT_LOCALE} />
+</BaseLayout>

@@ -1,0 +1,9 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import HobbyCycling from "@/components/HobbyCycling.astro";
+import { t, DEFAULT_LOCALE } from "@/i18n";
+---
+
+<BaseLayout title={t(DEFAULT_LOCALE, "hobbies.cycling.label")} locale={DEFAULT_LOCALE}>
+  <HobbyCycling locale={DEFAULT_LOCALE} />
+</BaseLayout>

@@ -1,0 +1,226 @@
+---
+import HandIcon from "@/components/HandIcon.astro";
+import { t, localizeUrl, type Locale } from "@/i18n";
+import { BOOKS } from "@/data/books";
+import type { HandIconName } from "@/components/hand-icons";
+import type { HobbyId } from "@/data/hobbies";
+
+interface Props {
+  locale: Locale;
+}
+
+interface HobbyEntry {
+  id: HobbyId;
+  icon: HandIconName;
+  illustration: string;
+  teaser: Record<Locale, string>;
+  fact: Record<Locale, string>;
+}
+
+const { locale } = Astro.props;
+
+const ENTRIES: HobbyEntry[] = [
+  {
+    id: "cycling",
+    icon: "bike",
+    illustration: "/images/hobbies/cyclist-rider.svg",
+    teaser: {
+      en: "Munich is best experienced at 28 km/h.",
+      zh: "慕尼黑，最好在 28 公里/小时的速度下体验。",
+      de: "München erlebt man am besten bei 28 km/h.",
+    },
+    fact: { en: "≈ 4 800 km a year", zh: "每年约 4 800 公里", de: "ca. 4 800 km pro Jahr" },
+  },
+  {
+    id: "reading",
+    icon: "book",
+    illustration: "/images/hobbies/book.svg",
+    teaser: {
+      en: "Wuxia, science fiction, and lately how politics and economies work.",
+      zh: "武侠、科幻，最近在读现实里的政治和经济。",
+      de: "Wuxia, Science-Fiction und gerade Politik und Wirtschaft.",
+    },
+    fact: {
+      en: `${BOOKS.length} books on the shelf`,
+      zh: `书架上 ${BOOKS.length} 本书`,
+      de: `${BOOKS.length} Bücher im Regal`,
+    },
+  },
+  {
+    id: "guitar",
+    icon: "guitar",
+    illustration: "/images/hobbies/guitar-singing.svg",
+    teaser: {
+      en: "Acoustic, self-taught, mostly late at night.",
+      zh: "木吉他，自学，多在深夜。",
+      de: "Akustikgitarre, autodidaktisch, meist spät abends.",
+    },
+    fact: { en: "Folk & fingerpicking", zh: "民谣与指弹", de: "Folk & Fingerpicking" },
+  },
+];
+---
+
+<div class="hobbies-index">
+  <header class="index-header">
+    <h1 class="index-title">{t(locale, "hobbies.title")}</h1>
+    <p class="index-intro">{t(locale, "hobbies.intro")}</p>
+  </header>
+
+  <ul class="entries" role="list">
+    {ENTRIES.map((entry, i) => (
+      <li>
+        <a class:list={["entry", { flip: i % 2 === 1 }]} href={localizeUrl(`/hobbies/${entry.id}/`, locale)}>
+          <span class="entry-art">
+            <img src={entry.illustration} alt="" loading={i === 0 ? "eager" : "lazy"} />
+          </span>
+          <span class="entry-text">
+            <span class="entry-title">
+              <HandIcon name={entry.icon} size={26} />
+              {t(locale, `hobbies.${entry.id}.label`)}
+            </span>
+            <span class="entry-teaser">{entry.teaser[locale]}</span>
+            <span class="entry-fact hand">{entry.fact[locale]}</span>
+            <span class="entry-arrow" aria-hidden="true">→</span>
+          </span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<style>
+  .hobbies-index {
+    max-width: var(--wide-width);
+    margin-inline: auto;
+    padding: 3.5rem var(--container-pad) 1rem;
+  }
+
+  .index-header {
+    max-width: 40rem;
+    margin-bottom: 3rem;
+  }
+
+  .index-title {
+    font-size: var(--text-hero);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin-bottom: 1rem;
+  }
+
+  .index-intro {
+    font-size: var(--text-lg);
+    color: var(--fg-muted);
+  }
+
+  .entries {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .entry {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: center;
+    gap: 2rem;
+    padding: 1.5rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    color: var(--fg);
+    text-decoration: none;
+    transition: border-color var(--transition), transform 300ms var(--ease-out),
+      box-shadow 300ms var(--ease-out);
+  }
+
+  .entry.flip {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+
+  .entry.flip .entry-art {
+    order: 2;
+  }
+
+  .entry:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .entry-art img {
+    display: block;
+    width: 100%;
+    height: 200px;
+    object-fit: contain;
+    filter: grayscale(1);
+    opacity: 0.85;
+    transition: filter 400ms ease, opacity 400ms ease;
+  }
+
+  .entry:hover .entry-art img {
+    filter: grayscale(0);
+    opacity: 1;
+  }
+
+  :global(.theme-dark) .entry-art img {
+    filter: grayscale(1) invert(1);
+    opacity: 0.6;
+  }
+
+  :global(.theme-dark) .entry:hover .entry-art img {
+    filter: grayscale(1) invert(1);
+    opacity: 0.85;
+  }
+
+  .entry-text {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .entry-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-heading);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+  }
+
+  .entry-teaser {
+    font-size: var(--text-lg);
+    line-height: 1.6;
+  }
+
+  .entry-fact {
+    font-size: 1.3rem;
+  }
+
+  .entry-arrow {
+    font-size: var(--text-xl);
+    color: var(--fg-muted);
+    transition: transform var(--transition), color var(--transition);
+  }
+
+  .entry:hover .entry-arrow {
+    color: var(--accent);
+    transform: translateX(6px);
+  }
+
+  @media (max-width: 640px) {
+    .entry,
+    .entry.flip {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .entry.flip .entry-art {
+      order: 0;
+    }
+
+    .entry-art img {
+      height: 150px;
+    }
+  }
+</style>

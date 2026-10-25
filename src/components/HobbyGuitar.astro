@@ -1,0 +1,24 @@
+---
+import HobbyShell from "@/components/HobbyShell.astro";
+import { t, type Locale } from "@/i18n";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+
+const KICKER: Record<Locale, string> = {
+  en: "the twenty minutes after a long day",
+  zh: "漫长一天之后的二十分钟",
+  de: "die zwanzig Minuten nach einem langen Tag",
+};
+---
+
+<HobbyShell
+  locale={locale}
+  hobby="guitar"
+  kicker={KICKER[locale]}
+  lead={t(locale, "hobbies.guitar.lead")}
+  illustration="/images/hobbies/guitar-singing.svg"
+/>
