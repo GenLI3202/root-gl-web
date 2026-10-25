@@ -68,6 +68,98 @@ ZH/DE versions: `src/i18n/zh.json` and `src/i18n/de.json` → key `index.tagline
 
 ---
 
+## Reading Page (WeChat Reading Sync)
+
+The Reading page (`/hobbies/reading/`, `/zh/hobbies/reading/`, `/de/hobbies/reading/`) combines two sources:
+
+- **Synced from WeChat Reading (微信读书)** — reading stats and every public shelf book with at least 3 hours of cumulative reading. Stored in `src/data/reading.json`.
+- **Hand-written** — about text, notes, epigraph and characters in `src/data/books.ts`.
+
+`src/data/library.ts` merges the two into one library. The page is built from the committed JSON; there are no API calls at runtime and the API key never reaches the site.
+
+### How the sync works
+
+`.github/workflows/reading-update.yml` runs `scripts/update-reading.mjs` every day at 04:17 UTC and on manual dispatch. If `src/data/reading.json` changed, the workflow commits it (`chore(reading): daily WeRead data update`) and the push triggers a Vercel redeploy. If nothing changed, nothing is committed.
+
+The script only re-checks books opened since the last run (`syncedThrough` in the JSON). The 3-hour threshold is `MIN_SECONDS` in the script; after changing it, run with `--full`. Use `--full` (see below) to re-check every book, for example if the data looks wrong.
+
+`src/data/reading.json` is generated — don't hand-edit it; the next run overwrites it.
+
+### One-time setup
+
+1. Get a WeRead agent API key (format `wrk-…`).
+2. GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**.
+3. Name `WEREAD_API_KEY`, value the key.
+
+Until the secret exists the job fails with "WEREAD_API_KEY is not set" and commits nothing. The workflow only runs once it is on the default branch.
+
+### Run it manually
+
+On GitHub: **Actions → Update reading data → Run workflow**. Tick **full** to re-check every book.
+
+Locally:
+
+```bash
+export WEREAD_API_KEY=wrk-...          # never commit this
+npm run update:reading                 # only books opened since the last run
+npm run update:reading -- --full       # re-check reading time for every book
+```
+
+Then review `git diff src/data/reading.json` and commit it.
+
+### What is public
+
+| Published | Never published |
+|-----------|-----------------|
+| Total hours, reading days, books read / finished, note count | Private (secret) shelf books |
+| Hours per year, hour-of-day distribution | Text of highlights and thoughts |
+| Per book: title, author, WeRead category, hours, progress, finish and last-read dates, link | Books under 3 hours of reading |
+| Per book: number of highlights and thoughts (counts only) | The API key |
+
+### Time-of-day chart uses Munich time
+
+WeRead only offers the hour-of-day distribution as an all-time aggregate in Beijing time, so it cannot be converted day by day. The script shifts it to Munich time (`Europe/Berlin`): 6 hours back for summer time (CEST), 7 hours back for winter time (CET), weighted by the share of the year Munich spends on summer time. The result is saved as `stats.hours` with `stats.hoursTimeZone`.
+
+This is an approximation: reading done while travelling or around clock changes is not separated out. The hours-per-year chart still uses Beijing calendar days.
+
+### Hide, rename or re-categorise a synced book
+
+Edit `WEREAD_OVERRIDES` in `src/data/library.ts`, keyed by the WeRead `bookId` (the `id` of the book in `reading.json`):
+
+```ts
+"35459982": { title: "潮骚", titleEn: "The Sound of Waves" },  // shorter title + English title
+"1234567":  { category: "scifi" },                             // move to another bookcase
+"7654321":  { hidden: true },                                  // remove from the shelf
+```
+
+| Field | Effect |
+|-------|--------|
+| `title` | Replaces the shortened WeRead title (series and edition suffixes are already trimmed by `shortTitle()`) |
+| `titleEn` | English title shown on EN pages |
+| `category` | One of `literature`, `ideas`, `polecon`, `wuxia`, `scifi` |
+| `hidden` | `true` removes the book from the shelf |
+
+Categories come from WeRead's own category via `CATEGORY_RULES` in `library.ts`; anything unmatched goes to literature. A book opened in the last 30 days (`RECENT_DAYS`) gets the red ribbon.
+
+### Add notes or characters to a synced book
+
+Add an entry to `BOOKS` in `src/data/books.ts` and set `wereadId` to the WeRead `bookId`. The synced copy then adds reading stats to your entry instead of appearing as a duplicate. In that entry:
+
+- `about` — one sentence per locale (required)
+- `notes` — Gen's own reading notes per locale (optional)
+- `epigraph` — a quoted line with source and translations (optional)
+- `characters` — ids from `src/data/characters.ts` (optional)
+
+### How the page reads
+
+1. **Room** — one bookcase per category.
+2. **Bookcase** — click one to zoom in; each spine's thickness is the hours read.
+3. **Book** — click a spine for a dialog with the reading facts and, if the book is in `books.ts`, the hand-written content.
+
+Headline numbers and the two charts (hours per year, time of day) are in `src/components/ReadingStats.astro`. Each chart has a table view and tooltips on hover or focus.
+
+---
+
 ## Editing Translated Strings (i18n)
 
 All UI strings live in three JSON files:
@@ -112,6 +204,9 @@ Each `.astro` file has a `<style>` block at the bottom — styles are scoped to 
 
 ### Deploy to production (Vercel)
 
+Vercel's Git integration deploys every push to `main` to production, including the daily
+reading-data commit. Other branches get preview deployments. To deploy by hand:
+
 ```bash
 vercel deploy --prod
 ```
@@ -146,7 +241,7 @@ vercel rollback
 git status                        # see what's changed
 git add <file>                    # stage specific files (avoid git add -A)
 git commit -m "type: description" # commit types: feat / fix / chore / docs
-git push                          # push to GitHub (triggers nothing — deploy is manual via vercel CLI)
+git push                          # Vercel deploys main to production; other branches get previews
 ```
 
 Commit type conventions:
@@ -167,6 +262,9 @@ Commit type conventions:
 | Edit ZH/DE homepage intro | `src/i18n/zh.json` + `de.json` → `index.tagline` |
 | Add project | `projects` array in `src/pages/projects.astro` |
 | Add project screenshot | Drop PNG in `public/images/projects/<id>.png` |
+| Add / edit a hand-written book | `BOOKS` in `src/data/books.ts` (`wereadId` links it to WeRead) |
+| Hide / rename / re-categorise a synced book | `WEREAD_OVERRIDES` in `src/data/library.ts` |
+| Refresh reading data now | `npm run update:reading` (add `-- --full` to re-check all) or run the GitHub Action |
 | Deploy to prod | `vercel deploy --prod` |
 | Local dev server | `npm run dev` |
 | Verify build before deploy | `npm run build && npm run preview` |
