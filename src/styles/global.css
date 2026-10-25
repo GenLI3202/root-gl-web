@@ -64,6 +64,7 @@
   /* Spacing */
   --container-width:  720px;  /* Content max-width */
   --nav-width:        960px;  /* Nav max-width */
+  --wide-width:       960px;  /* Hobby sub-pages and other wide layouts */
   --container-pad:    1.5rem; /* Side padding */
 
   /* Border radii */
