@@ -77,6 +77,7 @@
 
 - [x] **Humanize pass, step 1b** — name seal now uses Gen's own brush-written 李根 (traced from a photo, cinnabar stamp texture, `public/images/seal-ligen.svg`); all emoji replaced by pen-drawn `HandIcon` SVGs (`src/components/hand-icons.ts`)
 - [x] **Munich clock: season + weather** — `MunichClock.astro` reads live Munich weather (Open-Meteo, no key, cached 30 min) and the month; riding slots switch to a "guess what I'm doing?" teaser with a reveal button in winter, rain, snow, or below 5 °C
+- [x] **Content update (Oct 2026)** — research copy now covers the Huawei PhD internship, local EMS, and AIDC campus EMS (home, Lately, About in EN/ZH/DE); club spelled "Across" everywhere with links to across-cc.de; Three-Body cards for Luo Ji, Zhang Beihai, Cheng Xin with sketch avatars and Gen's notes
 
 ## Remaining Work
 
