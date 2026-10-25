@@ -182,6 +182,11 @@ const isExternal = (href: string): boolean => !href.startsWith("/");
               </div>
               <h3 class="card-title">{p.title[locale]}</h3>
               <p class="card-desc">{p.description[locale]}</p>
+              {p.related && (
+                <a class="card-related" href={p.related.href} target="_blank" rel="noopener noreferrer">
+                  {p.related.label[locale]}
+                </a>
+              )}
               <div class="card-tags">
                 {p.tags.map((tag) => <span class="tag">{tag}</span>)}
               </div>
@@ -449,6 +454,21 @@ const isExternal = (href: string): boolean => !href.startsWith("/");
     font-size: var(--text-sm);
     color: var(--fg-muted);
     line-height: 1.6;
+  }
+
+  /* Sits above the cover link so it stays clickable on its own */
+  .card-related {
+    position: relative;
+    z-index: 2;
+    width: fit-content;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--fg);
+    text-decoration-color: var(--accent);
+  }
+
+  .card-related:hover {
+    color: var(--accent);
   }
 
   .card-tags {

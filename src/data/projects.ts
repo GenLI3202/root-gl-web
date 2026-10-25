@@ -25,6 +25,8 @@ export interface Project {
   description: Record<Locale, string>;
   tags: string[];
   href: Record<Locale, string>;
+  /** Secondary link shown inside the card, above the cover link */
+  related?: { label: Record<Locale, string>; href: string };
 }
 
 export const STAGES: Stage[] = [
@@ -172,6 +174,14 @@ export const PROJECTS: Project[] = [
     },
     tags: ["Astro", "Sveltia CMS", "TypeScript", "Python"],
     href: SAME("https://www.across-cc.de/"),
+    related: {
+      label: {
+        en: "Content posting skills for the club ↗",
+        zh: "俱乐部内部用的发帖技能 ↗",
+        de: "Posting-Skills für den Club ↗",
+      },
+      href: "https://github.com/GenLI3202/acc-content-posting-system",
+    },
   },
   {
     id: "genli-dev",
