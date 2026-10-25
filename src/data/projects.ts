@@ -5,7 +5,7 @@ import type { Locale } from "@/i18n";
  * chain; everything else goes in the "other" group.
  */
 
-export type StageId = "plan" | "operate" | "trade" | "hedge";
+export type StageId = "source" | "plan" | "operate" | "trade" | "hedge";
 export type SketchName = "site" | "map" | "pareto" | "ride" | "browser";
 
 export interface Stage {
@@ -29,6 +29,16 @@ export interface Project {
 
 export const STAGES: Stage[] = [
   {
+    id: "source",
+    tint: "var(--tint-sky)",
+    name: { en: "Source", zh: "原料", de: "Rohstoffe" },
+    question: {
+      en: "How do we mine battery raw materials while weighing cost, environment and the people affected?",
+      zh: "电池原材料怎样开采，才能兼顾成本、环境和受影响的人？",
+      de: "Wie baut man Batterierohstoffe ab und wägt dabei Kosten, Umwelt und Betroffene ab?",
+    },
+  },
+  {
     id: "plan",
     tint: "var(--tint-sage)",
     name: { en: "Plan", zh: "规划", de: "Planen" },
@@ -50,7 +60,7 @@ export const STAGES: Stage[] = [
   },
   {
     id: "trade",
-    tint: "var(--tint-sky)",
+    tint: "var(--tint-lilac)",
     name: { en: "Trade", zh: "交易", de: "Handeln" },
     question: {
       en: "Which markets should storage serve, and when?",
@@ -117,14 +127,15 @@ export const PROJECTS: Project[] = [
   },
   {
     id: "mamoda",
+    stage: "source",
     sketch: "pareto",
     tint: "var(--tint-sky)",
     title: SAME("MAMODA Web Dashboard"),
-    status: { en: "Live", zh: "已上线", de: "Live" },
+    status: { en: "PhD · Live", zh: "博士项目 · 已上线", de: "Promotion · Live" },
     description: {
-      en: "Interactive knowledge hub for sustainable mining decisions: multi-objective optimization with stakeholder-guided decision-making and live Plotly visualizations.",
-      zh: "可持续采矿决策的交互式知识平台：多目标优化、利益相关方引导的决策，以及实时 Plotly 可视化。",
-      de: "Interaktive Wissensplattform für nachhaltige Bergbauentscheidungen: Multi-Ziel-Optimierung, stakeholdergeleitete Entscheidungen und Live-Plotly-Visualisierungen.",
+      en: "Part of my PhD, at the upstream end of the chain: an interactive knowledge hub for sustainable mining decisions on battery raw materials, with multi-objective optimization, stakeholder-guided decision-making and live Plotly visualizations.",
+      zh: "我博士项目的一部分，位于价值链最上游：面向电池原材料可持续开采决策的交互式知识平台，包含多目标优化、利益相关方引导的决策和实时 Plotly 可视化。",
+      de: "Teil meiner Promotion, ganz am Anfang der Kette: eine interaktive Wissensplattform für nachhaltige Abbauentscheidungen bei Batterierohstoffen, mit Multi-Ziel-Optimierung, stakeholdergeleiteten Entscheidungen und Live-Plotly-Visualisierungen.",
     },
     tags: ["Python", "FastAPI", "Plotly", "React"],
     href: SAME("https://mamoda-web-dashboard.vercel.app/"),

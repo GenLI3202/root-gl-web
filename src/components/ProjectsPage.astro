@@ -29,7 +29,7 @@ const COPY: Record<Locale, PageCopy> = {
     kicker: "my PhD in one line",
     title: "Optimization across the energy storage value chain",
     intro:
-      "A battery is only as good as the decisions around it: where it goes, how big it is, what it does every few minutes, which markets it serves, and how it holds up when the future refuses to be predicted. Those decisions are what I work on.",
+      "A battery is only as good as the decisions around it: where its raw materials come from, where it goes, how big it is, what it does every few minutes, which markets it serves, and how it holds up when the future refuses to be predicted. Those decisions are what I work on.",
     chainTitle: "The value chain, as questions",
     chainNote: "each stage is a research question",
     researchTitle: "Along the value chain",
@@ -44,7 +44,7 @@ const COPY: Record<Locale, PageCopy> = {
     kicker: "一句话说我的博士",
     title: "贯穿储能价值链的优化",
     intro:
-      "一块电池的价值，取决于围绕它的那些决策：建在哪、建多大、每隔几分钟该做什么、参与哪些市场，以及在未来不可预测时如何稳住。我研究的就是这些决策。",
+      "一块电池的价值，取决于围绕它的那些决策：原材料从哪来、建在哪、建多大、每隔几分钟该做什么、参与哪些市场，以及在未来不可预测时如何稳住。我研究的就是这些决策。",
     chainTitle: "用问题串起来的价值链",
     chainNote: "每个环节都是一个研究问题",
     researchTitle: "价值链上的项目",
@@ -58,7 +58,7 @@ const COPY: Record<Locale, PageCopy> = {
     kicker: "meine Promotion in einem Satz",
     title: "Optimierung entlang der Wertschöpfungskette von Energiespeichern",
     intro:
-      "Ein Speicher ist nur so gut wie die Entscheidungen um ihn herum: wo er steht, wie groß er ist, was er alle paar Minuten tut, welche Märkte er bedient und wie er besteht, wenn sich die Zukunft nicht vorhersagen lässt. An diesen Entscheidungen arbeite ich.",
+      "Ein Speicher ist nur so gut wie die Entscheidungen um ihn herum: woher seine Rohstoffe kommen, wo er steht, wie groß er ist, was er alle paar Minuten tut, welche Märkte er bedient und wie er besteht, wenn sich die Zukunft nicht vorhersagen lässt. An diesen Entscheidungen arbeite ich.",
     chainTitle: "Die Wertschöpfungskette als Fragen",
     chainNote: "jede Stufe ist eine Forschungsfrage",
     researchTitle: "Entlang der Wertschöpfungskette",
@@ -74,7 +74,8 @@ const COPY: Record<Locale, PageCopy> = {
 const EMAIL = "hiligen723@gmail.com";
 
 const copy = COPY[locale];
-const research = PROJECTS.filter((p) => p.stage);
+const stageIndex = (p: Project): number => STAGES.findIndex((s) => s.id === p.stage);
+const research = PROJECTS.filter((p) => p.stage).sort((a, b) => stageIndex(a) - stageIndex(b));
 const other = PROJECTS.filter((p) => !p.stage);
 const stageOf = (p: Project) => STAGES.find((s) => s.id === p.stage);
 const isExternal = (href: string): boolean => !href.startsWith("/");
@@ -265,8 +266,8 @@ const isExternal = (href: string): boolean => !href.startsWith("/");
   .chain-steps {
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 1.75rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1.6rem;
   }
 
   .step {
@@ -345,11 +346,11 @@ const isExternal = (href: string): boolean => !href.startsWith("/");
   }
 
   .cards--research {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
   }
 
   .cards--other {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
   }
 
   .card {
@@ -526,19 +527,13 @@ const isExternal = (href: string): boolean => !href.startsWith("/");
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .step:nth-child(2)::after {
+    .step:nth-child(2n)::after {
       display: none;
-    }
-
-    .cards--other {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
   @media (max-width: 600px) {
-    .chain-steps,
-    .cards--research,
-    .cards--other {
+    .chain-steps {
       grid-template-columns: 1fr;
     }
 
