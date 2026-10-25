@@ -80,6 +80,7 @@
 - [x] **Content update (Oct 2026)** — research copy now covers the Huawei PhD internship, local EMS, and AIDC campus EMS (home, Lately, About in EN/ZH/DE); club spelled "Across" everywhere with links to across-cc.de; Three-Body cards for Luo Ji, Zhang Beihai, Cheng Xin with sketch avatars and Gen's notes
 - [x] **Reading bookshelf + sketch portraits** — `Bookshelf.astro` (spines by category, filters, detail card, optional reading notes in `src/data/books.ts`, jumps to carousel characters); all seven carousel portraits redrawn in one pen-sketch style via `scripts/sketch-portraits.py`, rules in `docs/illustration-style.md`
 - [x] **Hobbies split into sub-pages** — `/hobbies/` index plus `/hobbies/cycling/`, `/hobbies/reading/`, `/hobbies/guitar/` (EN/ZH/DE) built on `HobbyShell.astro`; horizontal tab panels and the character carousel removed; memorable characters now sit inside their book on the shelf
+- [x] **Projects page redesign** — `ProjectsPage.astro` built around "Optimization across the energy storage value chain": stage diagram (Plan / Operate / Trade / Hedge) as research questions, sketch covers (`ProjectSketch.astro`), research vs other builds, researcher invitation; data in `src/data/projects.ts`; LEMS added
 
 ## Remaining Work
 
@@ -126,5 +127,4 @@
 
 ## Known Issues / Tech Debt
 
-- Project bento cards use CSS gradients as image placeholders (no real screenshots yet)
 - esbuild parses typographic quotes (`"` U+201C) as string terminators in TS frontmatter — use `「」` or `''` instead
