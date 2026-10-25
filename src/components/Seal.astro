@@ -1,0 +1,64 @@
+---
+/**
+ * Red name seal (印章) with 李根 carved in white, stamped at a slight angle.
+ * The rough edge comes from an SVG displacement filter, so each seal reads as ink on paper.
+ */
+interface Props {
+  size?: number;
+  tilt?: number;
+  class?: string;
+}
+
+const { size = 56, tilt = -4, class: className = "" } = Astro.props;
+const filterId = `seal-ink-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<svg
+  class:list={["seal", className]}
+  width={size}
+  height={size * 1.25}
+  viewBox="0 0 80 100"
+  role="img"
+  aria-label="李根"
+  style={`--seal-tilt: ${tilt}deg;`}
+>
+  <defs>
+    <filter id={filterId} x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="7" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.4" />
+    </filter>
+  </defs>
+  <g filter={`url(#${filterId})`}>
+    <rect class="seal-body" x="3" y="3" width="74" height="94" rx="6" />
+    <rect class="seal-rim" x="8" y="8" width="64" height="84" rx="3" />
+    <text class="seal-char" x="40" y="45" text-anchor="middle">李</text>
+    <text class="seal-char" x="40" y="84" text-anchor="middle">根</text>
+  </g>
+</svg>
+
+<style>
+  .seal {
+    display: inline-block;
+    flex-shrink: 0;
+    transform: rotate(var(--seal-tilt));
+    transition: transform 400ms var(--ease-out);
+  }
+
+  .seal-body {
+    fill: var(--accent);
+  }
+
+  .seal-rim {
+    fill: none;
+    stroke: var(--bg);
+    stroke-width: 1.6;
+    opacity: 0.85;
+  }
+
+  .seal-char {
+    fill: var(--bg);
+    font-family: "Noto Serif SC", "Songti SC", "SimSun", serif;
+    font-size: 34px;
+    font-weight: 900;
+  }
+</style>
