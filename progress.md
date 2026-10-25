@@ -75,6 +75,8 @@
 
 - [x] **Humanize pass, step 1 (shell + homepage)** — warm paper palette with grain, Caveat hand font for notes, red 李根 name seal (`Seal.astro`), shared `HomePage.astro` for EN/ZH/DE with greeting, live Munich clock with "probably doing" status, "Lately" cards (edit `src/data/now.ts`), `SayHello.astro` contact card, nav seal logo + pen underline, footer sign-off
 
+- [x] **Humanize pass, step 1b** — name seal now uses Gen's own brush-written 李根 (traced from a photo, cinnabar stamp texture, `public/images/seal-ligen.svg`); all emoji replaced by pen-drawn `HandIcon` SVGs (`src/components/hand-icons.ts`)
+
 ## Remaining Work
 
 - [ ] **Humanize pass, step 2** — carry the new style into About, Projects, Hobbies, and Posts pages
