@@ -20,6 +20,8 @@
 | Styles | Design tokens, global CSS | `src/styles/global.css` |
 | i18n | Locale utilities + JSON translations, `localeSwitchUrl()` | `src/i18n/index.ts`, `en/zh/de.json` |
 | Locale pages | Dynamic `[locale]` routes for ZH/DE (index, about, projects, hobbies/*) | `src/pages/[locale]/` |
+| Reading data | WeRead stats + shelf books synced daily into a committed JSON; merged with hand-written books | `scripts/update-reading.mjs`, `.github/workflows/reading-update.yml`, `src/data/reading.json`, `books.ts`, `library.ts` |
+| Reading room | Bookcases → zoomed spines → book dialog; stats charts | `ReadingRoom.astro`, `BookcaseSketch.astro`, `BookDialog.astro`, `ReadingStats.astro`, `src/utils/sketch.ts` |
 
 ## Completed Features
 
@@ -78,15 +80,23 @@
 - [x] **Humanize pass, step 1b** — name seal now uses Gen's own brush-written 李根 (traced from a photo, cinnabar stamp texture, `public/images/seal-ligen.svg`); all emoji replaced by pen-drawn `HandIcon` SVGs (`src/components/hand-icons.ts`)
 - [x] **Munich clock: season + weather** — `MunichClock.astro` reads live Munich weather (Open-Meteo, no key, cached 30 min) and the month; riding slots switch to a "guess what I'm doing?" teaser with a reveal button in winter, rain, snow, or below 5 °C
 - [x] **Content update (Oct 2026)** — research copy now covers the Huawei PhD internship, local EMS, and AIDC campus EMS (home, Lately, About in EN/ZH/DE); club spelled "Across" everywhere with links to across-cc.de; Three-Body cards for Luo Ji, Zhang Beihai, Cheng Xin with sketch avatars and Gen's notes
-- [x] **Reading bookshelf + sketch portraits** — `Bookshelf.astro` (spines by category, filters, detail card, optional reading notes in `src/data/books.ts`, jumps to carousel characters); all seven carousel portraits redrawn in one pen-sketch style via `scripts/sketch-portraits.py`, rules in `docs/illustration-style.md`
+- [x] **Reading bookshelf + sketch portraits** — `Bookshelf.astro` (spines by category, filters, detail card — later replaced by the reading room, see below; optional reading notes in `src/data/books.ts`, jumps to carousel characters); all seven carousel portraits redrawn in one pen-sketch style via `scripts/sketch-portraits.py`, rules in `docs/illustration-style.md`
 - [x] **Hobbies split into sub-pages** — `/hobbies/` index plus `/hobbies/cycling/`, `/hobbies/reading/`, `/hobbies/guitar/` (EN/ZH/DE) built on `HobbyShell.astro`; horizontal tab panels and the character carousel removed; memorable characters now sit inside their book on the shelf
 - [x] **Projects page redesign** — `ProjectsPage.astro` built around "Optimization across the energy storage value chain": stage diagram (Plan / Operate / Trade / Hedge) as research questions, sketch covers (`ProjectSketch.astro`), research vs other builds, researcher invitation; data in `src/data/projects.ts`; LEMS added
 - [x] **Agent skills collection** — Projects page section listing public SKILL.md repos (html-presentation-deck, paper-study, acc-content-posting-system) with prompts, install commands and copy buttons; data in `src/data/skills.ts`; GridKey added to the Trade stage
+- [x] **WeRead reading sync** (2026-10-25) — `scripts/update-reading.mjs` pulls public stats (total hours, reading days, books read/finished, note count, hours per year, hour-of-day) and every public shelf book with at least 3 hours of reading from the WeChat Reading agent API into `src/data/reading.json`; private books and note text are never stored (only highlight/thought counts); re-checks only books opened since the last run (`--full` re-checks all); skips writing when nothing changed; `npm run update:reading`
+- [x] **Daily reading Action** (2026-10-25) — `.github/workflows/reading-update.yml` runs the script at 04:17 UTC and on manual dispatch (`full` checkbox), commits `reading.json` if changed so Vercel redeploys; needs repo secret `WEREAD_API_KEY`; runs only once on the default branch
+- [x] **Reading library merge** (2026-10-25) — `src/data/library.ts` merges hand-written books (`books.ts`, linked by `wereadId`) with synced books; `WEREAD_OVERRIDES` (title, English title, category, hidden), `CATEGORY_RULES` map WeRead categories to the five bookcases, red ribbon for books read in the last 30 days
+- [x] **Reading room** (2026-10-25) — `ReadingRoom.astro` (+ `BookcaseSketch.astro`, `BookDialog.astro`) replaces the bookshelf: level 1 one bookcase per category, level 2 camera zoom into the picked bookcase with spines (thickness = hours read), level 3 modal dialog per book with reading facts and hand-written content; seeded hand-drawn SVG helpers in `src/utils/sketch.ts`
+- [x] **Reading stats** (2026-10-25) — `ReadingStats.astro`: headline numbers plus pen-drawn hours-per-year and time-of-day charts, hover/focus tooltips and a table view for each
+- [x] **Time-of-day chart in Munich time** (2026-10-25) — WeRead only gives an all-time Beijing-time hour distribution; the script shifts it to Munich time (`Europe/Berlin`): 6 h back in summer time, 7 h in winter time, weighted by the share of the year on summer time; the chart is an approximation and the hours-per-year chart stays on Beijing days
+- [x] **Maintenance guide: Reading section** (2026-10-25) — `MAINTENANCE.md` documents the sync, `WEREAD_API_KEY` setup, local run, `--full`, the 3-hour rule, public vs never-published data, `WEREAD_OVERRIDES`, and attaching notes via `books.ts`
 
 ## Remaining Work
 
 - [ ] **Humanize pass, step 2** — carry the new style into About, Projects, Hobbies, and Posts pages
-- [ ] **Reading notes** — write notes for 毛泽东传, 邓小平时代, 置身事内 together with Gen
+- [ ] **Reading notes** — write notes for 毛泽东传, 邓小平时代, 置身事内 together with Gen (hand-written entries in `src/data/books.ts`)
+- [ ] **WEREAD_API_KEY secret** — add it in GitHub → Settings → Secrets and variables → Actions, then run the Action once with `full` ticked
 - [ ] **Posters** — add poster content
 
 - [ ] **Lighthouse / performance audit** — run after content stabilises
@@ -124,6 +134,9 @@
 | Long content in page frontmatter (not JSON) | Bio paragraphs contain HTML links and are too long for JSON; locale-keyed objects in `.astro` frontmatter | 2026-03-21 |
 | Hobbies horizontal panels via CSS transform (not GSAP) | Delivers the panel-switching UX without a 25KB dependency; GSAP upgrade deferred to immersive spec | 2026-03-22 |
 | Notebook look: warm paper, ink, red pen | Humanize the site; red accent doubles as cycling red and correction pen | 2026-10-25 |
+| WeRead data synced into a committed JSON by a daily GitHub Action | Keeps the build static: no runtime API calls, no client-side requests, and the API key stays in CI secrets; the commit triggers the Vercel redeploy | 2026-10-25 |
+| Reading room with zoom + dialog | Progressive disclosure: bookcases first, spines after zooming in, full book details only on demand | 2026-10-25 |
+| Hour-of-day chart converted to Munich time | WeRead only offers an all-time Beijing-time aggregate; shown in Gen's local time with a blended DST shift (approximate) | 2026-10-25 |
 | `CharacterCarousel` as a standalone Astro component | Shared between EN and ZH/DE hobbies pages; quotes are language-native, no translation needed | 2026-03-22 |
 
 ## Known Issues / Tech Debt
