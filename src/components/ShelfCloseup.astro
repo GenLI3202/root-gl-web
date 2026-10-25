@@ -1,0 +1,611 @@
+---
+import type { BookCategory } from "@/data/books";
+import { toHours, type ShelfBook } from "@/data/library";
+import type { ComponentProps } from "astro/types";
+import ShelfDecor from "@/components/ShelfDecor.astro";
+
+/**
+ * Close-up of one bookcase, shown in the reading-room stage after the camera has moved in:
+ * a walnut case with a warm downlight in each compartment, xuan-paper spines and a few
+ * ink-wash objects that suit the category, with a name plaque at the foot of the case.
+ * Spine width follows reading hours, a red ribbon marks books read in the last 30 days, and
+ * each spine opens its book's dialog (wired up by ReadingRoom's script).
+ */
+interface Props {
+  category: BookCategory;
+  books: ShelfBook[];
+  label: string;
+  count: string;
+  back: string;
+  legend: string;
+  /** Width of this case relative to the widest one, 0–1 */
+  share: number;
+  /** Longest reading time in the library, for scaling spine width */
+  maxSeconds: number;
+}
+
+type DecorName = ComponentProps<typeof ShelfDecor>["name"];
+
+/** One compartment: its share of the books (0 for objects only) and what stands beside them */
+interface Compartment {
+  weight: number;
+  decor: DecorName[];
+}
+
+interface ShelfRow {
+  books: ShelfBook[];
+  decor: DecorName[];
+  /** Index of the row's first book across the whole case */
+  offset: number;
+}
+
+const { category, books, label, count, back, legend, share, maxSeconds } = Astro.props;
+
+/** Compartments from top to bottom, as the case stands on wide stages */
+const SHELF_PLAN: Record<BookCategory, Compartment[]> = {
+  ideas: [
+    { weight: 1, decor: ["bust", "bonsai"] },
+    { weight: 1, decor: ["stack", "censer"] },
+  ],
+  literature: [
+    { weight: 1, decor: [] },
+    { weight: 1, decor: ["plum-vase"] },
+  ],
+  polecon: [
+    { weight: 0, decor: ["stack", "globe", "scrolls"] },
+    { weight: 1, decor: ["map", "orchid"] },
+  ],
+  wuxia: [
+    { weight: 0, decor: ["painting", "sword"] },
+    { weight: 1, decor: ["rock"] },
+  ],
+  scifi: [
+    { weight: 0, decor: ["armillary", "starchart"] },
+    { weight: 1, decor: ["robot"] },
+  ],
+};
+
+/** Line icon on the plaque, one per category */
+const PLAQUE_ICONS: Record<BookCategory, string> = {
+  ideas:
+    "M5 11h14M6 11c0 5 2.5 7 6 7s6-2 6-7M8.5 17.5 7 21M15.5 17.5 17 21M12 18v3" +
+    "M5 11c-1-2 0-3.5 1.5-3M19 11c1-2 0-3.5-1.5-3M12 8c-1.5-1.5 1.5-2.5 0-4.5",
+  literature:
+    "M19.5 3.5 10.5 12.5M9 11l4 4M10.5 12.5C7.5 15 5.5 18 4 21c3.5-1 6.5-3.5 8.5-6.5",
+  polecon: "M3 9l9-5 9 5zM4 9.5h16M6 10.5v8M10 10.5v8M14 10.5v8M18 10.5v8M4 19h16M3 21.5h18",
+  wuxia:
+    "M5 4l11 11M19 4 8 15M13.5 18.5l5-5M5.5 13.5l5 5M16.5 16.5 20 20M7.5 16.5 4 20",
+  scifi:
+    "M17.5 12a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" +
+    "M6.8 9.2C3.4 10.3 1.5 12 2 13.2c.7 1.9 5.6 1.4 11-.8s9.2-5.3 8.5-7.2" +
+    "c-.4-1.1-2.6-1.4-5.4-.9",
+};
+
+// Spine heights cycle so a shelf looks hand-stacked, not uniform
+const SPINE_HEIGHTS = [136, 124, 148, 130, 118, 142, 128];
+const MAX_SPINE_HEIGHT = 168;
+const CJK = /[㐀-鿿]/;
+
+function spineWidth(book: ShelfBook): number {
+  if (!book.reading || maxSeconds === 0) return 40;
+  return Math.round(34 + 26 * Math.sqrt(book.reading.seconds / maxSeconds));
+}
+
+/** Height the vertical title and the hours label need at the regular title size */
+function neededHeight(book: ShelfBook): number {
+  const perChar = CJK.test(book.title) ? 14.6 : 8.4;
+  return book.title.length * perChar + (book.reading ? 52 : 32);
+}
+
+/** Cycled height, raised so the vertical title and the hours label both fit */
+function spineHeight(book: ShelfBook, index: number): number {
+  const cycled = SPINE_HEIGHTS[index % SPINE_HEIGHTS.length];
+  return Math.round(Math.min(MAX_SPINE_HEIGHT, Math.max(cycled, neededHeight(book))));
+}
+
+/** Splits the books across the compartments in proportion to their weights */
+function planRows(plan: Compartment[], all: ShelfBook[]): ShelfRow[] {
+  const total = plan.reduce((sum, c) => sum + c.weight, 0) || 1;
+  let cumulative = 0;
+  let start = 0;
+  return plan.map((compartment, i) => {
+    cumulative += compartment.weight;
+    const end = i === plan.length - 1 ? all.length : Math.round((all.length * cumulative) / total);
+    const row: ShelfRow = { books: all.slice(start, end), decor: compartment.decor, offset: start };
+    start = end;
+    return row;
+  });
+}
+
+const rows = planRows(SHELF_PLAN[category], books);
+---
+
+<section
+  class="case-view"
+  id={`case-${category}`}
+  data-case-view={category}
+  aria-labelledby={`case-${category}-title`}
+  style={`--spine: var(--shelf-${category}); --case-share: ${share.toFixed(3)};`}
+  hidden
+>
+  <div class="case-head">
+    <button type="button" class="case-back" data-close-case>
+      <span class="case-back-arrow" aria-hidden="true">←</span>
+      {back}
+    </button>
+    <p class="case-legend">{legend}</p>
+  </div>
+
+  <div class="case-cabinet">
+    <h3 class="case-title" id={`case-${category}-title`} tabindex="-1">
+      <svg class="case-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d={PLAQUE_ICONS[category]} />
+      </svg>
+      <span class="case-name">{label}</span>
+      <span class="case-count hand">{count}</span>
+    </h3>
+
+    <ul class="case-shelf" role="list">
+      {rows.map((row, r) => (
+        <>
+          {r > 0 && <li class="case-break" aria-hidden="true" />}
+          {row.books.map((book, j) => {
+            const i = row.offset + j;
+            const isLong = neededHeight(book) > MAX_SPINE_HEIGHT;
+            return (
+              <li class="case-slot">
+                <button
+                  type="button"
+                  class:list={["spine", { "is-long": isLong }]}
+                  data-open-book={book.id}
+                  aria-haspopup="dialog"
+                  aria-controls={`book-${book.id}`}
+                  style={`--spine-w: ${spineWidth(book)}px; --spine-h: ${spineHeight(book, i)}px;`}
+                >
+                  {book.recent && <span class="spine-ribbon" aria-hidden="true" />}
+                  <span class="spine-band" aria-hidden="true" />
+                  <span class="spine-title" lang={CJK.test(book.title) ? "zh" : undefined}>
+                    {book.title}
+                  </span>
+                  {book.reading && (
+                    <span class="spine-hours hand">{toHours(book.reading.seconds)}h</span>
+                  )}
+                </button>
+              </li>
+            );
+          })}
+          {row.decor.map((name) => (
+            <li class={`case-decor case-decor-${name}`} aria-hidden="true">
+              <ShelfDecor name={name} />
+            </li>
+          ))}
+        </>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  /*
+   * Shares the stage's grid cell with the room. As wide relative to the stage as the case is
+   * relative to the widest one, and centred where the camera came to rest.
+   */
+  .case-view {
+    grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    align-self: start;
+    justify-self: center;
+    width: max(min(100%, 26rem), calc(var(--case-share) * 100%));
+    padding: 0.75rem 1rem;
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+    pointer-events: none;
+    transition:
+      opacity 260ms ease,
+      transform 360ms var(--ease-out);
+  }
+
+  .case-view[hidden] {
+    display: none;
+  }
+
+  :global(.room-stage.is-zoomed) .case-view {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition:
+      opacity 320ms ease 520ms,
+      transform 420ms var(--ease-out) 520ms;
+  }
+
+  /* Back button on the left, the legend beside it in small print */
+  .case-head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem 0.9rem;
+  }
+
+  .case-back {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    padding: 0.35rem 0.85rem 0.35rem 0.7rem;
+    color: var(--fg);
+    background: var(--bg);
+    border: 1px solid var(--border-dark);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition:
+      border-color var(--transition),
+      color var(--transition),
+      transform var(--transition);
+  }
+
+  .case-back-arrow {
+    transition: transform var(--transition);
+  }
+
+  .case-back:hover,
+  .case-back:focus-visible {
+    border-color: var(--fg);
+  }
+
+  .case-back:hover .case-back-arrow,
+  .case-back:focus-visible .case-back-arrow {
+    transform: translateX(-3px);
+  }
+
+  .case-back:active {
+    transform: scale(0.97);
+  }
+
+  .case-legend {
+    font-size: var(--text-xs);
+    line-height: 1.45;
+    color: var(--fg-muted);
+  }
+
+  /*
+   * The walnut case: a grained frame around the shelves, with the name plaque set into the
+   * base. The plaque comes first in the markup so it is announced before the books.
+   */
+  .case-cabinet {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 14px 12px;
+    background:
+      repeating-linear-gradient(
+        93deg,
+        transparent 0 11px,
+        var(--closeup-grain) 11px 12px,
+        transparent 12px 29px
+      ),
+      repeating-linear-gradient(
+        88deg,
+        transparent 0 17px,
+        var(--closeup-grain) 17px 18px,
+        transparent 18px 41px
+      ),
+      linear-gradient(
+        to bottom,
+        var(--closeup-wood-edge),
+        var(--closeup-wood) 5%,
+        var(--closeup-wood) 92%,
+        var(--closeup-wood-dark)
+      );
+    border-radius: var(--radius-md);
+    box-shadow:
+      inset 0 1px 0 var(--closeup-wood-edge),
+      inset 0 0 0 1px var(--closeup-wood-dark),
+      0 22px 30px -22px var(--closeup-shade);
+  }
+
+  .case-title {
+    order: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem 0.7rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 1rem;
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--closeup-plaque-ink);
+    background: linear-gradient(to bottom, var(--closeup-plaque), var(--closeup-wood-dark));
+    border-radius: var(--radius-sm);
+    box-shadow:
+      inset 0 2px 4px var(--closeup-shade),
+      inset 0 -1px 0 var(--closeup-wood-edge);
+    outline: none;
+  }
+
+  .case-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .case-count {
+    white-space: nowrap;
+    font-size: 1.2rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--closeup-plaque-ink);
+  }
+
+  /*
+   * The shelves seen square-on. Each row is one compartment: a strip of light under the
+   * shelf above, its warm glow falling down the dark back, and a plank at the bottom.
+   */
+  .case-shelf {
+    --row: 184px;
+    --plank: 10px;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    padding: 0 10px;
+    background:
+      radial-gradient(ellipse 40% 4px at 50% 0, var(--closeup-light), transparent) 0 0 / 100%
+        var(--row) repeat-y,
+      radial-gradient(ellipse 80% 95% at 50% 0, var(--closeup-glow), transparent 72%) 0 0 / 100%
+        var(--row) repeat-y,
+      linear-gradient(
+          to bottom,
+          transparent calc(var(--row) - var(--plank)),
+          var(--closeup-plank-edge) calc(var(--row) - var(--plank)),
+          var(--closeup-plank) calc(var(--row) - var(--plank) + 2px)
+        )
+        0 0 / 100% var(--row) repeat-y,
+      linear-gradient(
+        to right,
+        var(--closeup-shade),
+        transparent 6%,
+        transparent 94%,
+        var(--closeup-shade)
+      ),
+      linear-gradient(to bottom, var(--closeup-back-lit), var(--closeup-back) 85%) 0 0 / 100%
+        var(--row) repeat-y;
+    border-radius: 2px;
+    box-shadow:
+      inset 0 0 0 1px var(--closeup-wood-dark),
+      inset 0 8px 10px -6px var(--closeup-shade);
+  }
+
+  .case-slot,
+  .case-decor {
+    display: flex;
+    align-items: flex-end;
+    height: var(--row);
+    padding: 0 2px var(--plank);
+  }
+
+  /* Starts the next compartment */
+  .case-break {
+    flex-basis: 100%;
+    height: 0;
+  }
+
+  /* Objects stand a little apart from the books and never catch the pointer */
+  .case-decor {
+    padding-inline: 0.55rem;
+    pointer-events: none;
+  }
+
+  /* The landscape hangs on the back wall and the sword rests on its stand in front of it */
+  .case-decor-painting {
+    align-items: flex-start;
+    margin-left: auto;
+    padding-top: 10px;
+  }
+
+  .case-decor-sword {
+    position: relative;
+    margin-left: -7rem;
+    margin-right: auto;
+  }
+
+  .case-decor-stack,
+  .case-decor-scrolls {
+    padding-inline: 0.3rem;
+  }
+
+  /*
+   * On narrow stages the case is one long shelf that pans sideways, books first and objects
+   * after them, so the close-up stays no taller than the room and the Back button in view.
+   */
+  @container room (max-width: 760px) {
+    .case-view {
+      width: 100%;
+      padding: 0.75rem;
+      gap: 0.55rem;
+    }
+
+    .case-cabinet {
+      padding: 10px 10px 9px;
+      gap: 8px;
+    }
+
+    .case-title {
+      padding: 0.35rem 0.8rem;
+      font-size: var(--text-base);
+    }
+
+    .case-icon {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+
+    .case-count {
+      font-size: 1.05rem;
+    }
+
+    .case-shelf {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x proximity;
+      scrollbar-width: thin;
+      scrollbar-color: var(--closeup-plank-edge) var(--closeup-back);
+    }
+
+    .case-break {
+      display: none;
+    }
+
+    .case-slot,
+    .case-decor {
+      flex: none;
+      scroll-snap-align: start;
+    }
+
+    .case-decor {
+      order: 1;
+    }
+  }
+
+  /*
+   * A spine of cream xuan paper: shaded at both edges so it reads as rounded, a band in the
+   * category's tint near the top, the title in ink running down, and the hours at the foot.
+   */
+  .spine {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    width: var(--spine-w);
+    height: var(--spine-h);
+    padding: 1.3rem 0 0.5rem;
+    background: linear-gradient(
+      to right,
+      var(--closeup-paper-shade),
+      var(--closeup-paper) 20%,
+      var(--closeup-paper) 72%,
+      var(--closeup-paper-shade)
+    );
+    border: 0;
+    border-radius: 2px 2px 0 0;
+    box-shadow:
+      inset 0 0 0 1px var(--closeup-ink-wash),
+      3px 0 4px -2px var(--closeup-shade);
+    color: var(--closeup-ink);
+    font: inherit;
+    cursor: pointer;
+    transition:
+      transform 280ms var(--ease-out),
+      box-shadow 280ms var(--ease-out);
+  }
+
+  /* A thin ink rule above the hours, like printed spine decoration */
+  .spine::after {
+    content: "";
+    position: absolute;
+    left: 0.3rem;
+    right: 0.3rem;
+    bottom: 0.3rem;
+    border-top: 1px solid var(--closeup-ink-soft);
+    opacity: 0.5;
+  }
+
+  .spine-band {
+    position: absolute;
+    top: 0.45rem;
+    left: 0;
+    right: 0;
+    height: 0.45rem;
+    background: var(--spine);
+    border-block: 1px solid var(--closeup-ink-wash);
+  }
+
+  .spine:hover {
+    transform: translateY(-6px);
+    box-shadow:
+      inset 0 0 0 1px var(--closeup-ink-wash),
+      0 10px 14px -6px var(--closeup-shade);
+  }
+
+  /* A light ring on a dark halo, so the focus stays visible on lit and shaded wood alike */
+  .spine:focus-visible {
+    transform: translateY(-6px);
+    outline: 2px solid var(--closeup-focus);
+    outline-offset: 2px;
+    border-radius: 2px 2px 0 0;
+    box-shadow:
+      inset 0 0 0 1px var(--closeup-ink-wash),
+      0 0 0 6px var(--closeup-back);
+  }
+
+  .spine:active {
+    transform: translateY(-3px);
+  }
+
+  .spine-title {
+    writing-mode: vertical-rl;
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .spine-title:lang(zh) {
+    font-family: var(--closeup-spine-font);
+    letter-spacing: 0.12em;
+  }
+
+  .spine.is-long .spine-title {
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+  }
+
+  .spine-hours {
+    font-size: 0.95rem;
+    line-height: 1;
+    color: var(--closeup-ink-soft);
+  }
+
+  /* A swallow-tailed cinnabar ribbon hanging from the top edge */
+  .spine-ribbon {
+    position: absolute;
+    top: -0.45rem;
+    right: 0.3rem;
+    width: 0.4rem;
+    height: 1.7rem;
+    background: var(--accent);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+  }
+
+  /* Reduced motion: only a short crossfade between room and close-up */
+  @media (prefers-reduced-motion: reduce) {
+    .case-view,
+    :global(.room-stage.is-zoomed) .case-view {
+      transform: none;
+      transition: opacity 180ms ease !important;
+    }
+
+    .spine,
+    .spine:hover,
+    .spine:focus-visible,
+    .spine:active {
+      transform: none;
+    }
+  }
+</style>

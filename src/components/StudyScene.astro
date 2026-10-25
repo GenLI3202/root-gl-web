@@ -1,0 +1,1194 @@
+---
+import Box3d from "@/components/Box3d.astro";
+import { seeded, sketchCurve, sketchSegment, type Point } from "@/utils/sketch";
+
+/**
+ * The study as a small 3D room in one-point perspective, painted in a freehand ink manner:
+ * paper-white plaster walls under a timber frame, a moon gate in the back wall that frames
+ * bamboo, a Taihu rock and mist (a garden "borrowed view"), light falling through lattice onto
+ * the floor (moonlight in the dark theme), a rug with a low tea table and a cushion, an ink
+ * scroll on the left wall, a writing desk in the left foreground and a standing lantern on
+ * the right. Furniture passed in the default slot stands in the same world, so every object
+ * shares the one vanishing point. The world element is the camera rig: the parent moves it
+ * through `--cam-*` custom properties, and an ancestor with `is-flying` lowers the eye to the
+ * middle of the stage so the subject ends up centred. Room units (`--u`) scale with the
+ * container width.
+ */
+
+const rand = seeded(10370819);
+const seg = (a: Point, b: Point, wobble = 0.8): string => sketchSegment(a, b, rand, wobble);
+
+/** A tapered brush leaf from (x, y), pointing at `angle` degrees */
+function leaf(x: number, y: number, angle: number, len: number, width = 0.22): string {
+  const a = (angle * Math.PI) / 180;
+  const tx = x + Math.cos(a) * len;
+  const ty = y + Math.sin(a) * len;
+  const mx = x + Math.cos(a) * len * 0.4;
+  const my = y + Math.sin(a) * len * 0.4;
+  const nx = -Math.sin(a) * len * width;
+  const ny = Math.cos(a) * len * width;
+  const r = (n: number): number => Math.round(n * 10) / 10;
+  return `M${r(x)} ${r(y)} Q${r(mx + nx)} ${r(my + ny)} ${r(tx)} ${r(ty)} Q${r(mx - nx * 0.3)} ${r(
+    my - ny * 0.3
+  )} ${r(x)} ${r(y)} Z`;
+}
+
+/** A spray of leaves hanging from one point, fanned around `angle` */
+function spray(x: number, y: number, angle: number, len: number, count = 4): string[] {
+  return Array.from({ length: count }, (_, i) =>
+    leaf(x, y, angle + (i - (count - 1) / 2) * 22 + (rand() - 0.5) * 10, len * (0.8 + rand() * 0.4))
+  );
+}
+
+/* ── Garden behind the moon gate, on a 200 × 200 canvas centred on the opening ── */
+
+const FAR_HILLS = `${sketchCurve(
+  [
+    [-10, 118],
+    [30, 92],
+    [58, 104],
+    [92, 70],
+    [124, 96],
+    [160, 82],
+    [210, 110],
+  ],
+  rand,
+  1.5
+)} L210 200 L-10 200 Z`;
+
+/** Far bamboo: thin, pale stalks behind the mist */
+const FAR_BAMBOO = [150, 162, 176, 60, 72].map((bx) =>
+  seg([bx, 200], [bx + (rand() - 0.5) * 10, 10], 3)
+);
+const FAR_LEAVES = [
+  ...spray(150, 40, 160, 16),
+  ...spray(164, 60, 30, 14),
+  ...spray(70, 50, 150, 14),
+  ...spray(176, 90, 200, 13, 3),
+];
+
+/** Near bamboo on the left of the view: three dark stalks with brushed leaf sprays */
+const NEAR_BAMBOO = [
+  seg([44, 210], [52, -10], 4),
+  seg([60, 210], [72, -10], 5),
+  seg([30, 210], [30, 20], 3),
+];
+const NEAR_LEAVES = [
+  ...spray(52, 30, 20, 22, 5),
+  ...spray(70, 56, 30, 20, 4),
+  ...spray(30, 70, 160, 18, 4),
+  ...spray(72, 12, 10, 18, 3),
+  ...spray(48, 96, 150, 16, 3),
+];
+
+/** Taihu rock: a tall, pierced limestone shape; the holes let the mist show through */
+const ROCK_OUTLINE =
+  "M98 178 C92 166 102 158 98 148 C92 136 104 128 100 116 C96 102 108 92 116 96 " +
+  "C118 84 132 78 140 86 C150 80 160 90 154 100 C164 106 158 118 162 128 " +
+  "C168 140 156 148 160 160 C164 170 158 176 162 178 Z";
+const ROCK_HOLES = [
+  "M112 112 C108 104 120 102 121 110 C122 116 114 118 112 112 Z",
+  "M138 100 C136 94 144 93 145 99 C146 104 140 106 138 100 Z",
+  "M128 132 C122 124 136 120 138 130 C140 140 130 142 128 132 Z",
+  "M110 156 C108 150 116 148 118 154 C119 160 112 162 110 156 Z",
+  "M146 150 C144 144 151 143 152 148 C153 153 148 155 146 150 Z",
+];
+const ROCK = [ROCK_OUTLINE, ...ROCK_HOLES].join(" ");
+/** Texture strokes (cun) that follow the rock's folds */
+const ROCK_INK = [
+  "M100 116 C108 120 106 130 114 136",
+  "M116 96 C120 104 128 104 130 112",
+  "M154 100 C146 108 150 116 142 122",
+  "M162 128 C152 132 154 142 146 144",
+  "M98 148 C106 150 104 162 112 168",
+  "M160 160 C150 160 150 170 142 172",
+  "M126 150 C130 158 128 166 132 174",
+];
+/** Light catching the upper face of the rock */
+const ROCK_LIGHT =
+  "M120 98 C126 86 142 84 148 94 C150 102 140 104 134 100 C128 104 122 104 120 98 Z";
+const SHRUBS = [
+  "M86 180 C84 168 98 164 102 172 C108 164 120 170 116 180 Z",
+  "M150 180 C148 170 160 166 164 174 C170 168 178 176 174 182 Z",
+];
+/** Stepping stones leading from the gate toward the rock */
+const STONES: [number, number, number][] = [
+  [100, 192, 14],
+  [112, 182, 10],
+  [122, 175, 7],
+];
+
+/** Lattice side screens just inside the opening */
+const SCREEN_STEP = 9;
+function screenLines(x0: number, x1: number): string[] {
+  const lines: string[] = [];
+  for (let x = x0; x <= x1; x += SCREEN_STEP) lines.push(seg([x, 0], [x, 200], 0.4));
+  for (let y = 4; y <= 200; y += SCREEN_STEP * 1.6) lines.push(seg([x0, y], [x1, y], 0.4));
+  return lines;
+}
+const SCREENS = [...screenLines(6, 33), ...screenLines(167, 194)];
+
+/* ── Hanging scroll: ink bamboo and a line of calligraphy, on a 60 × 160 painting ── */
+
+const SCROLL_BAMBOO = [seg([20, 150], [24, 20], 2), seg([30, 150], [36, 40], 2)];
+const SCROLL_LEAVES = [
+  ...spray(24, 40, 150, 14),
+  ...spray(36, 60, 30, 12),
+  ...spray(28, 90, 160, 12, 3),
+];
+const SCROLL_TEXT = [0, 1, 2, 3, 4, 5].map((i) => seg([50, 22 + i * 13], [50, 30 + i * 13], 1));
+
+/* ── Foreground bamboo leaves hanging into the top right corner ── */
+
+const OVERHANG_STEMS = [
+  sketchCurve(
+    [
+      [210, -4],
+      [176, 30],
+      [150, 50],
+      [120, 62],
+    ],
+    rand,
+    1
+  ),
+  sketchCurve(
+    [
+      [210, 30],
+      [186, 64],
+      [172, 96],
+    ],
+    rand,
+    1
+  ),
+];
+const OVERHANG_LEAVES = [
+  ...spray(150, 50, 130, 34, 4),
+  ...spray(122, 62, 150, 30, 3),
+  ...spray(176, 30, 110, 30, 3),
+  ...spray(186, 64, 140, 28, 4),
+  ...spray(172, 96, 115, 26, 3),
+];
+
+/** Lattice transom under the front beam, a stepped pattern on a 240 × 40 strip */
+const TRANSOM: string[] = [];
+for (let x = 0; x <= 240; x += 20) TRANSOM.push(`M${x} 0 V${x % 40 === 0 ? 40 : 22}`);
+TRANSOM.push("M0 22 H240", "M0 40 H240", "M0 2 H240");
+for (let x = 10; x < 240; x += 40) TRANSOM.push(`M${x} 22 V40 M${x - 10} 31 H${x + 10}`);
+---
+
+<div class="study">
+  <div class="study-world" data-world>
+    <span class="plane wall-back study-fade" aria-hidden="true">
+      <svg class="moon-gate" viewBox="-12 -12 224 224" aria-hidden="true" focusable="false">
+        <defs>
+          <clipPath id="gate-opening">
+            <circle cx="100" cy="100" r="92"></circle>
+          </clipPath>
+          <linearGradient id="gate-sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" class="sky-top" />
+            <stop offset="0.7" class="sky-mist" />
+          </linearGradient>
+          <linearGradient id="gate-floor-mist" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0.72" class="mist-clear" />
+            <stop offset="1" class="mist-full" />
+          </linearGradient>
+        </defs>
+        <g clip-path="url(#gate-opening)">
+          <rect x="0" y="0" width="200" height="200" fill="url(#gate-sky)" />
+          <circle class="garden-moon-halo" cx="138" cy="44" r="26" />
+          <circle class="garden-moon" cx="138" cy="44" r="11" />
+          <path class="garden-far" d={FAR_HILLS} />
+          <g class="garden-far-bamboo">
+            {FAR_BAMBOO.map((d) => <path class="stalk" d={d} />)}
+            {FAR_LEAVES.map((d) => <path class="leaf" d={d} />)}
+          </g>
+          <ellipse class="garden-mist drift" cx="110" cy="122" rx="120" ry="14" />
+          <path class="garden-ground" d="M-10 172 C40 162 150 160 210 170 L210 210 L-10 210 Z" />
+          {STONES.map(([cx, cy, rx]) => (
+            <ellipse class="garden-stone" cx={cx} cy={cy} rx={rx} ry={rx * 0.28} />
+          ))}
+          {SHRUBS.map((d) => <path class="garden-shrub" d={d} />)}
+          <path class="garden-rock" d={ROCK} />
+          <path class="garden-rock-light" d={ROCK_LIGHT} />
+          <g class="garden-rock-ink" filter="url(#hand-wobble)">
+            <path class="rock-edge" d={ROCK_OUTLINE} />
+            {ROCK_HOLES.map((d) => <path class="rock-edge" d={d} />)}
+            {ROCK_INK.map((d) => <path d={d} />)}
+          </g>
+          <g class="garden-bamboo">
+            {NEAR_BAMBOO.map((d) => <path class="stalk" d={d} />)}
+            {NEAR_LEAVES.map((d) => <path class="leaf" d={d} />)}
+          </g>
+          <ellipse class="garden-mist low" cx="90" cy="186" rx="130" ry="12" />
+          <g class="gate-screens">
+            {SCREENS.map((d) => <path d={d} />)}
+          </g>
+          <rect x="0" y="0" width="200" height="200" fill="url(#gate-floor-mist)" />
+        </g>
+        <circle class="gate-ring" cx="100" cy="100" r="98"></circle>
+        <circle class="gate-ring-inner" cx="100" cy="100" r="92.5"></circle>
+        <circle class="gate-ring-outer" cx="100" cy="100" r="104"></circle>
+      </svg>
+    </span>
+
+    <span class="plane wall-side wall-left study-fade" aria-hidden="true">
+      <svg class="hanging-scroll" viewBox="0 0 70 200" aria-hidden="true" focusable="false">
+        <path class="scroll-cord" d="M22 10 L35 0 L48 10" />
+        <rect class="scroll-mount" x="4" y="8" width="62" height="184" />
+        <rect class="scroll-paper" x="8" y="22" width="54" height="160" />
+        <g class="scroll-ink" filter="url(#hand-wobble)" transform="translate(5 22)">
+          {SCROLL_BAMBOO.map((d) => <path class="stalk" d={d} />)}
+          {SCROLL_TEXT.map((d) => <path class="text" d={d} />)}
+        </g>
+        <g class="scroll-leaves" transform="translate(5 22)">
+          {SCROLL_LEAVES.map((d) => <path d={d} />)}
+        </g>
+        <rect class="scroll-seal" x="51" y="108" width="5" height="6" />
+        <rect class="scroll-rod" x="0" y="188" width="70" height="7" rx="3" />
+        <rect class="scroll-rod" x="2" y="5" width="66" height="5" rx="2" />
+      </svg>
+    </span>
+    <span class="plane wall-side wall-right study-fade" aria-hidden="true"></span>
+    <span class="plane floor study-fade" aria-hidden="true"></span>
+    <span class="plane floor-patch gate-light study-fade" aria-hidden="true"></span>
+    <span class="plane floor-patch lattice-light study-fade" aria-hidden="true"></span>
+    <span class="plane floor-patch rug study-fade" aria-hidden="true"></span>
+
+    <span class="prop tea-table study-prop" aria-hidden="true">
+      <Box3d w={14} h={4.2} d={8} class="tea-box">
+        <svg class="table-art" viewBox="0 0 140 42" preserveAspectRatio="none" focusable="false">
+          <rect class="table-top" x="0" y="0" width="140" height="7" />
+          <path class="table-apron" d="M6 7 H134 V13 C108 17 32 17 6 13 Z" />
+          <rect class="table-leg" x="6" y="7" width="8" height="35" />
+          <rect class="table-leg" x="126" y="7" width="8" height="35" />
+        </svg>
+      </Box3d>
+      <svg class="tea-set" viewBox="0 0 100 40" aria-hidden="true" focusable="false">
+        <g class="tea-ink">
+          <path
+            class="tea-pot"
+            d="M30 39 C18 39 16 26 22 20 C28 15 46 15 52 20 C58 26 56 39 44 39 Z"
+          />
+          <path class="tea-line" d="M52 24 C60 22 62 16 66 12" />
+          <path class="tea-line" d="M22 22 C14 22 14 32 22 32" />
+          <path class="tea-pot" d="M33 16 C34 11 40 11 41 16 Z" />
+          <path class="tea-cup" d="M70 30 L84 30 L81 39 L73 39 Z" />
+          <path class="tea-cup" d="M86 32 L98 32 L96 39 L88 39 Z" />
+          <path class="tea-cup" d="M2 32 L14 32 L12 39 L4 39 Z" />
+        </g>
+      </svg>
+    </span>
+
+    <span class="prop cushion study-prop" aria-hidden="true">
+      <Box3d w={7.5} h={1.8} d={7} class="cushion-box" />
+    </span>
+
+    <span class="prop desk study-prop" aria-hidden="true">
+      <Box3d w={20} h={8.4} d={10} class="desk-box">
+        <svg class="table-art" viewBox="0 0 200 84" preserveAspectRatio="none" focusable="false">
+          <rect class="table-top" x="0" y="0" width="200" height="8" />
+          <rect class="table-apron" x="6" y="8" width="188" height="12" />
+          <rect class="desk-drawer" x="70" y="10" width="60" height="8" />
+          <rect class="table-leg" x="6" y="8" width="9" height="76" />
+          <rect class="table-leg" x="185" y="8" width="9" height="76" />
+          <path class="desk-rail" d="M15 70 H185" />
+        </svg>
+      </Box3d>
+      <svg class="desk-things" viewBox="0 0 120 50" aria-hidden="true" focusable="false">
+        <rect class="tone-ink" x="44" y="40" width="34" height="5" />
+        <rect class="tone-cream" x="46" y="45" width="30" height="5" />
+        <path class="desk-paper" d="M2 50 L30 44 L56 50 Z" />
+        <path class="desk-holder" d="M88 22 H104 V50 H88 Z" />
+        <g class="desk-brushes">
+          <path d="M92 22 L86 2" />
+          <path d="M96 22 L95 0" />
+          <path d="M100 22 L106 4" />
+          <path d="M98 22 L101 6" />
+        </g>
+      </svg>
+    </span>
+
+    <span class="prop lantern study-prop" aria-hidden="true">
+      <span class="lantern-glow"></span>
+      <svg class="lantern-art" viewBox="0 0 60 240" aria-hidden="true" focusable="false">
+        <path class="lantern-stand" d="M30 96 V226 M14 236 L30 224 L46 236 M18 236 H42" />
+        <path class="lantern-stand" d="M30 12 V22 M18 22 H42 M18 94 H42" />
+        <path class="lantern-body" d="M20 24 C8 40 8 78 20 92 H40 C52 78 52 40 40 24 Z" />
+        <path
+          class="lantern-ribs"
+          d="M30 24 V92 M24 26 C18 44 18 72 24 90 M36 26 C42 44 42 72 36 90"
+        />
+        <path class="lantern-tassel" d="M30 96 V110" />
+      </svg>
+    </span>
+
+    <slot />
+  </div>
+
+  <div class="study-overlay" aria-hidden="true">
+    <span class="sun-beams"></span>
+    <svg
+      class="overhang"
+      viewBox="0 0 210 140"
+      preserveAspectRatio="xMaxYMin meet"
+      focusable="false"
+    >
+      <g class="overhang-sway">
+        <g class="overhang-stems" filter="url(#hand-wobble)">
+          {OVERHANG_STEMS.map((d) => <path d={d} />)}
+        </g>
+        {OVERHANG_LEAVES.map((d) => <path class="overhang-leaf" d={d} />)}
+      </g>
+    </svg>
+    <span class="frame-beam"></span>
+    <svg
+      class="frame-transom left"
+      viewBox="0 0 240 40"
+      preserveAspectRatio="xMinYMin meet"
+      focusable="false"
+    >
+      {TRANSOM.map((d) => <path d={d} />)}
+    </svg>
+    <svg
+      class="frame-transom right"
+      viewBox="0 0 240 40"
+      preserveAspectRatio="xMaxYMin meet"
+      focusable="false"
+    >
+      {TRANSOM.map((d) => <path d={d} />)}
+    </svg>
+    <span class="frame-post left"></span>
+    <span class="frame-post right"></span>
+    <span class="paper-edge"></span>
+  </div>
+</div>
+
+<style>
+  /*
+   * Room geometry in room units. Origin = the eye; x right, y down, z toward the viewer.
+   * --P is the camera distance, --E the eye height inside the stage (the vanishing point),
+   * --floor how far the floor lies below the eye.
+   */
+  .study {
+    --u: 1cqw;
+    --P: 70;
+    --E: 9;
+    --floor: 40;
+    --ceil: 56;
+    --back: -46;
+    --front: 14;
+    --half: 56;
+    --stage-h: 50;
+    --plate-px: 12px;
+    --gate-r: 15.5;
+    --gate-y: 17.8;
+    --scroll-z: 28;
+    --scroll-y: 37;
+    --table-x: 2;
+    --table-z: -22;
+    --cushion-x: 14;
+    --cushion-z: -19;
+    --desk-x: -44;
+    --desk-z: 4;
+    --lamp-x: 51;
+    --lamp-z: -6;
+
+    position: relative;
+    height: calc(var(--stage-h) * var(--u));
+    perspective: calc(var(--P) * var(--u));
+    perspective-origin: 50% calc(var(--E) * var(--u));
+    transition: perspective-origin 700ms cubic-bezier(0.6, 0, 0.3, 1);
+  }
+
+  :global(.is-flying) .study {
+    perspective-origin: 50% calc(var(--stage-h) * var(--u) / 2);
+  }
+
+  /* Phone: a higher eye, three cases on the back wall and two low cabinets just in front.
+     The world is raised (negative --E) so the ceiling falls outside the stage and the room
+     stays short; the moon gate has no room there and is hidden. */
+  @container room (max-width: 560px) {
+    .study {
+      --u: 2.2cqw;
+      --E: -18;
+      --floor: 72;
+      --ceil: 92;
+      --half: 36;
+      --stage-h: 56;
+      --plate-px: 10.5px;
+      --gate-r: 7.5;
+      --gate-y: 45;
+    }
+  }
+
+  .study-world {
+    position: absolute;
+    left: 50%;
+    top: calc(var(--E) * var(--u));
+    width: 0;
+    height: 0;
+    transform-style: preserve-3d;
+    transform: translateZ(calc(var(--cam-z, 0) * var(--u)))
+      rotateY(calc(var(--cam-ry, 0) * 1deg))
+      translate3d(
+        calc(var(--cam-x, 0) * var(--u)),
+        calc(var(--cam-y, 0) * var(--u)),
+        calc(var(--cam-tz, 0) * var(--u))
+      );
+    transition:
+      transform 700ms cubic-bezier(0.6, 0, 0.3, 1),
+      top 700ms cubic-bezier(0.6, 0, 0.3, 1);
+  }
+
+  :global(.is-flying) .study-world {
+    top: calc(var(--stage-h) * var(--u) / 2);
+  }
+
+  .plane,
+  .prop {
+    position: absolute;
+    display: block;
+    transition: opacity 300ms ease;
+  }
+
+  /*
+   * Plaster back wall: a skirting board, a lintel beam with the shaded wall above it, posts at
+   * the corners, a soft halo around the gate and a faint mottling like old paper.
+   */
+  .wall-back {
+    --gate-cy: calc((var(--ceil) - var(--gate-y)) * var(--u));
+
+    left: calc(var(--half) * var(--u) * -1);
+    top: calc((var(--floor) - var(--ceil)) * var(--u));
+    width: calc(var(--half) * var(--u) * 2);
+    height: calc(var(--ceil) * var(--u));
+    background:
+      linear-gradient(to top, var(--case-wood-side) 0 calc(var(--u) * 0.9), transparent 0),
+      linear-gradient(
+        to bottom,
+        var(--room-ceiling) calc((var(--ceil) - 46) * var(--u)),
+        var(--case-wood) 0 calc((var(--ceil) - 44.4) * var(--u)),
+        transparent 0
+      ),
+      linear-gradient(
+        to right,
+        var(--case-wood) 0 calc(var(--u) * 1.6),
+        transparent 0 calc(100% - var(--u) * 1.6),
+        var(--case-wood) 0
+      ),
+      radial-gradient(
+        circle calc(var(--gate-r) * var(--u) * 2.4) at 50% var(--gate-cy),
+        var(--room-light-soft),
+        transparent
+      ),
+      radial-gradient(ellipse 30% 40% at 22% 30%, var(--room-plaster), transparent),
+      radial-gradient(ellipse 26% 30% at 80% 62%, var(--room-plaster), transparent),
+      radial-gradient(ellipse 40% 24% at 60% 12%, var(--room-plaster), transparent),
+      var(--room-wall);
+    /* A hair behind the side walls' back edges, so Chrome sorts the corner planes cleanly */
+    transform: translateZ(calc((var(--back) - 0.3) * var(--u)));
+  }
+
+  .wall-side {
+    top: calc((var(--floor) - var(--ceil)) * var(--u));
+    width: calc((var(--front) - var(--back)) * var(--u));
+    height: calc(var(--ceil) * var(--u));
+    background:
+      linear-gradient(to top, var(--case-wood-side) 0 calc(var(--u) * 0.9), transparent 0),
+      linear-gradient(
+        to bottom,
+        var(--room-ceiling) calc((var(--ceil) - 46) * var(--u)),
+        var(--case-wood) 0 calc((var(--ceil) - 44.4) * var(--u)),
+        transparent 0
+      ),
+      radial-gradient(ellipse 40% 30% at 40% 40%, var(--room-plaster), transparent),
+      var(--room-wall-side);
+    transform-origin: 0 50%;
+  }
+
+  /* Left wall runs from the front edge back; right wall from the back edge forward */
+  .wall-left {
+    left: calc(var(--half) * var(--u) * -1);
+    transform: translateZ(calc(var(--front) * var(--u))) rotateY(90deg);
+  }
+
+  .wall-right {
+    left: calc(var(--half) * var(--u));
+    transform: translateZ(calc(var(--back) * var(--u))) rotateY(-90deg);
+  }
+
+  /* Pale planks run toward the back wall, so their seams meet at the vanishing point */
+  .floor {
+    left: calc(var(--half) * var(--u) * -1);
+    top: calc(var(--floor) * var(--u));
+    width: calc(var(--half) * var(--u) * 2);
+    height: calc((var(--front) - var(--back)) * var(--u));
+    background:
+      linear-gradient(to bottom, var(--room-floor-seam), transparent 30%),
+      repeating-linear-gradient(
+        to right,
+        var(--room-floor-seam) 0 1px,
+        transparent 1px calc(var(--u) * 4.2)
+      ),
+      var(--room-floor);
+    transform-origin: 50% 0;
+    transform: translateZ(calc(var(--back) * var(--u))) rotateX(90deg);
+  }
+
+  /* Patches lying on the floor, a hair above it; --px/--pz/--pw/--pd place them in room units */
+  .floor-patch {
+    left: calc(var(--px) * var(--u));
+    top: calc(var(--floor) * var(--u) - 1px);
+    width: calc(var(--pw) * var(--u));
+    height: calc(var(--pd) * var(--u));
+    transform-origin: 50% 0;
+    transform: translateZ(calc(var(--pz) * var(--u))) rotateX(90deg);
+  }
+
+  /* Light through the gate spreads on the floor in front of it */
+  .gate-light {
+    --px: -20;
+    --pz: -46;
+    --pw: 40;
+    --pd: 34;
+
+    background: radial-gradient(ellipse 50% 60% at 50% 0, var(--room-sun-pool), transparent);
+  }
+
+  /* Sun through a lattice window on the right, its shadow grid sheared across the floor */
+  .lattice-light {
+    --px: 6;
+    --pz: -40;
+    --pw: 46;
+    --pd: 44;
+
+    background:
+      repeating-linear-gradient(
+        to right,
+        transparent 0 calc(var(--u) * 3.2),
+        var(--room-lattice) 0 calc(var(--u) * 3.8)
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 calc(var(--u) * 4.4),
+        var(--room-lattice) 0 calc(var(--u) * 5)
+      ),
+      var(--room-sun-pool);
+    -webkit-mask-image: radial-gradient(ellipse 50% 50% at 55% 50%, black 30%, transparent 75%);
+    mask-image: radial-gradient(ellipse 50% 50% at 55% 50%, black 30%, transparent 75%);
+    opacity: 0.85;
+    transform: translateZ(calc(var(--pz) * var(--u))) rotateX(90deg) skewX(-32deg);
+  }
+
+  /* Woven rug with a double border */
+  .rug {
+    --px: -17;
+    --pz: -36;
+    --pw: 40;
+    --pd: 27;
+
+    background:
+      repeating-linear-gradient(
+        45deg,
+        transparent 0 calc(var(--u) * 0.6),
+        var(--room-plaster) 0 calc(var(--u) * 1.2)
+      ),
+      var(--room-rug);
+    box-shadow:
+      inset 0 0 0 calc(var(--u) * 0.5) var(--room-rug-edge),
+      inset 0 0 0 calc(var(--u) * 1.3) var(--room-rug),
+      inset 0 0 0 calc(var(--u) * 1.5) var(--room-rug-edge);
+  }
+
+  @container room (max-width: 560px) {
+    .rug {
+      --px: -12;
+      --pz: -30;
+      --pw: 24;
+      --pd: 30;
+    }
+
+    .lattice-light {
+      --px: 2;
+      --pz: -38;
+      --pw: 30;
+    }
+  }
+
+  /* Ink-wash moon gate, centred on the back wall */
+  .moon-gate {
+    position: absolute;
+    left: calc((var(--half) - var(--gate-r) * 1.2174) * var(--u));
+    top: calc((var(--ceil) - var(--gate-y) - var(--gate-r) * 1.2174) * var(--u));
+    width: calc(var(--gate-r) * var(--u) * 2.4348);
+    height: calc(var(--gate-r) * var(--u) * 2.4348);
+  }
+
+  .sky-top {
+    stop-color: var(--garden-sky);
+  }
+
+  .sky-mist {
+    stop-color: var(--room-mist);
+  }
+
+  .mist-clear {
+    stop-color: var(--room-mist);
+    stop-opacity: 0;
+  }
+
+  .mist-full {
+    stop-color: var(--room-mist);
+    stop-opacity: 0.55;
+  }
+
+  .garden-moon {
+    fill: var(--garden-moon);
+  }
+
+  .garden-moon-halo {
+    fill: var(--garden-moon);
+    opacity: 0.18;
+  }
+
+  .garden-far {
+    fill: var(--garden-far);
+  }
+
+  .garden-far-bamboo .stalk {
+    fill: none;
+    stroke: var(--garden-bamboo-far);
+    stroke-width: 2.4;
+    stroke-dasharray: 30 1.5;
+  }
+
+  .garden-far-bamboo .leaf {
+    fill: var(--garden-bamboo-far);
+  }
+
+  .garden-mist {
+    fill: var(--room-mist);
+    opacity: 0.6;
+  }
+
+  .garden-mist.low {
+    opacity: 0.6;
+  }
+
+  /* The mist band drifts a little, side to side */
+  .drift {
+    animation: mist-drift 14s ease-in-out infinite alternate;
+  }
+
+  @keyframes mist-drift {
+    from {
+      transform: translateX(-8px);
+    }
+
+    to {
+      transform: translateX(8px);
+    }
+  }
+
+  .garden-ground {
+    fill: var(--garden-ground);
+  }
+
+  .garden-stone {
+    fill: var(--garden-rock);
+    opacity: 0.55;
+  }
+
+  .garden-shrub {
+    fill: var(--garden-bamboo);
+    opacity: 0.6;
+  }
+
+  .garden-rock {
+    fill: var(--garden-rock);
+    fill-rule: evenodd;
+  }
+
+  .garden-rock-light {
+    fill: var(--room-mist);
+    opacity: 0.45;
+  }
+
+  .garden-rock-ink path {
+    fill: none;
+    stroke: var(--garden-rock-ink);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    opacity: 0.6;
+  }
+
+  .garden-rock-ink .rock-edge {
+    stroke-width: 1.3;
+    opacity: 0.75;
+  }
+
+  .garden-bamboo .stalk {
+    fill: none;
+    stroke: var(--garden-bamboo);
+    stroke-width: 4.2;
+    stroke-linecap: round;
+    stroke-dasharray: 34 2;
+  }
+
+  .garden-bamboo .leaf {
+    fill: var(--garden-bamboo);
+    opacity: 0.92;
+  }
+
+  .gate-screens path {
+    fill: none;
+    stroke: var(--case-wood);
+    stroke-width: 2;
+    opacity: 0.9;
+  }
+
+  .gate-ring {
+    fill: none;
+    stroke: var(--case-wood);
+    stroke-width: 11;
+  }
+
+  .gate-ring-inner,
+  .gate-ring-outer {
+    fill: none;
+    stroke: var(--wood-line);
+    stroke-width: 1.4;
+    opacity: 0.45;
+  }
+
+  /* Hanging scroll on the left wall, centred on --scroll-z */
+  .hanging-scroll {
+    position: absolute;
+    left: calc((var(--scroll-z) - 3.5) * var(--u));
+    top: calc((var(--ceil) - var(--scroll-y)) * var(--u));
+    width: calc(var(--u) * 7);
+    height: calc(var(--u) * 20);
+  }
+
+  .scroll-cord {
+    fill: none;
+    stroke: var(--wood-line);
+    stroke-width: 1.2;
+  }
+
+  .scroll-mount {
+    fill: var(--book-paper);
+    stroke: var(--wood-line);
+    stroke-width: 0.6;
+  }
+
+  .scroll-paper {
+    fill: var(--scroll-paper);
+  }
+
+  .scroll-ink path {
+    fill: none;
+    stroke: var(--room-ink);
+    stroke-linecap: round;
+  }
+
+  .scroll-ink .stalk {
+    stroke-width: 2.6;
+    stroke-dasharray: 22 1.6;
+    opacity: 0.8;
+  }
+
+  .scroll-ink .text {
+    stroke-width: 2.2;
+    opacity: 0.7;
+  }
+
+  .scroll-leaves path {
+    fill: var(--room-ink);
+    opacity: 0.75;
+  }
+
+  .scroll-seal {
+    fill: var(--accent);
+  }
+
+  .scroll-rod {
+    fill: var(--case-wood);
+  }
+
+  /* Props stand on the floor at their --*-x / --*-z spot */
+  .prop {
+    left: 0;
+    top: 0;
+    transform-style: preserve-3d;
+  }
+
+  .tea-table {
+    transform: translate3d(
+      calc(var(--table-x) * var(--u)),
+      calc(var(--floor) * var(--u)),
+      calc(var(--table-z) * var(--u))
+    );
+  }
+
+  .cushion {
+    transform: translate3d(
+      calc(var(--cushion-x) * var(--u)),
+      calc(var(--floor) * var(--u)),
+      calc(var(--cushion-z) * var(--u))
+    );
+  }
+
+  .desk {
+    transform: translate3d(
+      calc(var(--desk-x) * var(--u)),
+      calc(var(--floor) * var(--u)),
+      calc(var(--desk-z) * var(--u))
+    );
+  }
+
+  .lantern {
+    transform: translate3d(
+      calc(var(--lamp-x) * var(--u)),
+      calc(var(--floor) * var(--u)),
+      calc(var(--lamp-z) * var(--u))
+    );
+  }
+
+  /* Tables are open between their legs, so the sides show only the apron and a back leg */
+  .tea-table :global(.box-front),
+  .desk :global(.box-front) {
+    background: none;
+  }
+
+  .tea-table :global(.box-side),
+  .desk :global(.box-side) {
+    background:
+      linear-gradient(to bottom, var(--case-wood-side) 0 18%, transparent 0),
+      linear-gradient(to right, transparent calc(100% - var(--u) * 0.8), var(--case-wood-side) 0);
+  }
+
+  .desk :global(.box-side) {
+    background:
+      linear-gradient(to bottom, var(--case-wood-side) 0 22%, transparent 0),
+      linear-gradient(to right, transparent calc(100% - var(--u) * 0.9), var(--case-wood-side) 0);
+  }
+
+  .tea-table :global(.box-top),
+  .desk :global(.box-top) {
+    background: var(--case-wood-top);
+  }
+
+  .cushion :global(.cushion-box) {
+    --box-front: var(--room-rug-edge);
+    --box-side: var(--room-rug-edge);
+    --box-top: var(--book-paper);
+  }
+
+  .cushion :global(.box-top) {
+    border-radius: 18%;
+  }
+
+  .table-art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .table-top {
+    fill: var(--case-wood-top);
+  }
+
+  .table-apron,
+  .table-leg {
+    fill: var(--case-wood);
+  }
+
+  .desk-drawer {
+    fill: none;
+    stroke: var(--case-wood-top);
+    stroke-width: 1.2;
+  }
+
+  .desk-rail {
+    stroke: var(--case-wood);
+    stroke-width: 3;
+  }
+
+  .tea-set {
+    position: absolute;
+    left: calc(var(--u) * -4.5);
+    top: calc(var(--u) * (-4.2 - 3.6));
+    width: calc(var(--u) * 9);
+    height: calc(var(--u) * 3.6);
+    transform: translateZ(calc(var(--u) * -3.5));
+  }
+
+  .tea-ink path {
+    stroke: var(--wood-line);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .tea-ink .tea-pot {
+    fill: var(--book-ink);
+  }
+
+  .tea-ink .tea-line {
+    fill: none;
+    stroke: var(--book-ink);
+    stroke-width: 3;
+  }
+
+  .tea-ink .tea-cup {
+    fill: var(--book-ivory);
+  }
+
+  .desk-things {
+    position: absolute;
+    left: calc(var(--u) * -8);
+    top: calc(var(--u) * (-8.4 - 5));
+    width: calc(var(--u) * 12);
+    height: calc(var(--u) * 5);
+    transform: translateZ(calc(var(--u) * -5));
+  }
+
+  .tone-ink {
+    fill: var(--book-ink);
+  }
+
+  .tone-cream {
+    fill: var(--book-cream);
+  }
+
+  .desk-paper {
+    fill: var(--book-ivory);
+  }
+
+  .desk-holder {
+    fill: var(--case-wood-side);
+  }
+
+  .desk-brushes path {
+    fill: none;
+    stroke: var(--room-ink);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  /* Standing paper lantern; its glow lies on the wall and floor behind it */
+  .lantern-art,
+  .lantern-glow {
+    position: absolute;
+    display: block;
+  }
+
+  .lantern-art {
+    left: calc(var(--u) * -3);
+    top: calc(var(--u) * -24);
+    width: calc(var(--u) * 6);
+    height: calc(var(--u) * 24);
+  }
+
+  .lantern-glow {
+    left: calc(var(--u) * -12);
+    top: calc(var(--u) * -32);
+    width: calc(var(--u) * 24);
+    height: calc(var(--u) * 24);
+    background: radial-gradient(closest-side, var(--room-lamp-glow), transparent);
+    transform: translateZ(calc(var(--u) * -1));
+  }
+
+  .lantern-stand {
+    fill: none;
+    stroke: var(--case-wood-side);
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+
+  .lantern-body {
+    fill: var(--room-lamp);
+    stroke: var(--case-wood-side);
+    stroke-width: 2;
+  }
+
+  .lantern-ribs,
+  .lantern-tassel {
+    fill: none;
+    stroke: var(--case-wood-side);
+    stroke-width: 1;
+    opacity: 0.6;
+  }
+
+  .lantern-tassel {
+    stroke: var(--accent);
+    stroke-width: 2;
+    opacity: 1;
+  }
+
+  /*
+   * Flat layers in front of the room: sun shafts, overhanging bamboo, the timber frame of the
+   * front opening, and a soft paper edge at the bottom. They fade out as soon as the camera
+   * moves.
+   */
+  .study-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transition: opacity 260ms ease;
+  }
+
+  :global(.is-zoomed) .study-overlay {
+    opacity: 0;
+  }
+
+  .study-overlay > * {
+    position: absolute;
+    display: block;
+  }
+
+  .sun-beams {
+    top: 0;
+    right: 0;
+    width: 88%;
+    height: 100%;
+    background:
+      repeating-linear-gradient(
+        116deg,
+        transparent 0 5%,
+        var(--room-sun) 6.5% 10%,
+        transparent 12% 15%,
+        var(--room-sun) 16% 17.5%,
+        transparent 19% 23%
+      ),
+      radial-gradient(ellipse 40% 50% at 92% 8%, var(--room-sun), transparent);
+    -webkit-mask-image: linear-gradient(208deg, black 10%, transparent 75%);
+    mask-image: linear-gradient(208deg, black 10%, transparent 75%);
+  }
+
+  .overhang {
+    top: 0;
+    right: 0;
+    width: 24%;
+    height: auto;
+    aspect-ratio: 210 / 140;
+  }
+
+  .overhang-sway {
+    transform-origin: 100% 0;
+    animation: bamboo-sway 9s ease-in-out infinite alternate;
+  }
+
+  @keyframes bamboo-sway {
+    from {
+      transform: rotate(-1.2deg);
+    }
+
+    to {
+      transform: rotate(1.4deg);
+    }
+  }
+
+  .overhang-stems path {
+    fill: none;
+    stroke: var(--garden-bamboo);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+  }
+
+  .overhang-leaf {
+    fill: var(--garden-bamboo);
+    opacity: 0.85;
+  }
+
+  .frame-beam {
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--u) * 1.6);
+    background: linear-gradient(
+      to bottom,
+      var(--case-wood) 70%,
+      var(--case-wood-side)
+    );
+  }
+
+  .frame-transom {
+    top: calc(var(--u) * 1.6);
+    width: 26%;
+    height: auto;
+    aspect-ratio: 240 / 40;
+  }
+
+  .frame-transom.left {
+    left: calc(var(--u) * 1.8);
+  }
+
+  .frame-transom.right {
+    right: calc(var(--u) * 1.8);
+    transform: scaleX(-1);
+  }
+
+  .frame-transom path {
+    fill: none;
+    stroke: var(--case-wood);
+    stroke-width: 2.6;
+    stroke-linecap: square;
+  }
+
+  .frame-post {
+    top: 0;
+    bottom: 0;
+    width: calc(var(--u) * 1.8);
+    background: linear-gradient(
+      to right,
+      var(--case-wood-side),
+      var(--case-wood) 40%,
+      var(--case-wood-side)
+    );
+  }
+
+  .frame-post.left {
+    left: 0;
+  }
+
+  .frame-post.right {
+    right: 0;
+  }
+
+  /* The bottom of the painting dissolves into the paper */
+  .paper-edge {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 9%;
+    background: linear-gradient(to top, var(--room-stage), transparent);
+  }
+
+  @container room (max-width: 560px) {
+    .frame-beam {
+      height: calc(var(--u) * 0.9);
+    }
+
+    .frame-post {
+      width: calc(var(--u) * 0.9);
+    }
+
+    .overhang {
+      width: 34%;
+    }
+
+    .paper-edge {
+      height: 5%;
+    }
+
+    .prop,
+    .hanging-scroll,
+    .moon-gate,
+    .study-overlay > .frame-transom {
+      display: none;
+    }
+  }
+</style>

@@ -1,12 +1,15 @@
 import type { Locale } from "@/i18n";
 
 /**
- * Books on the Hobbies → Reading shelf.
+ * Hand-written books on the Hobbies → Reading shelf. library.ts merges them with the
+ * books synced from WeChat Reading (reading.json).
+ * `wereadId` links a book to its WeRead entry, so the synced copy adds reading stats
+ * instead of appearing twice.
  * `notes` holds Gen's own reading notes per locale; a book without notes shows none.
  * `characters` lists ids from characters.ts, shown inside the book as memorable characters.
  */
 
-export type BookCategory = "polecon" | "wuxia" | "scifi" | "literature";
+export type BookCategory = "literature" | "ideas" | "polecon" | "wuxia" | "scifi";
 
 export interface Book {
   id: string;
@@ -14,6 +17,7 @@ export interface Book {
   titleEn: string;
   author: string;
   category: BookCategory;
+  wereadId?: string;
   recent?: boolean;
   about: Record<Locale, string>;
   characters?: string[];
@@ -22,13 +26,14 @@ export interface Book {
   notes?: Partial<Record<Locale, string[]>>;
 }
 
-export const CATEGORY_ORDER: BookCategory[] = ["polecon", "wuxia", "scifi", "literature"];
+export const CATEGORY_ORDER: BookCategory[] = ["literature", "ideas", "polecon", "wuxia", "scifi"];
 
 export const CATEGORY_LABELS: Record<BookCategory, Record<Locale, string>> = {
+  literature: { en: "Literature", zh: "文学", de: "Literatur" },
+  ideas: { en: "Mind & ideas", zh: "思想与心理", de: "Denken & Psyche" },
   polecon: { en: "Politics & economy", zh: "政治与经济", de: "Politik & Wirtschaft" },
   wuxia: { en: "Wuxia", zh: "武侠", de: "Wuxia" },
   scifi: { en: "Science fiction", zh: "科幻", de: "Science-Fiction" },
-  literature: { en: "Literature", zh: "文学", de: "Literatur" },
 };
 
 export const BOOKS: Book[] = [
@@ -51,7 +56,7 @@ export const BOOKS: Book[] = [
     titleEn: "Deng Xiaoping and the Transformation of China",
     author: "傅高义 Ezra F. Vogel",
     category: "polecon",
-    recent: true,
+    wereadId: "674048",
     about: {
       en: "Harvard scholar Ezra Vogel on Deng Xiaoping and China's reform and opening-up.",
       zh: "哈佛学者傅高义写邓小平与改革开放的那个时代。",
@@ -64,7 +69,7 @@ export const BOOKS: Book[] = [
     titleEn: "China's Government and Economic Development",
     author: "兰小欢 Lan Xiaohuan",
     category: "polecon",
-    recent: true,
+    wereadId: "40055543",
     about: {
       en: "How China's local governments take part in the economy: public finance, land-based financing, debt, and industrial policy.",
       zh: "讲中国地方政府如何深度参与经济发展：财税、土地融资、债务与产业政策。",
@@ -90,6 +95,7 @@ export const BOOKS: Book[] = [
     titleEn: "The Smiling, Proud Wanderer",
     author: "金庸 Jin Yong",
     category: "wuxia",
+    wereadId: "932429",
     about: {
       en: "Jin Yong's wuxia novel about sect politics and power struggles, seen through Linghu Chong.",
       zh: "金庸写江湖门派与权力之争的武侠小说，主角令狐冲。",
@@ -103,6 +109,7 @@ export const BOOKS: Book[] = [
     titleEn: "The Three-Body Trilogy",
     author: "刘慈欣 Liu Cixin",
     category: "scifi",
+    wereadId: "26070535",
     about: {
       en: "Liu Cixin's trilogy: The Three-Body Problem, The Dark Forest, Death's End.",
       zh: "刘慈欣的科幻三部曲：《三体》《黑暗森林》《死神永生》。",
