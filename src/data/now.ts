@@ -27,12 +27,12 @@ export const NOW_ITEMS: Record<Locale, NowItem[]> = {
       icon: "bike",
       label: "Riding",
       text: "Leading group rides with Accross Cycling Club Munich, and building the club's ClubHub site.",
-      href: "https://acc-clubhub.vercel.app/",
+      href: "https://www.across-cc.de/",
     },
     {
       icon: "book",
       label: "Reading",
-      text: "Wuxia and science fiction on WeChat Reading. Guo Jing and Ye Wenjie are still good company.",
+      text: "Wuxia and science fiction on WeChat Reading. Zhang Beihai, Luo Ji and Cheng Xin from the Three-Body trilogy stay on my mind.",
       href: "/hobbies/",
     },
     {
@@ -53,12 +53,12 @@ export const NOW_ITEMS: Record<Locale, NowItem[]> = {
       icon: "bike",
       label: "在骑车",
       text: "带 Accross 骑行俱乐部的团骑，顺便给俱乐部写 ClubHub 网站。",
-      href: "https://acc-clubhub.vercel.app/",
+      href: "https://www.across-cc.de/",
     },
     {
       icon: "book",
       label: "在读",
-      text: "微信读书上的武侠和科幻。郭靖和叶文洁依旧是好伙伴。",
+      text: "微信读书上的武侠和科幻。《三体》里的章北海、罗辑、程心，时常还会想起。",
       href: "/zh/hobbies/",
     },
     {
@@ -79,12 +79,12 @@ export const NOW_ITEMS: Record<Locale, NowItem[]> = {
       icon: "bike",
       label: "Radfahren",
       text: "Ich leite Gruppenausfahrten beim Accross Cycling Club München und baue die ClubHub-Seite.",
-      href: "https://acc-clubhub.vercel.app/",
+      href: "https://www.across-cc.de/",
     },
     {
       icon: "book",
       label: "Lesen",
-      text: "Wuxia und Science-Fiction in WeChat Reading. Guo Jing und Ye Wenjie sind immer noch gute Gesellschaft.",
+      text: "Wuxia und Science-Fiction in WeChat Reading. Zhang Beihai, Luo Ji und Cheng Xin aus der Trisolaris-Trilogie gehen mir nicht aus dem Kopf.",
       href: "/de/hobbies/",
     },
     {
