@@ -43,7 +43,7 @@ const COPY: Record<Locale, RoomCopy> = {
     legend: "Thicker spine, more hours read. Red ribbon: read in the last 30 days.",
     total: (n, c) => `${n} books · ${c} bookcases`,
     count: (n) => `${n} books`,
-    flow: ["Pick a bookcase", "Camera moves in", "Browse the books", "Open the details"],
+    flow: ["Pick a case", "Step closer", "Browse", "Open a book"],
   },
   zh: {
     section: "书房全景",
@@ -61,7 +61,7 @@ const COPY: Record<Locale, RoomCopy> = {
     legend: "Dickerer Rücken, mehr Lesestunden. Rotes Band: in den letzten 30 Tagen gelesen.",
     total: (n, c) => `${n} Bücher · ${c} Regale`,
     count: (n) => `${n} Bücher`,
-    flow: ["Regal wählen", "Kamera fährt heran", "Bücher ansehen", "Details öffnen"],
+    flow: ["Regal wählen", "Näher treten", "Stöbern", "Buch öffnen"],
   },
 };
 
@@ -484,14 +484,14 @@ function caseStyle(category: BookCategory): string {
     }
 
     .case[data-open-case="wuxia"] {
-      --x: -10.5;
-      --z: 9;
+      --x: -11;
+      --z: 0;
       --ry: 6;
     }
 
     .case[data-open-case="scifi"] {
-      --x: 10.5;
-      --z: 9;
+      --x: 11;
+      --z: 0;
       --ry: -6;
     }
   }
@@ -583,14 +583,22 @@ function caseStyle(category: BookCategory): string {
     transform: scale(1.3);
   }
 
+  /* Phones: dots only between steps, so the four steps fit on one line */
   @media (max-width: 560px) {
-    .room-flow li + li::after {
-      width: 0.9rem;
-      margin-inline: 0.35rem 0.15rem;
+    .room-flow {
+      flex-wrap: nowrap;
+      gap: 0 0.75rem;
+      font-size: 0.6875rem;
+      letter-spacing: 0;
+      white-space: nowrap;
     }
 
-    .room-flow {
-      letter-spacing: 0.04em;
+    .room-flow li {
+      gap: 0.3rem;
+    }
+
+    .room-flow li + li::after {
+      display: none;
     }
   }
 

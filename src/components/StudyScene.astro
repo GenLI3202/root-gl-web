@@ -404,16 +404,17 @@ for (let x = 10; x < 240; x += 40) TRANSOM.push(`M${x} 22 V40 M${x - 10} 31 H${x
     perspective-origin: 50% calc(var(--stage-h) * var(--u) / 2);
   }
 
-  /* Phone: a higher eye, three cases on the back wall and two in front; the gate becomes a
-     round window above the middle case */
+  /* Phone: a higher eye, three cases on the back wall and two low cabinets just in front.
+     The world is raised (negative --E) so the ceiling falls outside the stage and the room
+     stays short; the moon gate has no room there and is hidden. */
   @container room (max-width: 560px) {
     .study {
       --u: 2.2cqw;
-      --E: 2;
-      --floor: 60;
-      --ceil: 80;
+      --E: -18;
+      --floor: 72;
+      --ceil: 92;
       --half: 36;
-      --stage-h: 71;
+      --stage-h: 56;
       --plate-px: 10.5px;
       --gate-r: 7.5;
       --gate-y: 45;
@@ -1185,6 +1186,7 @@ for (let x = 10; x < 240; x += 40) TRANSOM.push(`M${x} 22 V40 M${x - 10} 31 H${x
 
     .prop,
     .hanging-scroll,
+    .moon-gate,
     .study-overlay > .frame-transom {
       display: none;
     }
