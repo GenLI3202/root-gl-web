@@ -1,5 +1,7 @@
 import data from "@/data/cycling.json";
+import routeData from "../../public/data/cycling-routes.json";
 import type { Locale } from "@/i18n";
+import { decodePolyline } from "./polyline.mjs";
 
 /** One ride from src/data/cycling.json: local date, km, elevation gain in m, moving seconds */
 export interface Ride {
@@ -229,4 +231,60 @@ export function climbText(locale: Locale, meters: number): string {
   if (locale === "zh") return `爬升 ${n} m`;
   if (locale === "de") return `${n} Hm`;
   return `${n} m climbing`;
+}
+
+/** A ride's simplified track: encoded polyline pieces from public/data/cycling-routes.json */
+export interface Route {
+  d: string;
+  km: number;
+  p: string[];
+}
+
+export function loadRoutes(): Route[] {
+  return routeData.routes;
+}
+
+/** Routes of rides between two dates (inclusive) that are at least `minKm` long */
+export function routesBetween(routes: Route[], from: string, to: string, minKm = 0): Route[] {
+  return routes.filter((r) => r.d >= from && r.d <= to && r.km >= minKm);
+}
+
+/**
+ * SVG path data that draws the given routes as a sketch inside a width × height box,
+ * north up and kept in proportion
+ */
+export function sketchPaths(routes: Route[], width: number, height: number, pad = 10): string[] {
+  const pieces = routes.flatMap((r) => r.p.map((p) => decodePolyline(p)));
+  const all = pieces.flat();
+  if (!all.length) return [];
+  const lats = all.map(([lat]) => lat);
+  const lons = all.map(([, lon]) => lon);
+  const minLat = Math.min(...lats);
+  const minLon = Math.min(...lons);
+  const midLat = (minLat + Math.max(...lats)) / 2;
+  const widthDeg = (Math.max(...lons) - minLon) * Math.cos((midLat * Math.PI) / 180);
+  const heightDeg = Math.max(...lats) - minLat;
+  const scale = Math.min((width - 2 * pad) / (widthDeg || 1e-6), (height - 2 * pad) / (heightDeg || 1e-6));
+  const offsetX = (width - widthDeg * scale) / 2;
+  const offsetY = (height - heightDeg * scale) / 2;
+  return pieces.map((piece) =>
+    piece
+      .map(([lat, lon], i) => {
+        const x = offsetX + (lon - minLon) * Math.cos((midLat * Math.PI) / 180) * scale;
+        const y = height - offsetY - (lat - minLat) * scale;
+        return `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`;
+      })
+      .join("")
+  );
+}
+
+const EARTH_CIRCUMFERENCE_KM = 40_075;
+const EVEREST_M = 8_849;
+
+/** Distance and climbing as playful yardsticks */
+export function funFigures(km: number, climbM: number): { aroundEarth: number; everests: number } {
+  return {
+    aroundEarth: Math.round((km / EARTH_CIRCUMFERENCE_KM) * 100),
+    everests: Math.round(climbM / EVEREST_M),
+  };
 }
