@@ -7,7 +7,9 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "update:reading": "node scripts/update-reading.mjs"
+    "update:reading": "node scripts/update-reading.mjs",
+    "update:cycling": "node scripts/update-cycling.mjs",
+    "authorize:strava": "node scripts/authorize-strava.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.0.0",
