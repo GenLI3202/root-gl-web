@@ -1,0 +1,48 @@
+---
+import { HAND_ICONS, type HandIconName } from "@/components/hand-icons";
+
+/** Small pen-drawn icon used in place of emoji. */
+interface Props {
+  name: HandIconName;
+  size?: number;
+  class?: string;
+}
+
+const { name, size = 22, class: className = "" } = Astro.props;
+---
+
+<svg
+  class:list={["hand-icon", className]}
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.7"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  <g class="hand-icon-ink">
+    {HAND_ICONS[name].map((d) => <path d={d} />)}
+  </g>
+  <!-- second, lighter pass: the pen going over the lines again -->
+  <g class="hand-icon-retrace" transform="rotate(2.2 12 12) translate(0.35 -0.3)">
+    {HAND_ICONS[name].map((d) => <path d={d} />)}
+  </g>
+</svg>
+
+<style>
+  .hand-icon {
+    display: inline-block;
+    flex-shrink: 0;
+    vertical-align: -0.2em;
+    overflow: visible;
+    filter: url(#hand-wobble);
+  }
+
+  .hand-icon-retrace {
+    opacity: 0.4;
+    stroke-width: 1;
+  }
+</style>
