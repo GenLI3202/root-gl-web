@@ -31,8 +31,10 @@ export interface ReadingStats {
   booksFinished: number;
   notes: number;
   years: { year: number; seconds: number }[];
-  /** Reading seconds per hour of the day, index 0 = 00:00 */
+  /** Reading seconds per hour of the day in local Munich time, index 0 = 00:00 */
   hours: number[];
+  /** IANA time zone of `hours` */
+  hoursTimeZone: string;
 }
 
 export interface ShelfBook extends Omit<Book, "titleEn" | "about" | "recent"> {

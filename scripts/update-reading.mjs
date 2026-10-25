@@ -20,8 +20,11 @@ const CONCURRENCY = 4;
 const OUT_PATH = path.join(process.cwd(), "src/data/reading.json");
 // WeRead buckets reading time by Beijing calendar days
 const BEIJING_OFFSET_SECONDS = 8 * 60 * 60;
-// preferTime starts at 06:00 and runs to 05:00 the next day
+// preferTime starts at 06:00 Beijing time and runs to 05:00 the next day
 const PREFER_TIME_START_HOUR = 6;
+const HOURS_TIME_ZONE = "Europe/Berlin";
+// Year used to measure how much of the year Europe/Berlin spends on summer time
+const DST_REFERENCE_YEAR = 2025;
 
 const API_KEY = process.env.WEREAD_API_KEY;
 if (!API_KEY) {
@@ -64,6 +67,24 @@ function beijingYear(unixSeconds) {
   return new Date((Number(unixSeconds) + BEIJING_OFFSET_SECONDS) * 1000).getUTCFullYear();
 }
 
+/** Share of days in DST_REFERENCE_YEAR on which Europe/Berlin is UTC+2 (summer time) */
+function summerTimeShare() {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: HOURS_TIME_ZONE,
+    timeZoneName: "shortOffset",
+  });
+  let summerDays = 0;
+  let days = 0;
+  const day = new Date(Date.UTC(DST_REFERENCE_YEAR, 0, 1, 12));
+  while (day.getUTCFullYear() === DST_REFERENCE_YEAR) {
+    const offset = formatter.formatToParts(day).find((p) => p.type === "timeZoneName")?.value;
+    if (offset === "GMT+2") summerDays++;
+    days++;
+    day.setUTCDate(day.getUTCDate() + 1);
+  }
+  return summerDays / days;
+}
+
 /** "162本" → 162 */
 function countOf(readStat, name) {
   const entry = (readStat ?? []).find((s) => s.stat === name);
@@ -103,11 +124,23 @@ const years = [...yearSeconds.entries()]
 // Drop empty years before the first year with any reading
 while (years.length && years[0].seconds === 0) years.shift();
 
+// preferTime is an all-time aggregate in Beijing time and cannot be split by date. It is
+// moved to Munich time with the usual shift, 6 h in summer (CEST) and 7 h in winter (CET),
+// weighted by the share of the year on summer time. Time spent in other zones or on other
+// clock changes cannot be separated out. Years above stay on Beijing calendar days.
 const preferTime = overall.preferTime ?? [];
-const hours =
+const summerShare = summerTimeShare();
+const beijingHours =
   preferTime.length === 24
     ? Array.from({ length: 24 }, (_, h) => preferTime[(h - PREFER_TIME_START_HOUR + 24) % 24])
     : [];
+const hours = beijingHours.length
+  ? beijingHours.map((_, h) => {
+      const summer = beijingHours[(h + 6) % 24];
+      const winter = beijingHours[(h + 7) % 24];
+      return Math.round(summerShare * summer + (1 - summerShare) * winter);
+    })
+  : [];
 
 const stats = {
   totalSeconds: overall.totalReadTime ?? 0,
@@ -117,6 +150,7 @@ const stats = {
   notes: countOf(overall.readStat, "笔记"),
   years,
   hours,
+  hoursTimeZone: HOURS_TIME_ZONE,
 };
 
 // ── Books ──
