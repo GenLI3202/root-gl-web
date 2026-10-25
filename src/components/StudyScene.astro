@@ -1,0 +1,456 @@
+---
+import Box3d from "@/components/Box3d.astro";
+import { seeded, sketchCurve, sketchSegment, type Point } from "@/utils/sketch";
+
+/**
+ * The study as a small 3D room seen in one-point perspective: plaster back wall with a moon
+ * window and an ink-wash hanging scroll, side walls, an elm plank floor, and a low tea table in
+ * the window light. Furniture passed in the default slot stands in the same world, so every
+ * object shares the one vanishing point. The world element is the camera rig: the parent moves
+ * it through `--cam-*` custom properties, and an ancestor with `is-flying` lowers the eye to the
+ * middle of the stage so the subject ends up centred. Room units (`--u`) scale with the
+ * container width.
+ */
+
+const rand = seeded(20240611);
+const seg = (a: Point, b: Point, wobble = 0.8): string => sketchSegment(a, b, rand, wobble);
+
+/** Square lattice inside the moon window, on a 200 × 200 canvas centred on the circle */
+const LATTICE_STEP = 40;
+const lattice = Array.from({ length: 4 }, (_, i) => (i + 1) * LATTICE_STEP).flatMap((v) => [
+  seg([v, 0], [v, 200], 0.8),
+  seg([0, v], [200, v], 0.8),
+]);
+
+/** Bamboo glimpsed through the window: two stalks and a few leaves */
+const bamboo = [
+  seg([132, 200], [140, 0], 2),
+  seg([150, 200], [166, 10], 2),
+  seg([132, 150], [148, 150], 0.4),
+  seg([135, 96], [152, 98], 0.4),
+  seg([138, 46], [158, 50], 0.4),
+];
+const BAMBOO_LEAVES = [
+  "M140 60 C120 58 104 66 92 78 C108 72 124 68 140 62 Z",
+  "M141 62 C128 74 120 88 118 104 C126 90 134 78 142 66 Z",
+  "M158 52 C176 44 190 46 200 52 C186 54 172 56 158 54 Z",
+  "M150 110 C134 116 122 128 116 140 C128 130 140 120 152 114 Z",
+];
+
+/** Ink-wash landscape for the hanging scroll, on a 60 × 120 painting area */
+const mountains = [
+  sketchCurve(
+    [
+      [2, 74],
+      [12, 52],
+      [20, 60],
+      [30, 30],
+      [40, 50],
+      [48, 44],
+      [58, 70],
+    ],
+    rand,
+    0.8
+  ),
+  sketchCurve(
+    [
+      [4, 96],
+      [16, 80],
+      [26, 88],
+      [36, 74],
+      [46, 84],
+      [56, 92],
+    ],
+    rand,
+    0.6
+  ),
+];
+---
+
+<div class="study">
+  <div class="study-world" data-world>
+    <span class="plane wall-back study-fade" aria-hidden="true">
+      <svg class="moon-window" viewBox="-12 -12 224 224" aria-hidden="true" focusable="false">
+        <defs>
+          <clipPath id="moon-opening">
+            <circle cx="100" cy="100" r="92"></circle>
+          </clipPath>
+        </defs>
+        <circle class="moon-sky" cx="100" cy="100" r="92"></circle>
+        <g clip-path="url(#moon-opening)">
+          <g class="moon-bamboo" filter="url(#hand-wobble)">
+            {bamboo.map((d) => <path d={d} />)}
+          </g>
+          {BAMBOO_LEAVES.map((d) => <path class="moon-leaf" d={d} />)}
+          <g class="moon-lattice">
+            {lattice.map((d) => <path d={d} />)}
+          </g>
+        </g>
+        <circle class="moon-frame" cx="100" cy="100" r="98"></circle>
+        <circle class="moon-frame-inner" cx="100" cy="100" r="91"></circle>
+      </svg>
+
+      <svg class="hanging-scroll" viewBox="0 0 70 200" aria-hidden="true" focusable="false">
+        <path class="scroll-cord" d="M22 10 L35 0 L48 10" />
+        <rect class="scroll-mount" x="4" y="8" width="62" height="184" />
+        <rect class="scroll-paper" x="9" y="40" width="52" height="120" />
+        <g class="scroll-ink" filter="url(#hand-wobble)" transform="translate(5 44)">
+          {mountains.map((d, i) => <path d={d} class={i === 0 ? "far" : "near"} />)}
+          <path class="near" d="M10 108 C20 104 34 104 50 108" />
+        </g>
+        <rect class="scroll-seal" x="49" y="146" width="6" height="7" />
+        <rect class="scroll-rod" x="0" y="190" width="70" height="7" rx="3" />
+        <rect class="scroll-rod" x="2" y="5" width="66" height="5" rx="2" />
+      </svg>
+    </span>
+
+    <span class="plane wall-side wall-left study-fade" aria-hidden="true"></span>
+    <span class="plane wall-side wall-right study-fade" aria-hidden="true"></span>
+    <span class="plane floor study-fade" aria-hidden="true"></span>
+    <span class="plane window-light study-fade" aria-hidden="true"></span>
+
+    <span class="tea-table" aria-hidden="true">
+      <Box3d w={13} h={4.4} d={8} class="tea-box">
+        <svg class="table-art" viewBox="0 0 130 44" preserveAspectRatio="none" focusable="false">
+          <rect class="table-top" x="0" y="0" width="130" height="8" />
+          <path class="table-apron" d="M6 8 H124 V14 C100 18 30 18 6 14 Z" />
+          <rect class="table-leg" x="6" y="8" width="8" height="36" />
+          <rect class="table-leg" x="116" y="8" width="8" height="36" />
+        </svg>
+      </Box3d>
+      <svg class="tea-set" viewBox="0 0 100 40" aria-hidden="true" focusable="false">
+        <g class="tea-ink" filter="url(#hand-wobble)">
+          <path
+            class="tea-pot"
+            d="M30 39 C18 39 16 26 22 20 C28 15 46 15 52 20 C58 26 56 39 44 39 Z"
+          />
+          <path class="tea-line" d="M52 24 C60 22 62 16 66 12" />
+          <path class="tea-line" d="M22 22 C14 22 14 32 22 32" />
+          <path class="tea-pot" d="M33 16 C34 11 40 11 41 16 Z" />
+          <path class="tea-cup" d="M70 30 L84 30 L81 39 L73 39 Z" />
+          <path class="tea-cup" d="M86 32 L98 32 L96 39 L88 39 Z" />
+        </g>
+      </svg>
+    </span>
+
+    <slot />
+  </div>
+</div>
+
+<style>
+  /*
+   * Room geometry in room units. Origin = the eye; x right, y down, z toward the viewer.
+   * --P is the camera distance, --E the eye height inside the stage (the vanishing point).
+   */
+  .study {
+    --u: 1cqw;
+    --P: 70;
+    --E: 6;
+    --floor: 46;
+    --ceil: 76;
+    --back: -50;
+    --front: 14;
+    --half: 55;
+    --stage-h: 55;
+    --plate-px: 13px;
+    --win-x: 21;
+    --win-y: 21;
+    --win-r: 9;
+    --scroll-x: -26;
+    --scroll-y: 31;
+    --table-x: 21;
+    --table-z: -30;
+
+    position: relative;
+    height: calc(var(--stage-h) * var(--u));
+    perspective: calc(var(--P) * var(--u));
+    perspective-origin: 50% calc(var(--E) * var(--u));
+    transition: perspective-origin 700ms cubic-bezier(0.6, 0, 0.3, 1);
+  }
+
+  :global(.is-flying) .study {
+    perspective-origin: 50% calc(var(--stage-h) * var(--u) / 2);
+  }
+
+  @container room (max-width: 560px) {
+    .study {
+      --u: 2.2cqw;
+      --E: 7;
+      --half: 34;
+      --stage-h: 61;
+      --plate-px: 11px;
+      --scroll-x: 0;
+      --scroll-y: 54;
+    }
+
+    .moon-window,
+    .tea-table,
+    .window-light {
+      display: none;
+    }
+  }
+
+  .study-world {
+    position: absolute;
+    left: 50%;
+    top: calc(var(--E) * var(--u));
+    width: 0;
+    height: 0;
+    transform-style: preserve-3d;
+    transform: translateZ(calc(var(--cam-z, 0) * var(--u)))
+      rotateY(calc(var(--cam-ry, 0) * 1deg))
+      translate3d(
+        calc(var(--cam-x, 0) * var(--u)),
+        calc(var(--cam-y, 0) * var(--u)),
+        calc(var(--cam-tz, 0) * var(--u))
+      );
+    transition:
+      transform 700ms cubic-bezier(0.6, 0, 0.3, 1),
+      top 700ms cubic-bezier(0.6, 0, 0.3, 1);
+  }
+
+  :global(.is-flying) .study-world {
+    top: calc(var(--stage-h) * var(--u) / 2);
+  }
+
+  .plane {
+    position: absolute;
+    display: block;
+    transition: opacity 300ms ease;
+  }
+
+  /* Plaster back wall with a dark skirting board and a halo around the window */
+  .wall-back {
+    left: calc(var(--half) * var(--u) * -1);
+    top: calc((var(--floor) - var(--ceil)) * var(--u));
+    width: calc(var(--half) * var(--u) * 2);
+    height: calc(var(--ceil) * var(--u));
+    background:
+      linear-gradient(to top, var(--wood-side) 0 calc(var(--u) * 1.1), transparent 0),
+      radial-gradient(
+        circle calc(var(--win-r) * var(--u) * 2.6) at
+          calc((var(--half) + var(--win-x)) * var(--u))
+          calc((var(--ceil) - var(--win-y)) * var(--u)),
+        var(--room-light-soft),
+        transparent
+      ),
+      var(--room-wall);
+    /* A hair behind the side walls' back edges, so Chrome sorts the corner planes cleanly */
+    transform: translateZ(calc((var(--back) - 0.3) * var(--u)));
+  }
+
+  .wall-side {
+    top: calc((var(--floor) - var(--ceil)) * var(--u));
+    width: calc((var(--front) - var(--back)) * var(--u));
+    height: calc(var(--ceil) * var(--u));
+    background:
+      linear-gradient(to top, var(--wood-side) 0 calc(var(--u) * 1.1), transparent 0),
+      var(--room-wall-side);
+    transform-origin: 0 50%;
+  }
+
+  /* Left wall runs from the front edge back; right wall from the back edge forward */
+  .wall-left {
+    left: calc(var(--half) * var(--u) * -1);
+    transform: translateZ(calc(var(--front) * var(--u))) rotateY(90deg);
+  }
+
+  .wall-right {
+    left: calc(var(--half) * var(--u));
+    transform: translateZ(calc(var(--back) * var(--u))) rotateY(-90deg);
+  }
+
+  /* Planks run toward the back wall, so their seams meet at the vanishing point */
+  .floor {
+    left: calc(var(--half) * var(--u) * -1);
+    top: calc(var(--floor) * var(--u));
+    width: calc(var(--half) * var(--u) * 2);
+    height: calc((var(--front) - var(--back)) * var(--u));
+    background:
+      linear-gradient(to bottom, var(--room-floor-seam), transparent 45%),
+      repeating-linear-gradient(
+        to right,
+        var(--room-floor-seam) 0 1px,
+        transparent 1px calc(var(--u) * 3.4)
+      ),
+      var(--room-floor);
+    transform-origin: 50% 0;
+    transform: translateZ(calc(var(--back) * var(--u))) rotateX(90deg);
+  }
+
+  .window-light {
+    left: calc((var(--win-x) - 11) * var(--u));
+    top: calc(var(--floor) * var(--u) - 1px);
+    width: calc(var(--u) * 22);
+    height: calc(var(--u) * 34);
+    background: radial-gradient(
+      ellipse 50% 50% at 50% 30%,
+      var(--room-light-soft),
+      transparent
+    );
+    transform-origin: 50% 0;
+    transform: translateZ(calc(var(--back) * var(--u))) rotateX(90deg);
+  }
+
+  .moon-window {
+    position: absolute;
+    left: calc((var(--half) + var(--win-x) - var(--win-r) * 1.12) * var(--u));
+    top: calc((var(--ceil) - var(--win-y) - var(--win-r) * 1.12) * var(--u));
+    width: calc(var(--win-r) * var(--u) * 2.24);
+    height: calc(var(--win-r) * var(--u) * 2.24);
+  }
+
+  .moon-sky {
+    fill: var(--room-light);
+  }
+
+  .moon-bamboo path {
+    fill: none;
+    stroke: var(--leaf);
+    stroke-width: 5;
+    stroke-linecap: round;
+    opacity: 0.55;
+  }
+
+  .moon-leaf {
+    fill: var(--leaf);
+    opacity: 0.5;
+  }
+
+  .moon-lattice path {
+    fill: none;
+    stroke: var(--wood);
+    stroke-width: 4.5;
+    stroke-linecap: round;
+  }
+
+  .moon-frame {
+    fill: none;
+    stroke: var(--wood);
+    stroke-width: 12;
+  }
+
+  .moon-frame-inner {
+    fill: none;
+    stroke: var(--wood-line);
+    stroke-width: 2;
+  }
+
+  .hanging-scroll {
+    position: absolute;
+    left: calc((var(--half) + var(--scroll-x) - 3) * var(--u));
+    top: calc((var(--ceil) - var(--scroll-y)) * var(--u));
+    width: calc(var(--u) * 6);
+    height: calc(var(--u) * 17.2);
+  }
+
+  .scroll-cord {
+    fill: none;
+    stroke: var(--wood-line);
+    stroke-width: 1.2;
+  }
+
+  .scroll-mount {
+    fill: var(--room-wall-side);
+    stroke: var(--wood-line);
+    stroke-width: 0.8;
+  }
+
+  .scroll-paper {
+    fill: var(--scroll-paper);
+  }
+
+  .scroll-ink path {
+    fill: none;
+    stroke: var(--fg);
+    stroke-linecap: round;
+  }
+
+  .scroll-ink .far {
+    stroke-width: 1.4;
+    opacity: 0.35;
+  }
+
+  .scroll-ink .near {
+    stroke-width: 2;
+    opacity: 0.75;
+  }
+
+  .scroll-seal {
+    fill: var(--accent);
+  }
+
+  .scroll-rod {
+    fill: var(--wood);
+  }
+
+  /* Low tea table: open between its legs, so the sides show only the apron and a back leg */
+  .tea-table {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-style: preserve-3d;
+    transform: translate3d(
+      calc(var(--table-x) * var(--u)),
+      calc(var(--floor) * var(--u)),
+      calc(var(--table-z) * var(--u))
+    );
+  }
+
+  .tea-table :global(.box-front) {
+    background: none;
+  }
+
+  .tea-table :global(.box-side) {
+    background:
+      linear-gradient(to bottom, var(--wood-side) 0 18%, transparent 0),
+      linear-gradient(to right, transparent calc(100% - var(--u) * 0.8), var(--wood-side) 0);
+  }
+
+  .table-art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .table-top {
+    fill: var(--wood-top);
+  }
+
+  .table-apron,
+  .table-leg {
+    fill: var(--wood);
+  }
+
+  .tea-set {
+    position: absolute;
+    left: calc(var(--u) * -4.5);
+    top: calc(var(--u) * (-4.4 - 3.6));
+    width: calc(var(--u) * 9);
+    height: calc(var(--u) * 3.6);
+    transform: translateZ(calc(var(--u) * -3.5));
+    transition: opacity 260ms ease;
+  }
+
+  .tea-ink path {
+    stroke: var(--wood-line);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .tea-ink .tea-pot {
+    fill: var(--clay);
+  }
+
+  .tea-ink .tea-line {
+    fill: none;
+    stroke: var(--clay);
+    stroke-width: 3;
+  }
+
+  .tea-ink .tea-cup {
+    fill: var(--scroll-paper);
+  }
+</style>
