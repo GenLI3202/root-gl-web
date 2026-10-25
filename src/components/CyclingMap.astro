@@ -18,6 +18,7 @@ interface Props {
     label: string;
     loading: string;
     error: string;
+    noRoutes: string;
     styleLabel: string;
     styles: Record<"paper" | "clean" | "cycling" | "terrain" | "satellite", string>;
   };
@@ -57,6 +58,7 @@ const notes = HIGHLIGHTS.map((h) => ({
     data-src="/data/cycling-routes.json"
     data-notes={JSON.stringify(notes)}
     data-error={copy.error}
+    data-no-routes={copy.noRoutes}
   >
     <p class="status">{copy.loading}</p>
   </div>
@@ -121,6 +123,21 @@ const notes = HIGHLIGHTS.map((h) => ({
     place-items: center;
     font-size: var(--text-sm);
     color: var(--fg-muted);
+  }
+
+  /* Over a live map, before any routes exist */
+  .route-map :global(.status.note) {
+    inset: auto 0.75rem 1.75rem;
+    z-index: 1000;
+    display: block;
+    width: fit-content;
+    max-width: calc(100% - 1.5rem);
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--border-dark);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    color: var(--fg);
+    pointer-events: none;
   }
 
   /* Paper: plain OpenStreetMap tiles, muted and warmed toward the site's paper */
@@ -241,6 +258,7 @@ const notes = HIGHLIGHTS.map((h) => ({
       line: { weight: 3, opacity: 0.9 },
     },
   };
+  const MUNICH: [number, number] = [48.137, 11.575];
   const DEFAULT_STYLE = "paper";
   const STYLE_KEY = "cycling-map-style";
 
@@ -284,7 +302,6 @@ const notes = HIGHLIGHTS.map((h) => ({
       const [L, response] = await Promise.all([import("leaflet"), fetch(el.dataset.src ?? "")]);
       if (!response.ok) throw new Error(`routes: HTTP ${response.status}`);
       const { routes } = (await response.json()) as { routes: Route[] };
-      status?.remove();
 
       const style = getComputedStyle(document.documentElement);
       const accent = (): string => style.getPropertyValue("--accent").trim();
@@ -296,6 +313,7 @@ const notes = HIGHLIGHTS.map((h) => ({
         timeZone: "UTC",
       });
       const notes = JSON.parse(el.dataset.notes ?? "[]") as Note[];
+      if (routes.length && status) status.remove();
 
       const map = L.map(el, {
         preferCanvas: true,
@@ -414,7 +432,16 @@ const notes = HIGHLIGHTS.map((h) => ({
       });
 
       applyStyle();
-      show("all");
+      if (routes.length) {
+        show("all");
+      } else {
+        // Nothing to frame yet: show Munich and say why the map is empty
+        map.setView(MUNICH, 9);
+        if (status) {
+          status.textContent = el.dataset.noRoutes ?? "";
+          status.classList.add("note");
+        }
+      }
     } catch (error) {
       console.error(error);
       if (status) status.textContent = el.dataset.error ?? "";
