@@ -6,7 +6,7 @@ import type { Locale } from "@/i18n";
  */
 
 export type StageId = "source" | "plan" | "operate" | "trade" | "hedge";
-export type SketchName = "site" | "map" | "pareto" | "ride" | "browser";
+export type SketchName = "site" | "map" | "pareto" | "market" | "ride" | "browser";
 
 export interface Stage {
   id: StageId;
@@ -124,6 +124,25 @@ export const PROJECTS: Project[] = [
     },
     tags: ["Python", "Pyomo", "CPLEX"],
     href: SAME("https://patentscope.wipo.int/search/en/detail.jsf?docId=WO2025026594"),
+  },
+  {
+    id: "gridkey",
+    stage: "trade",
+    sketch: "market",
+    tint: "var(--tint-lilac)",
+    title: SAME("GridKey"),
+    status: {
+      en: "Open source · Huawei TechArena 2025",
+      zh: "开源 · 华为 TechArena 2025",
+      de: "Open Source · Huawei TechArena 2025",
+    },
+    description: {
+      en: "Grew out of the Huawei TechArena 2025 challenge: Pyomo models that schedule a battery across day-ahead energy, FCR and aFRR markets, with cyclic and calendar aging costs and rolling-horizon experiments. Now a public testbed for BESS market optimization.",
+      zh: "源自华为 TechArena 2025 竞赛：用 Pyomo 建模，让一块电池在日前电能、FCR 和 aFRR 市场之间协同优化，计入循环与日历老化成本，并做滚动时域实验。现在是一个公开的储能市场优化试验平台。",
+      de: "Entstanden aus der Huawei TechArena 2025: Pyomo-Modelle, die einen Batteriespeicher über Day-Ahead-, FCR- und aFRR-Märkte einsetzen, mit zyklischen und kalendarischen Alterungskosten und Rolling-Horizon-Experimenten. Heute eine offene Testumgebung für BESS-Marktoptimierung.",
+    },
+    tags: ["Python", "Pyomo", "MILP", "HiGHS"],
+    href: SAME("https://github.com/GenLI3202/GridKey"),
   },
   {
     id: "mamoda",

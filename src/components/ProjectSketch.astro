@@ -96,6 +96,23 @@ const DRAWINGS: Record<SketchName, Drawing> = {
     ],
     accent: [circle(80, 72, 3), "M80 61 C70 61.4 66 66 69 72 C72 79 86 81 91 74 C95 68 90 61 79 61.6"],
   },
+  // Market participation: hourly prices, charge in the trough, sell at the peak
+  market: {
+    ink: [
+      "M24 100 L24.4 16 M20.6 20 L24.4 15 L28 20.4",
+      "M24 100 L184 99.4 M179 95.6 L184.4 99.4 L179.4 103",
+      "M28 62 L44 62 L44 70 L60 70 L60 80 L76 80 L76 76 L92 76 L92 58 L108 58 " +
+        "L108 40 L124 40 L124 32 L140 32 L140 48 L156 48 L156 64 L172 64",
+      "M150 12 C160 11.6 168 11.8 176 12.4 L176.2 26 C168 26.4 160 26.2 150.2 26 L150 11.6",
+      "M176.4 16.4 L179.4 16.6 L179.2 21.6 L176.4 21.8",
+      "M154 15.6 L154.2 22.6 M158.6 15.4 L158.8 22.8",
+    ],
+    dashed: ["M60 88 L60 99 M76 88 L76 99", "M124 22 L124 99 M140 22 L140 99"],
+    accent: [
+      "M68 92 L68 104 M63.6 99.6 L68 104.4 L72.4 99.8",
+      "M132 26 L132 14 M127.6 18.4 L132 13.6 L136.4 18.2",
+    ],
+  },
   // Club rides: a bike, the route, and the flag at the café stop
   ride: {
     ink: [

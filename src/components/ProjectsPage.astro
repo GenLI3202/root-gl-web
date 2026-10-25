@@ -346,7 +346,7 @@ const isExternal = (href: string): boolean => !href.startsWith("/");
   }
 
   .cards--research {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .cards--other {
@@ -533,7 +533,8 @@ const isExternal = (href: string): boolean => !href.startsWith("/");
   }
 
   @media (max-width: 600px) {
-    .chain-steps {
+    .chain-steps,
+    .cards--research {
       grid-template-columns: 1fr;
     }
 
