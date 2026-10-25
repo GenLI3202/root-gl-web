@@ -2,27 +2,30 @@
 import type { Locale } from "@/i18n";
 import BookDialog from "@/components/BookDialog.astro";
 import ShelfCloseup from "@/components/ShelfCloseup.astro";
-import StudyBookcase, { type CaseShape } from "@/components/StudyBookcase.astro";
+import StudyBookcase, { type CaseShape, type CaseTopper } from "@/components/StudyBookcase.astro";
+import StudyHeader from "@/components/StudyHeader.astro";
 import StudyScene from "@/components/StudyScene.astro";
 import { CATEGORY_LABELS, CATEGORY_ORDER, type BookCategory } from "@/data/books";
 import { LIBRARY, type ShelfBook } from "@/data/library";
 
 /**
- * The reading room: a small 3D study with one rosewood bookcase per category. Picking a
- * bookcase moves the camera up to it and fades to a close-up of its shelves; picking a spine
- * there opens the book's dialog.
+ * The reading room: a header band, then a small 3D study with one walnut bookcase per
+ * category around a moon gate. Picking a bookcase moves the camera up to it and fades to a
+ * close-up of its shelves; picking a spine there opens the book's dialog. A quiet four-step
+ * hint under the stage marks where the visitor is in that flow.
  */
 interface Props {
   locale: Locale;
 }
 
 interface RoomCopy {
-  heading: string;
+  section: string;
   hint: string;
   back: string;
   legend: string;
-  total: (count: number) => string;
+  total: (books: number, cases: number) => string;
   count: (count: number) => string;
+  flow: [string, string, string, string];
 }
 
 interface Bookcase {
@@ -34,45 +37,55 @@ const { locale } = Astro.props;
 
 const COPY: Record<Locale, RoomCopy> = {
   en: {
-    heading: "The reading room",
+    section: "The whole room",
     hint: "pick a bookcase to step closer",
     back: "Back to the room",
     legend: "Thicker spine, more hours read. Red ribbon: read in the last 30 days.",
-    total: (n) => `${n} books`,
+    total: (n, c) => `${n} books · ${c} bookcases`,
     count: (n) => `${n} books`,
+    flow: ["Pick a bookcase", "Camera moves in", "Browse the books", "Open the details"],
   },
   zh: {
-    heading: "书房",
-    hint: "点一个书架，走近看看",
+    section: "书房全景",
+    hint: "点击书架，走近看看",
     back: "回到书房",
     legend: "书脊越厚，读得越久。红签：最近 30 天读过。",
-    total: (n) => `${n} 本书`,
+    total: (n, c) => `${n} 本书 · ${c} 个书架`,
     count: (n) => `${n} 本`,
+    flow: ["选择书架", "镜头推进", "查看书籍", "打开详情"],
   },
   de: {
-    heading: "Das Lesezimmer",
+    section: "Das ganze Zimmer",
     hint: "wähl ein Regal und tritt näher",
     back: "Zurück ins Zimmer",
     legend: "Dickerer Rücken, mehr Lesestunden. Rotes Band: in den letzten 30 Tagen gelesen.",
-    total: (n) => `${n} Bücher`,
+    total: (n, c) => `${n} Bücher · ${c} Regale`,
     count: (n) => `${n} Bücher`,
+    flow: ["Regal wählen", "Kamera fährt heran", "Bücher ansehen", "Details öffnen"],
   },
 };
 
-/** Tall cases stand along the back wall; the two smallest are low cabinets at the front */
+/** Tall cases stand by the moon gate and the left wall; wuxia and sci-fi are lower cabinets */
 const CASE_SHAPES: Record<BookCategory, CaseShape> = {
-  literature: { w: 26, h: 36, d: 8 },
-  ideas: { w: 16, h: 36, d: 8 },
-  polecon: { w: 15, h: 36, d: 8 },
-  wuxia: { w: 16, h: 15, d: 9 },
-  scifi: { w: 14, h: 15, d: 9 },
+  literature: { w: 22, h: 34, d: 7 },
+  ideas: { w: 14, h: 34, d: 7 },
+  polecon: { w: 13, h: 34, d: 7 },
+  wuxia: { w: 13, h: 22, d: 7 },
+  scifi: { w: 14, h: 22, d: 7 },
+};
+
+/** What stands on top of each case */
+const CASE_TOPPERS: Partial<Record<BookCategory, CaseTopper>> = {
+  ideas: "incense",
+  literature: "bonsai",
+  polecon: "vase",
 };
 
 /** The widest case; each close-up keeps its case's width relative to this one */
 const WIDEST_CASE = Math.max(...Object.values(CASE_SHAPES).map((s) => s.w));
 
 const copy = COPY[locale];
-/** Tab order through the room follows where cases stand: back row left to right, then front */
+/** Tab order follows where cases stand: left to right (on phones, back row first) */
 const ROOM_ORDER: BookCategory[] = ["ideas", "literature", "polecon", "wuxia", "scifi"];
 
 const bookcases: Bookcase[] = CATEGORY_ORDER.map((category) => ({
@@ -91,10 +104,14 @@ function caseStyle(category: BookCategory): string {
 }
 ---
 
-<section class="reading-room" data-reading-room aria-labelledby="room-heading">
-  <div class="room-head">
-    <h2 class="room-heading" id="room-heading">{copy.heading}</h2>
-    <p class="room-hint hand">{copy.total(LIBRARY.length)} · {copy.hint}</p>
+<section class="reading-room" data-reading-room data-step="1" aria-labelledby="room-heading">
+  <StudyHeader locale={locale} />
+
+  <div class="room-label">
+    <span class="label-num" aria-hidden="true">01</span>
+    <span class="label-name">{copy.section}</span>
+    <span class="label-hint">{copy.hint}</span>
+    <span class="label-total">{copy.total(LIBRARY.length, bookcases.length)}</span>
   </div>
 
   <div class="room-stage" data-stage>
@@ -118,7 +135,7 @@ function caseStyle(category: BookCategory): string {
               shape={CASE_SHAPES[category]}
               label={CATEGORY_LABELS[category][locale]}
               count={copy.count(books.length)}
-              orchid={category === "scifi"}
+              topper={CASE_TOPPERS[category]}
             />
           </button>
         ))}
@@ -138,6 +155,10 @@ function caseStyle(category: BookCategory): string {
       />
     ))}
   </div>
+
+  <ol class="room-flow" aria-hidden="true">
+    {copy.flow.map((step, i) => <li data-flow-step={i + 1}>{step}</li>)}
+  </ol>
 
   {LIBRARY.map((book) => <BookDialog book={book} locale={locale} />)}
 </section>
@@ -169,6 +190,11 @@ function caseStyle(category: BookCategory): string {
     let openView: HTMLElement | null = null;
     let trigger: HTMLButtonElement | null = null;
     let timer = 0;
+
+    /** Marks the current step of the flow hint under the stage (1 room … 4 book details) */
+    function setStep(step: number): void {
+      root!.dataset.step = String(step);
+    }
 
     /**
      * Moves the camera rig so the bookcase's front face turns square to the viewer at eye level
@@ -212,6 +238,7 @@ function caseStyle(category: BookCategory): string {
       trigger = button;
 
       if (!reduceMotion.matches) aimCamera(button);
+      setStep(reduceMotion.matches ? 3 : 2);
       void view.offsetWidth; // start the fade-in from the hidden state
       stage.classList.add("is-zoomed");
       room.inert = true;
@@ -223,7 +250,10 @@ function caseStyle(category: BookCategory): string {
         });
       }
       timer = window.setTimeout(
-        () => view.querySelector<HTMLElement>(".case-title")?.focus({ preventScroll: true }),
+        () => {
+          setStep(3);
+          view.querySelector<HTMLElement>(".case-title")?.focus({ preventScroll: true });
+        },
         reduceMotion.matches ? 0 : CAMERA_MS
       );
     }
@@ -237,6 +267,7 @@ function caseStyle(category: BookCategory): string {
 
       window.clearTimeout(timer);
       resetCamera();
+      setStep(1);
       stage.classList.remove("is-zoomed");
       room.inert = false;
       button.setAttribute("aria-expanded", "false");
@@ -264,16 +295,20 @@ function caseStyle(category: BookCategory): string {
     root.querySelectorAll<HTMLButtonElement>("[data-open-book]").forEach((spine) =>
       spine.addEventListener("click", () => {
         const dialog = document.getElementById(`book-${spine.dataset.openBook}`);
-        if (dialog instanceof HTMLDialogElement) dialog.showModal();
+        if (dialog instanceof HTMLDialogElement) {
+          dialog.showModal();
+          setStep(4);
+        }
       })
     );
 
     // A click on the dialog element itself landed on the backdrop
-    root.querySelectorAll<HTMLDialogElement>("dialog").forEach((dialog) =>
+    root.querySelectorAll<HTMLDialogElement>("dialog").forEach((dialog) => {
       dialog.addEventListener("click", (event) => {
         if (event.target === dialog) dialog.close();
-      })
-    );
+      });
+      dialog.addEventListener("close", () => setStep(openView ? 3 : 1));
+    });
 
     // Escape steps back out of the close-up; an open dialog handles its own Escape first
     root.addEventListener("keydown", (event) => {
@@ -288,25 +323,46 @@ function caseStyle(category: BookCategory): string {
   .reading-room {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.9rem;
   }
 
-  .room-head {
+  /* Section label over the stage: number, name, hint, and the live counts on the right */
+  .room-label {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.25rem 1rem;
+    gap: 0.2rem 1rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--border);
   }
 
-  .room-heading {
+  .label-num {
     font-family: var(--font-heading);
-    font-size: var(--text-2xl);
-    font-weight: 700;
+    font-size: var(--text-xl);
+    font-style: italic;
+    line-height: 1;
+    color: var(--accent);
   }
 
-  .room-hint {
+  .label-name {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  .label-hint {
+    font-size: var(--text-sm);
+    letter-spacing: 0.1em;
+    color: var(--fg-muted);
+  }
+
+  .label-total {
+    margin-left: auto;
+    font-family: var(--font-hand);
     font-size: 1.2rem;
-    color: var(--accent);
+    line-height: 1;
+    color: var(--fg-muted);
   }
 
   /* Room and close-up share one grid cell, so one can fade into the other in place */
@@ -315,18 +371,13 @@ function caseStyle(category: BookCategory): string {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     overflow: hidden;
-    border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    background: var(--surface);
+    background: var(--room-stage);
     scroll-margin-top: var(--scroll-offset);
   }
 
   .room {
     grid-area: 1 / 1;
-  }
-
-  /* ── Room ── */
-  .room {
     transition: opacity 300ms ease;
   }
 
@@ -336,21 +387,20 @@ function caseStyle(category: BookCategory): string {
   }
 
   /* Everything but the picked bookcase thins out while the camera moves in */
-  .room-stage.is-zoomed :global(.study-fade),
-  .room-stage.is-zoomed :global(.tea-table) :global(.box-face),
-  .room-stage.is-zoomed :global(.tea-set),
-  .room-stage.is-zoomed .case:not(.is-target) :global(.box-face),
-  .room-stage.is-zoomed .case:not(.is-target) :global(.case-orchid) {
-    opacity: 0;
-  }
-
   .room-stage.is-zoomed :global(.study-fade) {
     opacity: 0.35;
   }
 
+  .room-stage.is-zoomed :global(.study-prop),
+  .room-stage.is-zoomed .case:not(.is-target) :global(.box-face),
+  .room-stage.is-zoomed .case:not(.is-target) :global(.case-topper) {
+    opacity: 0;
+  }
+
   /*
    * Where each bookcase stands: x and z of its front face in room units, turned by --ry.
-   * Tall cases line the back wall; the low cabinets sit forward, angled toward the middle.
+   * Literature, politics and wuxia line the back wall beside the moon gate; ideas stands
+   * forward by the left wall and sci-fi by the right, both angled toward the middle.
    * The button is as large as the case's front face, with its bottom centre on that spot,
    * so its own box is the click target and carries the focus ring.
    */
@@ -388,38 +438,41 @@ function caseStyle(category: BookCategory): string {
   }
 
   .case[data-open-case="ideas"] {
-    --x: -40;
-    --z: -42;
-    --ry: 0;
+    --x: -45.5;
+    --z: -27;
+    --ry: 32;
   }
 
   .case[data-open-case="literature"] {
-    --x: -6;
-    --z: -42;
+    --x: -30;
+    --z: -39;
     --ry: 0;
   }
 
   .case[data-open-case="polecon"] {
-    --x: 41.5;
-    --z: -42;
+    --x: 25.5;
+    --z: -39;
     --ry: 0;
   }
 
   .case[data-open-case="wuxia"] {
-    --x: -38;
-    --z: 2;
-    --ry: 26;
+    --x: 40;
+    --z: -39;
+    --ry: 0;
   }
 
   .case[data-open-case="scifi"] {
-    --x: 39;
-    --z: 2;
-    --ry: -26;
+    --x: 47;
+    --z: -23;
+    --ry: -32;
   }
 
+  /* Phone: three tall cases on the back wall, the two low cabinets in front */
   @container room (max-width: 560px) {
     .case[data-open-case="ideas"] {
-      --x: -23;
+      --x: -21;
+      --z: -39;
+      --ry: 0;
     }
 
     .case[data-open-case="literature"] {
@@ -427,19 +480,19 @@ function caseStyle(category: BookCategory): string {
     }
 
     .case[data-open-case="polecon"] {
-      --x: 22.5;
+      --x: 20.5;
     }
 
     .case[data-open-case="wuxia"] {
-      --x: -12.5;
-      --z: 6;
-      --ry: 14;
+      --x: -10.5;
+      --z: 9;
+      --ry: 6;
     }
 
     .case[data-open-case="scifi"] {
-      --x: 12.5;
-      --z: 6;
-      --ry: -14;
+      --x: 10.5;
+      --z: 9;
+      --ry: -6;
     }
   }
 
@@ -452,17 +505,93 @@ function caseStyle(category: BookCategory): string {
     --lift: 0.5;
   }
 
-  /* Hover: a thin ring drawn on the door frame */
+  /* Hover: the shelves brighten and a thin ring is drawn on the case frame */
+  .case :global(.case-art) {
+    transition: filter 200ms ease;
+  }
+
+  .case:hover :global(.case-art) {
+    filter: brightness(1.08);
+  }
+
   .case:hover :global(.box-front) {
     outline: 2px solid var(--accent);
     outline-offset: -2px;
   }
 
-  /* Keyboard focus: a ring around the whole case, set off against the wall rather than the wood */
+  /*
+   * Keyboard focus: a ring around the whole case, with a paper-coloured band between ring and
+   * wood so it reads against the floor and the wall alike
+   */
   .case:focus-visible {
     outline: 3px solid var(--accent);
     outline-offset: 4px;
     border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 4px var(--bg);
+  }
+
+  /* Flow hint: four quiet steps, the current one inked in */
+  .room-flow {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem 0;
+    padding: 0.25rem 0 0;
+    list-style: none;
+    font-size: var(--text-xs);
+    letter-spacing: 0.12em;
+    color: var(--fg-muted);
+  }
+
+  .room-flow li {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    transition: color 200ms ease;
+  }
+
+  .room-flow li::before {
+    content: "";
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: var(--border-dark);
+    transition: background 200ms ease, transform 200ms ease;
+  }
+
+  .room-flow li + li::after {
+    order: -1;
+    content: "";
+    width: 2.2rem;
+    height: 1px;
+    margin-inline: 0.7rem 0.25rem;
+    background: var(--border-dark);
+  }
+
+  .reading-room[data-step="1"] [data-flow-step="1"],
+  .reading-room[data-step="2"] [data-flow-step="2"],
+  .reading-room[data-step="3"] [data-flow-step="3"],
+  .reading-room[data-step="4"] [data-flow-step="4"] {
+    color: var(--fg);
+  }
+
+  .reading-room[data-step="1"] [data-flow-step="1"]::before,
+  .reading-room[data-step="2"] [data-flow-step="2"]::before,
+  .reading-room[data-step="3"] [data-flow-step="3"]::before,
+  .reading-room[data-step="4"] [data-flow-step="4"]::before {
+    background: var(--accent);
+    transform: scale(1.3);
+  }
+
+  @media (max-width: 560px) {
+    .room-flow li + li::after {
+      width: 0.9rem;
+      margin-inline: 0.35rem 0.15rem;
+    }
+
+    .room-flow {
+      letter-spacing: 0.04em;
+    }
   }
 
   /* Reduced motion: no camera move, only a short crossfade between room and close-up */
