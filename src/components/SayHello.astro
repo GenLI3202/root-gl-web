@@ -1,4 +1,5 @@
 ---
+import HandIcon from "@/components/HandIcon.astro";
 import type { Locale } from "@/i18n";
 
 interface Props {
@@ -52,7 +53,7 @@ const copy = COPY[locale];
       <p class="hello-body">{copy.body}</p>
       <div class="hello-actions">
         <a class="hello-btn" href={`mailto:${EMAIL}`}>
-          <span aria-hidden="true">✉</span> {copy.cta}
+          <HandIcon name="mail" size={18} /> {copy.cta}
         </a>
         <span class="hello-email">{EMAIL}</span>
       </div>

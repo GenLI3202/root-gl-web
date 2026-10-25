@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import HandIcon from "@/components/HandIcon.astro";
 import CharacterCarousel from "@/components/CharacterCarousel.astro";
 ---
 
@@ -17,13 +18,13 @@ import CharacterCarousel from "@/components/CharacterCarousel.astro";
     <!-- Section tabs -->
     <div class="scene-tabs" role="tablist" aria-label="Hobby sections">
       <button class="scene-tab active" data-scene="0" role="tab" aria-selected="true">
-        <span class="tab-icon">🚴</span> Cycling
+        <HandIcon name="bike" size={18} class="tab-icon" /> Cycling
       </button>
       <button class="scene-tab" data-scene="1" role="tab" aria-selected="false">
-        <span class="tab-icon">📖</span> Reading
+        <HandIcon name="book" size={18} class="tab-icon" /> Reading
       </button>
       <button class="scene-tab" data-scene="2" role="tab" aria-selected="false">
-        <span class="tab-icon">🎸</span> Guitar
+        <HandIcon name="guitar" size={18} class="tab-icon" /> Guitar
       </button>
     </div>
 
@@ -205,7 +206,6 @@ import CharacterCarousel from "@/components/CharacterCarousel.astro";
     border-bottom-color: var(--accent);
   }
 
-  .tab-icon { font-size: 1rem; }
 
   /* ── Wrapper + track ──────────────────────────────── */
   .hobbies-wrapper {

@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import HandIcon from "@/components/HandIcon.astro";
 import { t, SUPPORTED_LOCALES, DEFAULT_LOCALE, type Locale } from "@/i18n";
 
 export async function getStaticPaths() {
@@ -131,19 +132,19 @@ const labels = toolboxLabels[locale];
         <p>{t(locale, "about.contact.note")}</p>
         <div class="contact-links">
           <a href="mailto:hiligen723@gmail.com" class="contact-item">
-            <span class="contact-icon">✉</span>
+            <span class="contact-icon"><HandIcon name="mail" size={20} /></span>
             <span class="contact-label">hiligen723@gmail.com</span>
           </a>
           <a href="https://github.com/GenLI3202" target="_blank" rel="noopener noreferrer" class="contact-item">
-            <span class="contact-icon">⌥</span>
+            <span class="contact-icon"><HandIcon name="code" size={20} /></span>
             <span class="contact-label">github.com/GenLI3202</span>
           </a>
           <a href="https://www.linkedin.com/in/gen-li-tum723" target="_blank" rel="noopener noreferrer" class="contact-item">
-            <span class="contact-icon">↗</span>
+            <span class="contact-icon"><HandIcon name="linkedin" size={20} /></span>
             <span class="contact-label">linkedin.com/in/gen-li-tum723</span>
           </a>
           <a href="https://www.strava.com/athletes/119635546" target="_blank" rel="noopener noreferrer" class="contact-item">
-            <span class="contact-icon">🚴</span>
+            <span class="contact-icon"><HandIcon name="bike" size={20} /></span>
             <span class="contact-label">Strava</span>
           </a>
         </div>
@@ -178,6 +179,6 @@ const labels = toolboxLabels[locale];
   .contact-links { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.25rem; }
   .contact-item { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--fg-muted); transition: color var(--transition); width: fit-content; }
   .contact-item:hover { color: var(--accent); }
-  .contact-icon { font-size: var(--text-base); width: 1.25rem; text-align: center; flex-shrink: 0; }
+  .contact-icon { display: inline-flex; justify-content: center; width: 1.25rem; flex-shrink: 0; }
   .contact-label { font-size: var(--text-sm); }
 </style>

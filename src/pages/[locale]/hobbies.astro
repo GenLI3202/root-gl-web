@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import HandIcon from "@/components/HandIcon.astro";
 import { t, SUPPORTED_LOCALES, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import CharacterCarousel from "@/components/CharacterCarousel.astro";
 
@@ -34,13 +35,13 @@ const tabLabels: Record<string, Record<Locale, string>> = {
 
     <div class="scene-tabs" role="tablist" aria-label={t(locale, "hobbies.title")}>
       <button class="scene-tab active" data-scene="0" role="tab" aria-selected="true">
-        <span class="tab-icon">🚴</span> {tabLabels.cycling[locale]}
+        <HandIcon name="bike" size={18} class="tab-icon" /> {tabLabels.cycling[locale]}
       </button>
       <button class="scene-tab" data-scene="1" role="tab" aria-selected="false">
-        <span class="tab-icon">📖</span> {tabLabels.reading[locale]}
+        <HandIcon name="book" size={18} class="tab-icon" /> {tabLabels.reading[locale]}
       </button>
       <button class="scene-tab" data-scene="2" role="tab" aria-selected="false">
-        <span class="tab-icon">🎸</span> {tabLabels.guitar[locale]}
+        <HandIcon name="guitar" size={18} class="tab-icon" /> {tabLabels.guitar[locale]}
       </button>
     </div>
 
@@ -177,7 +178,6 @@ const tabLabels: Record<string, Record<Locale, string>> = {
 
   .scene-tab:hover { color: var(--fg); }
   .scene-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .tab-icon { font-size: 1rem; }
 
   .hobbies-wrapper {
     overflow: hidden;
