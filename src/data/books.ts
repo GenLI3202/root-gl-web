@@ -3,7 +3,7 @@ import type { Locale } from "@/i18n";
 /**
  * Books on the Hobbies → Reading shelf.
  * `notes` holds Gen's own reading notes per locale; a book without notes shows none.
- * `characters` lists CharacterCarousel ids, so the shelf can jump to those cards.
+ * `characters` lists ids from characters.ts, shown inside the book as memorable characters.
  */
 
 export type BookCategory = "polecon" | "wuxia" | "scifi" | "literature";
@@ -17,6 +17,8 @@ export interface Book {
   recent?: boolean;
   about: Record<Locale, string>;
   characters?: string[];
+  /** A line from the book worth keeping, shown above the characters */
+  epigraph?: { text: string; source: string; translation: Record<Locale, string> };
   notes?: Partial<Record<Locale, string[]>>;
 }
 
@@ -107,6 +109,15 @@ export const BOOKS: Book[] = [
       de: "Liu Cixins Trilogie: Die drei Sonnen, Der dunkle Wald, Jenseits der Zeit.",
     },
     characters: ["ye-wenjie", "luo-ji", "zhang-beihai", "cheng-xin"],
+    epigraph: {
+      text: "给岁月以文明，而不是给文明以岁月。",
+      source: "《三体 II · 黑暗森林》",
+      translation: {
+        en: "Give civilization to the years, not years to civilization.",
+        zh: "改写自帕斯卡：给时光以生命，而不是给生命以时光。",
+        de: "Gib den Jahren Zivilisation, nicht der Zivilisation Jahre.",
+      },
+    },
   },
   {
     id: "demian",
