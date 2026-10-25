@@ -57,8 +57,9 @@ ZH/DE versions: `src/i18n/zh.json` and `src/i18n/de.json` → key `index.tagline
 ### About page bio
 `src/pages/about.astro` — long-form HTML content is inline in the frontmatter as locale-keyed objects (`bioBlocks`).
 
-### Hobbies page stats (cycling numbers)
-`src/pages/hobbies.astro` and `src/pages/[locale]/hobbies.astro` — edit the `stat-num` spans directly.
+### Cycling stats and charts
+Generated from Strava, nothing to edit by hand. The workflow `.github/workflows/cycling-update.yml`
+refreshes `src/data/cycling.json` daily; setup and details are in `docs/strava-sync.md`.
 
 ### Projects
 `src/pages/projects.astro` — edit the `projects` array in the frontmatter. To add a screenshot, drop a PNG into `public/images/projects/<id>.png`.

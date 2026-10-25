@@ -1,0 +1,299 @@
+---
+import type { Locale } from "@/i18n";
+import {
+  cumulativeKm,
+  dateAt,
+  dayIndex,
+  daysInYear,
+  formatDate,
+  formatNumber,
+  LOCALE_TAGS,
+  niceAxis,
+  type CyclingData,
+} from "@/utils/cycling";
+
+/**
+ * Running distance since 1 January, one line per year. The newest year is the accent line,
+ * older years fade to grey. A crosshair script in HobbyCycling.astro reads the series
+ * from the JSON block and shows every year's value for the hovered date.
+ */
+interface Props {
+  data: CyclingData;
+  locale: Locale;
+  title: string;
+  hint: string;
+}
+
+interface Geometry {
+  name: "wide" | "narrow";
+  width: number;
+  height: number;
+  ml: number;
+  mr: number;
+  mt: number;
+  mb: number;
+  /** Label every n-th month on the x axis */
+  monthStep: number;
+}
+
+const { data, locale, title, hint } = Astro.props;
+
+const GEOMETRIES: Geometry[] = [
+  { name: "wide", width: 840, height: 300, ml: 44, mr: 44, mt: 12, mb: 28, monthStep: 1 },
+  { name: "narrow", width: 300, height: 240, ml: 34, mr: 30, mt: 10, mb: 26, monthStep: 3 },
+];
+const LAST_INDEX = 365;
+const LABEL_GAP = 13;
+const firstYear = data.years[0].year;
+
+// Newest first: the current year always leads, older years follow in order
+const series = [...data.years].reverse().map((summary, rank) => {
+  const current = summary.year === data.year;
+  const end = current ? dayIndex(data.asOf) + 1 : daysInYear(summary.year);
+  const start = summary.year === firstYear ? dayIndex(data.first) : 0;
+  return {
+    year: summary.year,
+    rank,
+    current,
+    start,
+    values: cumulativeKm(data.rides, summary.year, end, start),
+    total: summary.km,
+    // Older years fade out so the newest line stays the story
+    opacity: current ? 1 : Math.max(0.35, 0.85 - 0.3 * (rank - 1)),
+  };
+});
+
+const axis = niceAxis(Math.max(...series.map((s) => s.total)));
+const yTicks: number[] = [];
+for (let v = 0; v <= axis.end; v += axis.step) yTicks.push(v);
+
+function yLabel(v: number): string {
+  if (v < 1000) return String(v);
+  return `${formatNumber(locale, v / 1000, v % 1000 ? 1 : 0)}K`;
+}
+
+function monthStart(month: number): number {
+  return dayIndex(`${data.year}-${String(month + 1).padStart(2, "0")}-01`);
+}
+
+const views = GEOMETRIES.map((g) => {
+  const pw = g.width - g.ml - g.mr;
+  const ph = g.height - g.mt - g.mb;
+  const x = (i: number): number => g.ml + (i / LAST_INDEX) * pw;
+  const y = (v: number): number => g.mt + ph - (v / axis.end) * ph;
+
+  const lines = series.map((s) => {
+    // Begin one day before the first ride so the line rises from zero
+    const from = Math.max(0, s.start - 1);
+    const to = s.values.length - 1;
+    const at = (i: number): number => s.values[i] ?? 0;
+    const points: [number, number][] = [];
+    for (let i = from; i <= to; i++) {
+      const changed = i > from && at(i) !== at(i - 1);
+      if (changed && points[points.length - 1]?.[0] !== i - 1) points.push([i - 1, at(i - 1)]);
+      if (i === from || changed || i === to) points.push([i, at(i)]);
+    }
+    const d = points
+      .map(([i, v], n) => `${n ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`)
+      .join("");
+    return { ...s, d, endX: x(to), endY: y(at(to)) };
+  });
+
+  // End labels in priority order; one that would touch an earlier label is left to the legend
+  const labels: { year: number; x: number; y: number }[] = [];
+  for (const line of lines) {
+    const ly = line.endY + 4;
+    if (labels.every((l) => Math.abs(l.y - ly) >= LABEL_GAP || Math.abs(l.x - line.endX) > 40)) {
+      labels.push({ year: line.year, x: line.endX + 8, y: ly });
+    }
+  }
+
+  const months = Array.from({ length: 12 }, (_, m) => m)
+    .filter((m) => m % g.monthStep === 0)
+    .map((m) => ({
+      x: x(monthStart(m)),
+      text: formatDate(locale, dateAt(data.year, monthStart(m)), { month: "short" }),
+    }));
+
+  return { g, pw, ph, x, y, lines, labels, months };
+});
+
+const clientSeries = series.map((s) => ({
+  year: s.year,
+  current: s.current,
+  opacity: s.opacity,
+  values: s.values.map((v) => (v === null ? null : Math.round(v))),
+}));
+
+const summary = series
+  .map((s) => `${s.year}: ${formatNumber(locale, s.total)} km`)
+  .reverse()
+  .join(", ");
+---
+
+<div class="yoy" data-locale={LOCALE_TAGS[locale]} data-unit="km" data-ref-year={data.year}>
+  <ul class="legend">
+    {series.map((s) => (
+      <li>
+        <span class:list={["line-key", s.current ? "cur" : "past"]} style={`opacity:${s.opacity}`}></span>
+        <span class="yr">{s.year}</span>
+        <span class="tot">{formatNumber(locale, s.total)} km</span>
+      </li>
+    ))}
+  </ul>
+
+  {views.map(({ g, pw, ph, x, y, lines, labels, months }) => (
+    <svg
+      class={`plot plot-${g.name}`}
+      viewBox={`0 0 ${g.width} ${g.height}`}
+      role="img"
+      aria-label={`${title}. ${summary}`}
+      data-yoy
+      data-ml={g.ml}
+      data-pw={pw}
+      data-mt={g.mt}
+      data-ph={ph}
+      data-yend={axis.end}
+    >
+      {yTicks.map((v) => (
+        <g>
+          <line class:list={["grid", { base: v === 0 }]} x1={g.ml} x2={g.ml + pw} y1={y(v)} y2={y(v)} />
+          <text class="tick" x={g.ml - 8} y={y(v) + 4} text-anchor="end">{yLabel(v)}</text>
+        </g>
+      ))}
+      {months.map((m) => (
+        <text class="tick" x={m.x} y={g.height - 8}>{m.text}</text>
+      ))}
+
+      {[...lines].reverse().map((line) => (
+        <path
+          class:list={["line", line.current ? "cur" : "past"]}
+          style={`opacity:${line.opacity}`}
+          d={line.d}
+        />
+      ))}
+      {lines.filter((l) => l.current).map((l) => (
+        <circle class="end-dot" cx={l.endX} cy={l.endY} r="4" />
+      ))}
+      {labels.map((l) => (
+        <text class="end-label" x={l.x} y={l.y}>{l.year}</text>
+      ))}
+
+      <line class="cross" x1="0" x2="0" y1={g.mt} y2={g.mt + ph} />
+      {lines.map((l) => (
+        <circle class:list={["dot", l.current ? "cur" : "past"]} data-year={l.year} r="4" cx="0" cy="0" />
+      ))}
+      <rect class="hit" x={g.ml} y={g.mt} width={pw} height={ph} tabindex="0" aria-label={hint} />
+    </svg>
+  ))}
+
+  <script type="application/json" class="yoy-data" is:inline set:html={JSON.stringify(clientSeries)} />
+</div>
+
+<style>
+  .legend {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.25rem;
+    margin-bottom: 0.75rem;
+    font-size: var(--text-sm);
+  }
+
+  .legend li {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+  }
+
+  .line-key {
+    align-self: center;
+    width: 16px;
+    height: 2px;
+    border-radius: 1px;
+  }
+
+  .line-key.cur { background: var(--accent); }
+  .line-key.past { background: var(--fg-muted); }
+
+  .yr {
+    font-weight: 600;
+  }
+
+  .tot {
+    color: var(--fg-muted);
+  }
+
+  .plot {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .plot-narrow {
+    display: none;
+  }
+
+  .grid {
+    stroke: var(--border);
+    stroke-width: 1;
+  }
+
+  .grid.base {
+    stroke: var(--border-dark);
+  }
+
+  .tick,
+  .end-label {
+    font-family: var(--font-body);
+    font-size: 11px;
+    fill: var(--fg-muted);
+  }
+
+  .line {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  .line.cur { stroke: var(--accent); }
+  .line.past { stroke: var(--fg-muted); }
+
+  .end-dot {
+    fill: var(--accent);
+    stroke: var(--surface);
+    stroke-width: 2;
+  }
+
+  .cross {
+    stroke: var(--fg-muted);
+    stroke-width: 1;
+    visibility: hidden;
+  }
+
+  .dot {
+    stroke: var(--surface);
+    stroke-width: 2;
+    visibility: hidden;
+  }
+
+  .dot.cur { fill: var(--accent); }
+  .dot.past { fill: var(--fg-muted); }
+
+  .hit {
+    fill: transparent;
+    cursor: crosshair;
+  }
+
+  .hit:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 700px) {
+    .plot-wide { display: none; }
+    .plot-narrow { display: block; }
+  }
+</style>

@@ -1,0 +1,178 @@
+---
+import type { Locale } from "@/i18n";
+import {
+  BUCKET_LABELS,
+  formatNumber,
+  niceAxis,
+  rideUnit,
+  ridesText,
+  type CyclingData,
+} from "@/utils/cycling";
+
+/**
+ * Rides per year as one bar, split by ride length with the same colour ramp as the calendar.
+ * Segments carry their numbers in the tooltip and in the table under the charts.
+ */
+interface Props {
+  data: CyclingData;
+  locale: Locale;
+  title: string;
+}
+
+interface Geometry {
+  name: "wide" | "narrow";
+  width: number;
+  left: number;
+  right: number;
+  row: number;
+  bar: number;
+  /** Write the unit after the total at the end of each bar */
+  withUnit: boolean;
+}
+
+const { data, locale, title } = Astro.props;
+
+const GEOMETRIES: Geometry[] = [
+  { name: "wide", width: 840, left: 44, right: 120, row: 44, bar: 22, withUnit: true },
+  { name: "narrow", width: 300, left: 36, right: 34, row: 36, bar: 20, withUnit: false },
+];
+const TOP = 6;
+const AXIS_BAND = 26;
+const GAP = 2;
+const RADIUS = 4;
+
+const years = [...data.years].reverse();
+const axis = niceAxis(Math.max(...years.map((y) => y.rides)), [10, 20, 25, 50, 100]);
+const ticks: number[] = [];
+for (let v = 0; v <= axis.end; v += axis.step) ticks.push(v);
+
+/** Segment with a square baseline end and, on the last segment, a 4px rounded data end */
+function segmentPath(x: number, y: number, w: number, h: number, round: boolean): string {
+  if (!round) return `M${x} ${y}h${w}v${h}h${-w}z`;
+  const r = Math.min(RADIUS, w / 2, h / 2);
+  return `M${x} ${y}h${w - r}a${r} ${r} 0 0 1 ${r} ${r}v${h - 2 * r}a${r} ${r} 0 0 1 ${-r} ${r}h${-(w - r)}z`;
+}
+
+const views = GEOMETRIES.map((g) => {
+  const pw = g.width - g.left - g.right;
+  const scale = pw / axis.end;
+  const height = TOP + years.length * g.row + AXIS_BAND;
+  const rows = years.map((year, r) => {
+    const y = TOP + r * g.row + (g.row - g.bar) / 2;
+    const lastFilled = year.buckets.reduce((last, n, i) => (n ? i : last), 0);
+    let start = g.left;
+    const segments = year.buckets.map((n, b) => {
+      const w = n * scale;
+      const x = start;
+      start += w;
+      if (!n) return null;
+      return {
+        b,
+        // Keep a 2px surface gap between touching segments
+        d: segmentPath(x, y, b === lastFilled ? w : Math.max(w - GAP, 1), g.bar, b === lastFilled),
+        tipTitle: `${year.year} · ${BUCKET_LABELS[b]} km`,
+        tip: `${ridesText(locale, n)}|${formatNumber(locale, year.bucketKm[b])} km`,
+      };
+    });
+    return { year: year.year, rides: year.rides, y, end: start, segments };
+  });
+  return { g, pw, height, rows };
+});
+
+const summary = years
+  .map((y) => `${y.year}: ${ridesText(locale, y.rides)}, ${y.centuries} × 100+ km`)
+  .join("; ");
+---
+
+{views.map(({ g, pw, height, rows }) => (
+  <svg
+    class={`mix mix-${g.name}`}
+    viewBox={`0 0 ${g.width} ${height}`}
+    role="img"
+    aria-label={`${title}. ${summary}`}
+  >
+    {ticks.map((v) => (
+      <g>
+        <line class:list={["grid", { base: v === 0 }]} x1={g.left + v * (pw / axis.end)} x2={g.left + v * (pw / axis.end)} y1={TOP} y2={height - AXIS_BAND} />
+        <text class="tick" x={g.left + v * (pw / axis.end)} y={height - 8} text-anchor="middle">{v}</text>
+      </g>
+    ))}
+    {rows.map((row) => (
+      <g>
+        <text class="year" x="0" y={row.y + g.bar / 2 + 4}>{row.year}</text>
+        {row.segments.map((s) => s && (
+          <path
+            class={`seg b${s.b + 1}`}
+            d={s.d}
+            tabindex="0"
+            data-tip-title={s.tipTitle}
+            data-tip={s.tip}
+          />
+        ))}
+        <text class="total" x={row.end + 8} y={row.y + g.bar / 2 + 4}>
+          <tspan class="value">{formatNumber(locale, row.rides)}</tspan>
+          {g.withUnit && <tspan class="unit">{" "}{rideUnit(locale, row.rides)}</tspan>}
+        </text>
+      </g>
+    ))}
+  </svg>
+))}
+
+<style>
+  .mix {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .mix-narrow {
+    display: none;
+  }
+
+  .grid {
+    stroke: var(--border);
+    stroke-width: 1;
+  }
+
+  .grid.base {
+    stroke: var(--border-dark);
+  }
+
+  .tick,
+  .year,
+  .total {
+    font-family: var(--font-body);
+    font-size: 11px;
+    fill: var(--fg-muted);
+  }
+
+  .year {
+    font-size: 12px;
+    font-weight: 600;
+    fill: var(--fg);
+  }
+
+  .total .value {
+    font-size: 12px;
+    font-weight: 600;
+    fill: var(--fg);
+  }
+
+  .seg:hover,
+  .seg:focus-visible {
+    stroke: var(--fg);
+    stroke-width: 1.5;
+    outline: none;
+  }
+
+  .b1 { fill: var(--ride-1); }
+  .b2 { fill: var(--ride-2); }
+  .b3 { fill: var(--ride-3); }
+  .b4 { fill: var(--ride-4); }
+
+  @media (max-width: 700px) {
+    .mix-wide { display: none; }
+    .mix-narrow { display: block; }
+  }
+</style>

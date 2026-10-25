@@ -1,0 +1,74 @@
+name: Update cycling data
+
+# Pulls rides from Strava into src/data/cycling.json and public/data/cycling-routes.json,
+# then commits the result so Vercel redeploys. Only totals and trimmed, simplified tracks
+# are stored (see scripts/update-cycling.mjs).
+#
+# Setup (one time, details in docs/strava-sync.md):
+#   - Repo secret  STRAVA_CLIENT_ID      — Client ID of the Strava API app
+#   - Repo secret  STRAVA_CLIENT_SECRET  — Client Secret of the same app
+#   - Repo secret  STRAVA_REFRESH_TOKEN  — from `npm run authorize:strava`
+#   - Repo secret  STRAVA_SECRETS_PAT    — optional, fine-grained token with "Secrets:
+#                                          read and write" on this repo. Strava can replace
+#                                          the refresh token at any time and the old one
+#                                          stops working; with this secret the job stores
+#                                          the new one itself.
+#   - Repo secret  STRAVA_PRIVACY_ZONE   — optional, "lat,lon,radiusMeters" around your home;
+#                                          nothing inside it is published on the route map
+# Until the secrets are set the job fails with a clear message and commits nothing.
+
+on:
+  schedule:
+    - cron: "43 4 * * *" # every day at 04:43 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cycling-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Pull Strava data
+        env:
+          STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
+          STRAVA_PRIVACY_ZONE: ${{ secrets.STRAVA_PRIVACY_ZONE }}
+          STRAVA_TOKEN_OUT: ${{ runner.temp }}/strava-refresh-token
+        run: node scripts/update-cycling.mjs
+
+      - name: Store a replaced refresh token
+        if: always() && hashFiles(format('{0}/strava-refresh-token', runner.temp)) != ''
+        env:
+          GH_TOKEN: ${{ secrets.STRAVA_SECRETS_PAT }}
+          TOKEN_FILE: ${{ runner.temp }}/strava-refresh-token
+        run: |
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo "::error::Strava replaced the refresh token and the old one is now invalid. Run 'npm run authorize:strava' and update STRAVA_REFRESH_TOKEN, or add STRAVA_SECRETS_PAT so this job can do it."
+            exit 1
+          fi
+          gh secret set STRAVA_REFRESH_TOKEN --repo "$GITHUB_REPOSITORY" < "$TOKEN_FILE"
+
+      - name: Commit and push if changed
+        run: |
+          FILES="src/data/cycling.json public/data/cycling-routes.json"
+          if [[ -n "$(git status --porcelain $FILES)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add $FILES
+            git commit -m "chore(cycling): daily Strava data update"
+            git push
+          else
+            echo "No cycling changes today."
+          fi

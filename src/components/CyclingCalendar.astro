@@ -1,0 +1,147 @@
+---
+import type { Locale } from "@/i18n";
+import {
+  bucketOf,
+  climbText,
+  dailyTotals,
+  dateAt,
+  dayIndex,
+  daysInYear,
+  formatDate,
+  formatNumber,
+  isoDate,
+  mondayWeekday,
+  ridesText,
+  type CyclingData,
+} from "@/utils/cycling";
+
+/**
+ * One square per day, a row of weeks per year, coloured by that day's distance. Days before
+ * the first recorded ride and after the latest one are left out, so a gap never reads as rest.
+ */
+interface Props {
+  data: CyclingData;
+  locale: Locale;
+  title: string;
+}
+
+const { data, locale, title } = Astro.props;
+
+const WIDTH = 840;
+const LEFT = 44;
+const MONTH_BAND = 18;
+const YEAR_GAP = 14;
+const GAP = 2;
+const COLUMNS = 54;
+const pitch = (WIDTH - LEFT) / COLUMNS;
+const cell = pitch - GAP;
+const blockHeight = MONTH_BAND + 7 * pitch;
+
+const firstIndex = dayIndex(data.first);
+const lastIndex = dayIndex(data.asOf);
+const firstYear = data.years[0].year;
+
+const blocks = [...data.years].reverse().map((summary, row) => {
+  const year = summary.year;
+  const top = row * (blockHeight + YEAR_GAP);
+  const offset = mondayWeekday(dateAt(year, 0));
+  const from = year === firstYear ? firstIndex : 0;
+  const to = year === data.year ? lastIndex : daysInYear(year) - 1;
+  const totals = dailyTotals(data.rides, year);
+
+  const cells = [];
+  for (let i = from; i <= to; i++) {
+    const date = dateAt(year, i);
+    const day = totals.get(isoDate(date));
+    cells.push({
+      x: LEFT + Math.floor((i + offset) / 7) * pitch,
+      y: top + MONTH_BAND + mondayWeekday(date) * pitch,
+      level: day ? bucketOf(day.km) + 1 : 0,
+      tipTitle: day
+        ? formatDate(locale, date, { weekday: "short", day: "numeric", month: "short", year: "numeric" })
+        : undefined,
+      tip: day
+        ? `${formatNumber(locale, day.km, 1)} km|${climbText(locale, day.m)} · ${ridesText(locale, day.rides)}`
+        : undefined,
+    });
+  }
+
+  const months = Array.from({ length: 12 }, (_, m) => dayIndex(`${year}-${String(m + 1).padStart(2, "0")}-01`))
+    .map((index, m) => ({ index, m }))
+    .filter(({ index }) => index >= from - 14 && index <= to)
+    .map(({ index }) => ({
+      x: LEFT + Math.floor((index + offset) / 7) * pitch,
+      y: top + MONTH_BAND - 6,
+      text: formatDate(locale, dateAt(year, index), { month: "short" }),
+    }));
+
+  return { year, top, cells, months };
+});
+
+const height = blocks.length * (blockHeight + YEAR_GAP) - YEAR_GAP;
+---
+
+<div class="scroll">
+  <svg viewBox={`0 0 ${WIDTH} ${height}`} role="img" aria-label={title} class="calendar">
+    {blocks.map((block) => (
+      <g>
+        <text class="year" x="0" y={block.top + MONTH_BAND + 3.5 * pitch + 4}>{block.year}</text>
+        {block.months.map((m) => (
+          <text class="month" x={m.x} y={m.y}>{m.text}</text>
+        ))}
+        {block.cells.map((c) => (
+          <rect
+            class={`cell l${c.level}`}
+            x={c.x}
+            y={c.y}
+            width={cell}
+            height={cell}
+            rx="2"
+            data-tip-title={c.tipTitle}
+            data-tip={c.tip}
+          />
+        ))}
+      </g>
+    ))}
+  </svg>
+</div>
+
+<style>
+  .scroll {
+    overflow-x: auto;
+  }
+
+  .calendar {
+    display: block;
+    width: 100%;
+    min-width: 720px;
+    height: auto;
+  }
+
+  .year,
+  .month {
+    font-family: var(--font-body);
+    fill: var(--fg-muted);
+  }
+
+  .year {
+    font-size: 12px;
+    font-weight: 600;
+    fill: var(--fg);
+  }
+
+  .month {
+    font-size: 11px;
+  }
+
+  .l0 { fill: var(--border); }
+  .l1 { fill: var(--ride-1); }
+  .l2 { fill: var(--ride-2); }
+  .l3 { fill: var(--ride-3); }
+  .l4 { fill: var(--ride-4); }
+
+  .cell[data-tip]:hover {
+    stroke: var(--fg);
+    stroke-width: 1.5;
+  }
+</style>

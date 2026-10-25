@@ -97,6 +97,8 @@
 - [x] **Time-of-day chart in Munich time** (2026-10-25) — WeRead only gives an all-time Beijing-time hour distribution; the script shifts it to Munich time (`Europe/Berlin`): 6 h back in summer time, 7 h in winter time, weighted by the share of the year on summer time; the chart is an approximation and the hours-per-year chart stays on Beijing days
 - [x] **Maintenance guide: Reading section** (2026-10-25) — `MAINTENANCE.md` documents the sync, `WEREAD_API_KEY` setup, local run, `--full`, the 3-hour rule, public vs never-published data, `WEREAD_OVERRIDES`, and attaching notes via `books.ts`
 
+- [x] **Cycling page from Strava** — daily GitHub Action (`cycling-update.yml`, `scripts/update-cycling.mjs`) writes per-ride totals to `src/data/cycling.json` and privacy-trimmed route tracks to `public/data/cycling-routes.json`; page opens with a one-sentence odometer, a Leaflet/OpenStreetMap route map with handwritten labels and year filter, and postcards for remembered rides (`src/data/cycling-highlights.ts`); year-over-year line, riding-day calendar, ride-length bars and a table sit in a folded "For the number nerds" block; OAuth helper `npm run authorize:strava`; setup and route privacy in `docs/strava-sync.md`. First stats snapshot was loaded from the Strava connector and is replaced by the first workflow run; routes appear after that run
+
 ## Remaining Work
 
 - [ ] **Humanize pass, step 2** — carry the new style into About, Projects, Hobbies, and Posts pages
@@ -113,7 +115,6 @@
 | Posts: filter by tag | Client-side JS, data attributes on `<li>` elements |
 | Posts: sort by name or date | Toggle button, same client-side approach |
 | Project screenshots | Drop PNGs in `public/images/projects/<id>.png` |
-| Strava API | Auto-fetch cycling stats for Hobbies page |
 | OG images | Dynamic Satori generation |
 | ~~View Transitions~~ | ~~`<ViewTransitions />` for page-to-page animation~~ — ✅ Done |
 | **Hobbies GSAP immersive upgrade** | Full scroll-driven transitions (bike suction, CSS 3D book) — spec in `docs/hobbies-immersive-spec.md`, update plan in `docs/hobbies-update-plan.md`. Assets ready. ~20h remaining. |
