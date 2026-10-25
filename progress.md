@@ -76,6 +76,7 @@
 - [x] **Humanize pass, step 1 (shell + homepage)** — warm paper palette with grain, Caveat hand font for notes, red 李根 name seal (`Seal.astro`), shared `HomePage.astro` for EN/ZH/DE with greeting, live Munich clock with "probably doing" status, "Lately" cards (edit `src/data/now.ts`), `SayHello.astro` contact card, nav seal logo + pen underline, footer sign-off
 
 - [x] **Humanize pass, step 1b** — name seal now uses Gen's own brush-written 李根 (traced from a photo, cinnabar stamp texture, `public/images/seal-ligen.svg`); all emoji replaced by pen-drawn `HandIcon` SVGs (`src/components/hand-icons.ts`)
+- [x] **Munich clock: season + weather** — `MunichClock.astro` reads live Munich weather (Open-Meteo, no key, cached 30 min) and the month; riding slots switch to a "guess what I'm doing?" teaser with a reveal button in winter, rain, snow, or below 5 °C
 
 ## Remaining Work
 
