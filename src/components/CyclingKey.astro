@@ -1,0 +1,68 @@
+---
+import { BUCKET_LABELS } from "@/utils/cycling";
+
+/** Legend for the ride-length colour ramp shared by the calendar and the length chart */
+interface Props {
+  title: string;
+  /** Label for a day without a ride; omit when the chart has no empty marks */
+  empty?: string;
+}
+
+const { title, empty } = Astro.props;
+---
+
+<ul class="key" aria-label={title}>
+  <li class="key-title">{title} <span class="unit">km</span></li>
+  {empty && (
+    <li>
+      <span class="swatch empty"></span>
+      {empty}
+    </li>
+  )}
+  {BUCKET_LABELS.map((label, i) => (
+    <li>
+      <span class={`swatch b${i + 1}`}></span>
+      {label}
+    </li>
+  ))}
+</ul>
+
+<style>
+  .key {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 1rem;
+    font-size: var(--text-xs);
+    color: var(--fg-muted);
+  }
+
+  .key li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .key-title {
+    color: var(--fg);
+    font-weight: 600;
+  }
+
+  .unit {
+    font-weight: 400;
+    color: var(--fg-muted);
+  }
+
+  .swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  .empty { background: var(--border); }
+  .b1 { background: var(--ride-1); }
+  .b2 { background: var(--ride-2); }
+  .b3 { background: var(--ride-3); }
+  .b4 { background: var(--ride-4); }
+</style>

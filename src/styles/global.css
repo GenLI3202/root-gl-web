@@ -50,6 +50,12 @@
   --tint-rose:  #F0D9D3;
   --tint-lilac: #E3DDEC;
 
+  /* Cycling charts: ride length from short to century, accent mixed into the surface */
+  --ride-1: color-mix(in srgb, var(--accent) 24%, var(--surface));
+  --ride-2: color-mix(in srgb, var(--accent) 48%, var(--surface));
+  --ride-3: color-mix(in srgb, var(--accent) 72%, var(--surface));
+  --ride-4: var(--accent);
+
   /* Typography */
   --font-heading: "Playfair Display", Georgia, serif;
   --font-body:    "Inter", system-ui, -apple-system, sans-serif;

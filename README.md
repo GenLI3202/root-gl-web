@@ -142,4 +142,4 @@ Post body here.
 | 8 — Production | 🟡 Partial | Live at root-ligen.vercel.app · Lighthouse pending |
 | 9 — i18n | ✅ Done | EN/ZH/DE routing, all pages translated |
 
-**Backlog**: Posts filter by tag · Strava API · OG images · View Transitions · GSAP immersive hobbies upgrade
+**Backlog**: Posts filter by tag · OG images · View Transitions · GSAP immersive hobbies upgrade

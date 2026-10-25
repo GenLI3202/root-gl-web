@@ -1,0 +1,440 @@
+---
+import { HIGHLIGHTS } from "@/data/cycling-highlights";
+import type { Locale } from "@/i18n";
+import { LOCALE_TAGS } from "@/utils/cycling";
+
+/**
+ * Every outdoor ride on OpenStreetMap-based tiles, drawn from public/data/cycling-routes.json.
+ * Leaflet and the routes load when the map scrolls into view. The highlights get a
+ * handwritten label at the middle of their track. The reader picks one of five map styles;
+ * the tile sources live in the script below.
+ */
+interface Props {
+  locale: Locale;
+  years: number[];
+  copy: {
+    all: string;
+    filter: string;
+    label: string;
+    loading: string;
+    error: string;
+    styleLabel: string;
+    styles: Record<"paper" | "clean" | "cycling" | "terrain" | "satellite", string>;
+  };
+}
+
+const { locale, years, copy } = Astro.props;
+const STYLE_IDS = ["paper", "clean", "cycling", "terrain", "satellite"] as const;
+
+const notes = HIGHLIGHTS.map((h) => ({
+  from: h.from,
+  to: h.to,
+  minKm: h.minKm ?? 0,
+  label: h.title[locale],
+}));
+---
+
+<div class="route-map-wrap" data-locale={LOCALE_TAGS[locale]}>
+  <div class="controls">
+    <div class="filters" role="group" aria-label={copy.filter}>
+      <button type="button" class="chip" data-year="all" aria-pressed="true">{copy.all}</button>
+      {years.map((year) => (
+        <button type="button" class="chip" data-year={year} aria-pressed="false">{year}</button>
+      ))}
+    </div>
+    <div class="filters" role="group" aria-label={copy.styleLabel}>
+      {STYLE_IDS.map((id, i) => (
+        <button type="button" class="chip" data-map-style={id} aria-pressed={i === 0 ? "true" : "false"}>
+          {copy.styles[id]}
+        </button>
+      ))}
+    </div>
+  </div>
+  <div
+    class="route-map"
+    role="region"
+    aria-label={copy.label}
+    data-src="/data/cycling-routes.json"
+    data-notes={JSON.stringify(notes)}
+    data-error={copy.error}
+  >
+    <p class="status">{copy.loading}</p>
+  </div>
+</div>
+
+<style>
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .chip {
+    padding: 0.3rem 0.85rem;
+    border: 1px solid var(--border-dark);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    font: inherit;
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    cursor: pointer;
+    transition: border-color var(--transition), color var(--transition);
+  }
+
+  .chip:hover {
+    border-color: var(--accent);
+    color: var(--fg);
+  }
+
+  .chip[aria-pressed="true"] {
+    border-color: var(--fg);
+    background: var(--fg);
+    color: var(--bg);
+  }
+
+  .chip:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .route-map {
+    position: relative;
+    height: 480px;
+    border: 1px solid var(--border-dark);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  .status {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+  }
+
+  /* Paper: plain OpenStreetMap tiles, muted and warmed toward the site's paper */
+  .route-map[data-map-style="paper"] :global(.leaflet-tile-pane) {
+    filter: grayscale(0.65) sepia(0.3) brightness(1.03) contrast(0.92);
+  }
+
+  :global(.theme-dark) .route-map[data-map-style="paper"] :global(.leaflet-tile-pane) {
+    filter: invert(1) hue-rotate(180deg) grayscale(0.5) brightness(0.9) contrast(0.85);
+  }
+
+  /* Colourful styles are dimmed in the dark theme so they do not glare */
+  :global(.theme-dark) .route-map:is([data-map-style="cycling"], [data-map-style="terrain"]) :global(.leaflet-tile-pane) {
+    filter: brightness(0.75) contrast(1.05);
+  }
+
+  .route-map :global(.leaflet-container) {
+    background: var(--bg);
+    font-family: var(--font-body);
+  }
+
+  .route-map :global(.route-note) {
+    background: none;
+    border: none;
+  }
+
+  .route-map :global(.route-note span) {
+    display: inline-block;
+    padding: 0 0.35rem;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    font-family: var(--font-hand);
+    font-size: 1.2rem;
+    line-height: 1.3;
+    white-space: nowrap;
+    color: var(--fg);
+    transform: translate(8px, -22px) rotate(-3deg);
+  }
+
+  @media (max-width: 560px) {
+    .route-map {
+      height: 360px;
+    }
+  }
+</style>
+
+<script>
+  import "leaflet/dist/leaflet.css";
+  import { decodePolyline } from "../utils/polyline.mjs";
+
+  interface Route {
+    d: string;
+    km: number;
+    p: string[];
+  }
+
+  interface Note {
+    from: string;
+    to: string;
+    minKm: number;
+    label: string;
+  }
+
+  const OSM = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+  interface TileStyle {
+    /** Tile layers drawn on top of each other, base first */
+    urls: string[];
+    /** Layers used instead while the dark theme is on */
+    darkUrls?: string[];
+    attribution: string;
+    subdomains?: string;
+    maxZoom: number;
+    /** Route lines need more weight on busy or dark backgrounds */
+    line: { weight: number; opacity: number };
+  }
+
+  const ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services";
+  const TILE_STYLES: Record<string, TileStyle> = {
+    // Plain OpenStreetMap tiles; the CSS turns them into a muted, paper-coloured map
+    paper: {
+      urls: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      attribution: OSM,
+      maxZoom: 19,
+      line: { weight: 2.5, opacity: 0.7 },
+    },
+    clean: {
+      urls: [
+        `${ESRI}/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
+        `${ESRI}/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}`,
+      ],
+      darkUrls: [
+        `${ESRI}/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
+        `${ESRI}/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`,
+      ],
+      attribution: `Tiles &copy; Esri, HERE, Garmin, ${OSM}`,
+      maxZoom: 16,
+      line: { weight: 3, opacity: 0.8 },
+    },
+    cycling: {
+      urls: ["https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png"],
+      attribution: `<a href="https://www.cyclosm.org">CyclOSM</a> | Map data: ${OSM}`,
+      subdomains: "abc",
+      maxZoom: 20,
+      line: { weight: 3, opacity: 0.7 },
+    },
+    terrain: {
+      urls: ["https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"],
+      attribution: `Map data: ${OSM}, SRTM | Style: <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)`,
+      subdomains: "abc",
+      maxZoom: 17,
+      line: { weight: 3, opacity: 0.75 },
+    },
+    satellite: {
+      urls: [`${ESRI}/World_Imagery/MapServer/tile/{z}/{y}/{x}`],
+      attribution: "Imagery &copy; Esri, Maxar, Earthstar Geographics",
+      maxZoom: 18,
+      line: { weight: 3, opacity: 0.9 },
+    },
+  };
+  const DEFAULT_STYLE = "paper";
+  const STYLE_KEY = "cycling-map-style";
+
+  function savedStyle(): string {
+    try {
+      const id = localStorage.getItem(STYLE_KEY);
+      return id && id in TILE_STYLES ? id : DEFAULT_STYLE;
+    } catch {
+      return DEFAULT_STYLE;
+    }
+  }
+
+  function saveStyle(id: string): void {
+    try {
+      localStorage.setItem(STYLE_KEY, id);
+    } catch {
+      // Private mode: the choice just lasts for this visit
+    }
+  }
+  /** The first view frames rides within this distance of the typical ride; faraway trips stay a pan away */
+  const HOME_RADIUS_KM = 900;
+  const EARTH_RADIUS_KM = 6371;
+
+  function distanceKm(a: [number, number], b: [number, number]): number {
+    const rad = Math.PI / 180;
+    const h =
+      Math.sin(((b[0] - a[0]) * rad) / 2) ** 2 +
+      Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(((b[1] - a[1]) * rad) / 2) ** 2;
+    return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(h));
+  }
+
+  function median(values: number[]): number {
+    const sorted = [...values].sort((a, b) => a - b);
+    return sorted[Math.floor(sorted.length / 2)];
+  }
+
+  async function startMap(el: HTMLElement): Promise<void> {
+    const wrap = el.closest<HTMLElement>(".route-map-wrap");
+    const status = el.querySelector(".status");
+    try {
+      const [L, response] = await Promise.all([import("leaflet"), fetch(el.dataset.src ?? "")]);
+      if (!response.ok) throw new Error(`routes: HTTP ${response.status}`);
+      const { routes } = (await response.json()) as { routes: Route[] };
+      status?.remove();
+
+      const style = getComputedStyle(document.documentElement);
+      const accent = (): string => style.getPropertyValue("--accent").trim();
+      const locale = wrap?.dataset.locale ?? "en";
+      const dateFormat = new Intl.DateTimeFormat(locale, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        timeZone: "UTC",
+      });
+      const notes = JSON.parse(el.dataset.notes ?? "[]") as Note[];
+
+      const map = L.map(el, {
+        preferCanvas: true,
+        scrollWheelZoom: false,
+        // One finger scrolls the page on a phone; two fingers move the map
+        dragging: !L.Browser.mobile,
+        zoomSnap: 0.5,
+      });
+      let styleId = savedStyle();
+      let tiles: ReturnType<typeof L.tileLayer>[] = [];
+
+      /** Line look for the current map style; highlighted rides stand out a little more */
+      function lineStyle(picked: boolean) {
+        const { weight, opacity } = TILE_STYLES[styleId].line;
+        return {
+          color: accent(),
+          weight: picked ? weight + 1 : weight,
+          opacity: picked ? Math.min(1, opacity + 0.25) : opacity,
+        };
+      }
+
+      const lines = routes.map((route) => {
+        const picked = notes.some((n) => route.d >= n.from && route.d <= n.to && route.km >= n.minKm);
+        const line = L.polyline(
+          route.p.map((piece) => decodePolyline(piece)),
+          { ...lineStyle(picked), lineJoin: "round" }
+        );
+        const tip = document.createElement("span");
+        tip.textContent = `${dateFormat.format(new Date(`${route.d}T00:00:00Z`))} · ${Math.round(route.km)} km`;
+        line.bindTooltip(tip, { sticky: true });
+        line.on("mouseover", () => line.setStyle({ weight: 5, opacity: 1 }).bringToFront());
+        line.on("mouseout", () => line.setStyle(lineStyle(picked)));
+        return { route, year: route.d.slice(0, 4), line, picked };
+      });
+
+      function applyStyle(): void {
+        const tileStyle = TILE_STYLES[styleId];
+        const dark = document.documentElement.classList.contains("theme-dark");
+        tiles.forEach((layer) => layer.remove());
+        tiles = (dark && tileStyle.darkUrls ? tileStyle.darkUrls : tileStyle.urls).map((url) =>
+          L.tileLayer(url, {
+            attribution: tileStyle.attribution,
+            subdomains: tileStyle.subdomains ?? "abc",
+            maxZoom: tileStyle.maxZoom,
+          }).addTo(map)
+        );
+        tiles.forEach((layer) => layer.bringToBack());
+        el.dataset.mapStyle = styleId;
+        lines.forEach((l) => l.line.setStyle(lineStyle(l.picked)));
+      }
+
+      // A handwritten label at the middle of the longest piece of each highlight's first ride
+      const labels = notes.flatMap((note) => {
+        const first = lines.find(
+          (l) => l.route.d >= note.from && l.route.d <= note.to && l.route.km >= note.minKm
+        );
+        if (!first) return [];
+        const longest = first.route.p.map((p) => decodePolyline(p)).sort((a, b) => b.length - a.length)[0];
+        const [lat, lon] = longest[Math.floor(longest.length / 2)];
+        const text = document.createElement("span");
+        text.textContent = note.label;
+        const marker = L.marker([lat, lon], {
+          interactive: false,
+          keyboard: false,
+          icon: L.divIcon({ className: "route-note", html: text, iconSize: [0, 0] }),
+        });
+        return [{ year: first.year, marker }];
+      });
+
+      function show(year: string): void {
+        const visible = lines.filter((l) => year === "all" || l.year === year);
+        for (const l of lines) {
+          if (visible.includes(l)) l.line.addTo(map);
+          else l.line.remove();
+        }
+        for (const l of labels) {
+          if (year === "all" || l.year === year) l.marker.addTo(map);
+          else l.marker.remove();
+        }
+
+        // Frame the rides near the typical one, so a trip overseas does not shrink the rest
+        const centers = visible.map((l) => {
+          const c = l.line.getBounds().getCenter();
+          return [c.lat, c.lng] as [number, number];
+        });
+        if (!centers.length) return;
+        const typical: [number, number] = [median(centers.map((c) => c[0])), median(centers.map((c) => c[1]))];
+        const near = visible.filter((_, i) => distanceKm(centers[i], typical) <= HOME_RADIUS_KM);
+        const bounds = L.latLngBounds([]);
+        for (const l of near) bounds.extend(l.line.getBounds());
+        map.fitBounds(bounds, { padding: [24, 24] });
+      }
+
+      const yearChips = wrap?.querySelectorAll<HTMLButtonElement>("button[data-year]") ?? [];
+      const styleChips = wrap?.querySelectorAll<HTMLButtonElement>("button[data-map-style]") ?? [];
+      yearChips.forEach((chip) => {
+        chip.addEventListener("click", () => {
+          yearChips.forEach((c) => c.setAttribute("aria-pressed", String(c === chip)));
+          show(chip.dataset.year ?? "all");
+        });
+      });
+      styleChips.forEach((chip) => {
+        chip.addEventListener("click", () => {
+          styleId = chip.dataset.mapStyle ?? DEFAULT_STYLE;
+          styleChips.forEach((c) => c.setAttribute("aria-pressed", String(c === chip)));
+          saveStyle(styleId);
+          applyStyle();
+        });
+      });
+      styleChips.forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.mapStyle === styleId)));
+
+      // The theme switch changes the accent red and picks the dark tiles of the paper style
+      new MutationObserver(applyStyle).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+
+      applyStyle();
+      show("all");
+    } catch (error) {
+      console.error(error);
+      if (status) status.textContent = el.dataset.error ?? "";
+    }
+  }
+
+  function initMaps(): void {
+    document.querySelectorAll<HTMLElement>(".route-map:not([data-started])").forEach((el) => {
+      el.dataset.started = "true";
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((e) => e.isIntersecting)) return;
+          observer.disconnect();
+          void startMap(el);
+        },
+        { rootMargin: "300px" }
+      );
+      observer.observe(el);
+    });
+  }
+
+  document.addEventListener("astro:page-load", initMaps);
+</script>
