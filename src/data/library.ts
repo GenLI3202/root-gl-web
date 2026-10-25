@@ -145,6 +145,12 @@ const fromWeread: ShelfBook[] = SYNCED.filter(
   };
 });
 
+/** Seconds → hours, with one decimal under ten hours: 14 040 → 3.9, 117 194 → 33 */
+export function toHours(seconds: number): number {
+  const hours = seconds / 3600;
+  return hours < 10 ? Math.round(hours * 10) / 10 : Math.round(hours);
+}
+
 /** Most recently read first; hand-written books without WeRead data follow their ribbon */
 function recency(book: ShelfBook): number {
   return book.reading?.lastReadAt ?? (book.recent ? NOW_SECONDS : 0);
