@@ -11,6 +11,11 @@ export async function getStaticPaths() {
 const { locale } = Astro.params as { locale: Locale };
 
 const projectDesc: Record<string, Record<Locale, string>> = {
+  lems: {
+    en: "",
+    zh: "我在华为的博士实习项目：把场站里的储能、光伏、充电桩、负荷和并网点作为一个整体协调，在场站物理约束内快速做出本地决策。",
+    de: "Mein PhD-Praktikumsprojekt bei Huawei: Batteriespeicher, PV, Ladeinfrastruktur, Lasten und Netzanschluss eines Standorts als ein System koordinieren, mit schnellen lokalen Entscheidungen innerhalb seiner physikalischen Grenzen.",
+  },
   mamoda: {
     en: "",
     zh: "可持续采矿决策的交互式知识平台，融合多目标优化与利益相关方引导决策和实时Plotly可视化。",
@@ -33,7 +38,24 @@ const projectDesc: Record<string, Record<Locale, string>> = {
   },
 };
 
+const LEMS_BADGE: Record<Locale, string> = {
+  en: "Ongoing · Huawei",
+  zh: "进行中 · 华为",
+  de: "Laufend · Huawei",
+};
+
 const projects = [
+  {
+    id: "lems",
+    title: locale === "zh" ? "本地能量管理系统（LEMS）" : "Local Energy Management System (LEMS)",
+    description: projectDesc["lems"][locale],
+    tags: ["BESS", "PV", "EV Charging", "Optimisation"],
+    href: locale === "zh" ? "/zh/posts/intersolar-2026-ems-lems-insights/" : "/posts/intersolar-2026-ems-lems-insights/",
+    image: null,
+    gradient: "linear-gradient(135deg, #2b1d0e 0%, #6b3e12 50%, #c97b1a 100%)",
+    badge: LEMS_BADGE[locale],
+    size: "large",
+  },
   {
     id: "mamoda",
     title: "MAMODA Web Dashboard",
@@ -87,7 +109,13 @@ const projects = [
     <ul class="bento-grid" role="list">
       {projects.map((project) => (
         <li class={`bento-card bento-card--${project.size}`}>
-          <a href={project.href} class="bento-cover-link" target="_blank" rel="noopener noreferrer" aria-label={project.title} />
+          <a
+            href={project.href}
+            class="bento-cover-link"
+            target={project.href.startsWith("/") ? undefined : "_blank"}
+            rel={project.href.startsWith("/") ? undefined : "noopener noreferrer"}
+            aria-label={project.title}
+          />
           <div class="bento-visual" style={`background: ${project.gradient};`}>
             {project.badge && <span class="bento-badge">{project.badge}</span>}
             {project.liveHref && (
@@ -114,9 +142,9 @@ const projects = [
   .projects-page { padding-block: 4rem; }
   .page-title { font-size: var(--text-2xl); font-family: var(--font-heading); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
   .page-subtitle { font-size: var(--text-base); color: var(--fg-muted); margin-bottom: 3rem; }
-  .bento-grid { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .bento-grid { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-flow: dense; gap: 1rem; }
   .bento-card--large { grid-column: 1 / -1; }
-  .bento-card--tall { grid-column: 2; grid-row: 2 / 4; }
+  .bento-card--tall { grid-column: 2; grid-row: span 2; }
   .bento-card--small { grid-column: 1; }
   .bento-card { border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; background: var(--surface); position: relative; display: flex; flex-direction: column; transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition); }
   .bento-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-hover); }

@@ -3,6 +3,18 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 
 const projects = [
   {
+    id: "lems",
+    title: "Local Energy Management System (LEMS)",
+    description:
+      "My PhD internship project at Huawei: coordinating a site's battery storage, PV, EV charging, loads and grid connection as one system, with fast local decisions inside the site's physical limits.",
+    tags: ["BESS", "PV", "EV Charging", "Optimisation"],
+    href: "/posts/intersolar-2026-ems-lems-insights/",
+    image: null,
+    gradient: "linear-gradient(135deg, #2b1d0e 0%, #6b3e12 50%, #c97b1a 100%)",
+    badge: "Ongoing · Huawei",
+    size: "large",
+  },
+  {
     id: "mamoda",
     title: "MAMODA Web Dashboard",
     description:
@@ -68,8 +80,8 @@ const projects = [
             <a
               href={project.href}
               class="bento-cover-link"
-              target="_blank"
-              rel="noopener noreferrer"
+              target={project.href.startsWith("/") ? undefined : "_blank"}
+              rel={project.href.startsWith("/") ? undefined : "noopener noreferrer"}
               aria-label={project.title}
             />
 
@@ -138,6 +150,7 @@ const projects = [
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: auto;
+    grid-auto-flow: dense;
     gap: 1rem;
   }
 
@@ -149,7 +162,7 @@ const projects = [
   /* tall: 2 rows, 1 col — right side */
   .bento-card--tall {
     grid-column: 2;
-    grid-row: 2 / 4;
+    grid-row: span 2;
   }
 
   /* small: single cell */
