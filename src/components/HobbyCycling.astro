@@ -25,7 +25,6 @@ interface CyclingCopy {
   odometer: (since: string, km: string, percent: number, everests: number) => string;
   noTargets: string;
   mapTitle: string;
-  mapCaption: (year: number) => string;
   mapAll: string;
   mapFilter: string;
   mapLabel: string;
@@ -64,8 +63,6 @@ const COPY: Record<Locale, CyclingCopy> = {
       `Since ${since} the wheels have turned about <span class="marker">${km} km</span>, ${percent} % of the way around the planet, and climbed the height of Everest ${everests}×. One pedal stroke at a time.`,
     noTargets: "No targets, no streaks. Just rides.",
     mapTitle: "Where the wheels have been",
-    mapCaption: (year) =>
-      `Every outdoor ride with a GPS track since ${year}, on OpenStreetMap-based maps. Hover a line for its date. The first and last 500 m of every ride are left out.`,
     mapAll: "All years",
     mapFilter: "Show rides from",
     mapLabel: "Map of my rides",
@@ -100,8 +97,6 @@ const COPY: Record<Locale, CyclingCopy> = {
       `自 ${since}以来，车轮大约转了 <span class="marker">${km} 公里</span>，绕地球 ${percent}%，累计爬升相当于 ${everests} 座珠峰。一脚一脚踩出来的。`,
     noTargets: "没有目标，没有连续打卡，只有骑行。",
     mapTitle: "车轮到过的地方",
-    mapCaption: (year) =>
-      `${year} 年以来每一次带 GPS 轨迹的户外骑行，画在基于 OpenStreetMap 的地图上。悬停在线上可以看日期。每次骑行的起点和终点各 500 米已省略。`,
     mapAll: "全部年份",
     mapFilter: "按年份显示",
     mapLabel: "骑行路线地图",
@@ -136,8 +131,6 @@ const COPY: Record<Locale, CyclingCopy> = {
       `Seit ${since} haben sich die Räder rund <span class="marker">${km} km</span> gedreht, ${percent} % um die Erde, und die Höhe des Everest ${everests}-mal erklommen. Pedaltritt für Pedaltritt.`,
     noTargets: "Keine Ziele, keine Serien. Nur Fahrten.",
     mapTitle: "Wo die Räder waren",
-    mapCaption: (year) =>
-      `Jede Außenfahrt mit GPS-Spur seit ${year}, auf OpenStreetMap-Karten. Linie anfahren für das Datum. Die ersten und letzten 500 m jeder Fahrt fehlen.`,
     mapAll: "Alle Jahre",
     mapFilter: "Fahrten anzeigen aus",
     mapLabel: "Karte meiner Fahrten",
@@ -213,7 +206,6 @@ const tableRows = data
   {routeYears.length > 0 && (
     <section class="hobby-section">
       <h2 class="section-title">{copy.mapTitle}</h2>
-      <p class="caption">{copy.mapCaption(routeYears[routeYears.length - 1])}</p>
       <CyclingMap
         locale={locale}
         years={routeYears}
