@@ -1,0 +1,573 @@
+---
+import type { Locale } from "@/i18n";
+import BookcaseSketch from "@/components/BookcaseSketch.astro";
+import BookDialog from "@/components/BookDialog.astro";
+import { CATEGORY_LABELS, CATEGORY_ORDER, type BookCategory } from "@/data/books";
+import { LIBRARY, toHours, type ShelfBook } from "@/data/library";
+
+/**
+ * The reading room: one bookcase per category. Picking a bookcase zooms the room in on it
+ * and fades to a close-up of its shelf; picking a spine there opens the book's dialog.
+ */
+interface Props {
+  locale: Locale;
+}
+
+interface RoomCopy {
+  heading: string;
+  hint: string;
+  back: string;
+  legend: string;
+  total: (count: number) => string;
+  count: (count: number) => string;
+}
+
+interface Bookcase {
+  category: BookCategory;
+  books: ShelfBook[];
+}
+
+const { locale } = Astro.props;
+
+const COPY: Record<Locale, RoomCopy> = {
+  en: {
+    heading: "The reading room",
+    hint: "pick a bookcase to step closer",
+    back: "Back to the room",
+    legend: "Thicker spine, more hours read. Red ribbon: read in the last 30 days.",
+    total: (n) => `${n} books`,
+    count: (n) => `${n} books`,
+  },
+  zh: {
+    heading: "书房",
+    hint: "点一个书架，走近看看",
+    back: "回到书房",
+    legend: "书脊越厚，读得越久。红签：最近 30 天读过。",
+    total: (n) => `${n} 本书`,
+    count: (n) => `${n} 本`,
+  },
+  de: {
+    heading: "Das Lesezimmer",
+    hint: "wähl ein Regal und tritt näher",
+    back: "Zurück ins Zimmer",
+    legend: "Dickerer Rücken, mehr Lesestunden. Rotes Band: in den letzten 30 Tagen gelesen.",
+    total: (n) => `${n} Bücher`,
+    count: (n) => `${n} Bücher`,
+  },
+};
+
+// Spine heights cycle so a shelf looks hand-stacked, not uniform
+const SPINE_HEIGHTS = [150, 134, 158, 140, 128, 152, 138];
+const MAX_SPINE_HEIGHT = 196;
+
+const copy = COPY[locale];
+const bookcases: Bookcase[] = CATEGORY_ORDER.map((category) => ({
+  category,
+  books: LIBRARY.filter((b) => b.category === category),
+})).filter((c) => c.books.length > 0);
+const maxSeconds = Math.max(0, ...LIBRARY.map((b) => b.reading?.seconds ?? 0));
+
+const CJK = /[㐀-鿿]/;
+
+function spineWidth(book: ShelfBook): number {
+  if (!book.reading || maxSeconds === 0) return 40;
+  return Math.round(34 + 26 * Math.sqrt(book.reading.seconds / maxSeconds));
+}
+
+/** Cycled height, raised so the vertical title and the hours label both fit */
+function spineHeight(book: ShelfBook, index: number): number {
+  const perChar = CJK.test(book.title) ? 17 : 8.5;
+  const needed = book.title.length * perChar + (book.reading ? 58 : 34);
+  return Math.min(MAX_SPINE_HEIGHT, Math.max(SPINE_HEIGHTS[index % SPINE_HEIGHTS.length], needed));
+}
+---
+
+<section class="reading-room" data-reading-room aria-labelledby="room-heading">
+  <div class="room-head">
+    <h2 class="room-heading" id="room-heading">{copy.heading}</h2>
+    <p class="room-hint hand">{copy.total(LIBRARY.length)} · {copy.hint}</p>
+  </div>
+
+  <div class="room-stage" data-stage>
+    <div class="room" data-room>
+      <ul class="bookcases" role="list">
+        {bookcases.map(({ category, books }) => (
+          <li>
+            <button
+              type="button"
+              class="bookcase"
+              data-open-case={category}
+              aria-controls={`case-${category}`}
+              aria-expanded="false"
+              style={`--spine: var(--shelf-${category});`}
+            >
+              <BookcaseSketch category={category} books={books} maxSeconds={maxSeconds} />
+              <span class="bookcase-label">{CATEGORY_LABELS[category][locale]}</span>
+              <span class="bookcase-count hand">{copy.count(books.length)}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <div class="room-floor" aria-hidden="true"></div>
+    </div>
+
+    {bookcases.map(({ category, books }) => (
+      <section
+        class="case-view"
+        id={`case-${category}`}
+        data-case-view={category}
+        aria-labelledby={`case-${category}-title`}
+        style={`--spine: var(--shelf-${category});`}
+        hidden
+      >
+        <div class="case-head">
+          <button type="button" class="case-back" data-close-case>← {copy.back}</button>
+          <h3 class="case-title" id={`case-${category}-title`} tabindex="-1">
+            {CATEGORY_LABELS[category][locale]}
+            <span class="case-count hand">{copy.count(books.length)}</span>
+          </h3>
+          <p class="case-legend">{copy.legend}</p>
+        </div>
+        <ul class="case-shelf" role="list">
+          {books.map((book, i) => (
+            <li class="case-slot">
+              <button
+                type="button"
+                class="spine"
+                data-open-book={book.id}
+                aria-haspopup="dialog"
+                aria-controls={`book-${book.id}`}
+                style={`--spine-w: ${spineWidth(book)}px; --spine-h: ${spineHeight(book, i)}px;`}
+              >
+                {book.recent && <span class="spine-ribbon" aria-hidden="true"></span>}
+                <span class="spine-title" lang={CJK.test(book.title) ? "zh" : undefined}>
+                  {book.title}
+                </span>
+                {book.reading && (
+                  <span class="spine-hours hand">{toHours(book.reading.seconds)}h</span>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+
+  {LIBRARY.map((book) => <BookDialog book={book} locale={locale} />)}
+</section>
+
+<script>
+  const ZOOM_MS = 650;
+  const FADE_OUT_MS = 420;
+
+  function initReadingRoom(): void {
+    const root = document.querySelector<HTMLElement>("[data-reading-room]");
+    if (!root) return;
+
+    const stage = root.querySelector<HTMLElement>("[data-stage]")!;
+    const room = root.querySelector<HTMLElement>("[data-room]")!;
+    const views = Array.from(root.querySelectorAll<HTMLElement>("[data-case-view]"));
+    const cases = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-open-case]"));
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    let openView: HTMLElement | null = null;
+    let trigger: HTMLButtonElement | null = null;
+    let timer = 0;
+
+    function open(button: HTMLButtonElement): void {
+      const view = views.find((v) => v.dataset.caseView === button.dataset.openCase);
+      if (!view || openView) return;
+
+      // Zoom toward the middle of the picked bookcase
+      const roomBox = room.getBoundingClientRect();
+      const box = button.getBoundingClientRect();
+      room.style.setProperty("--zoom-x", `${box.left - roomBox.left + box.width / 2}px`);
+      room.style.setProperty("--zoom-y", `${box.top - roomBox.top + box.height * 0.45}px`);
+
+      window.clearTimeout(timer);
+      views.forEach((v) => (v.hidden = v !== view));
+      cases.forEach((c) => c.classList.toggle("is-target", c === button));
+      button.setAttribute("aria-expanded", "true");
+      openView = view;
+      trigger = button;
+
+      void view.offsetWidth; // start the fade-in from the hidden state
+      stage.classList.add("is-zoomed");
+      room.inert = true;
+
+      if (stage.getBoundingClientRect().top < 0) {
+        stage.scrollIntoView({ behavior: reduceMotion.matches ? "auto" : "smooth", block: "start" });
+      }
+      timer = window.setTimeout(
+        () => view.querySelector<HTMLElement>(".case-title")?.focus({ preventScroll: true }),
+        reduceMotion.matches ? 0 : ZOOM_MS
+      );
+    }
+
+    function close(): void {
+      if (!openView || !trigger) return;
+      const view = openView;
+      const button = trigger;
+      openView = null;
+      trigger = null;
+
+      window.clearTimeout(timer);
+      stage.classList.remove("is-zoomed");
+      room.inert = false;
+      button.setAttribute("aria-expanded", "false");
+      button.focus({ preventScroll: true });
+      timer = window.setTimeout(
+        () => {
+          view.hidden = true;
+          button.classList.remove("is-target");
+        },
+        reduceMotion.matches ? 0 : FADE_OUT_MS
+      );
+    }
+
+    cases.forEach((c) => c.addEventListener("click", () => open(c)));
+    root
+      .querySelectorAll<HTMLButtonElement>("[data-close-case]")
+      .forEach((b) => b.addEventListener("click", close));
+
+    root.querySelectorAll<HTMLButtonElement>("[data-open-book]").forEach((spine) =>
+      spine.addEventListener("click", () => {
+        const dialog = document.getElementById(`book-${spine.dataset.openBook}`);
+        if (dialog instanceof HTMLDialogElement) dialog.showModal();
+      })
+    );
+
+    // A click on the dialog element itself landed on the backdrop
+    root.querySelectorAll<HTMLDialogElement>("dialog").forEach((dialog) =>
+      dialog.addEventListener("click", (event) => {
+        if (event.target === dialog) dialog.close();
+      })
+    );
+
+    // Escape steps back out of the close-up; an open dialog handles its own Escape first
+    root.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && openView && !root.querySelector("dialog[open]")) close();
+    });
+  }
+
+  document.addEventListener("astro:page-load", initReadingRoom);
+</script>
+
+<style>
+  .reading-room {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .room-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 1rem;
+  }
+
+  .room-heading {
+    font-family: var(--font-heading);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+  }
+
+  .room-hint {
+    font-size: 1.2rem;
+    color: var(--accent);
+  }
+
+  /* Room and close-up share one grid cell, so one can fade into the other in place */
+  .room-stage {
+    display: grid;
+    overflow: hidden;
+    padding: 0.75rem 0.5rem 0.5rem;
+    border-radius: var(--radius-md);
+  }
+
+  .room,
+  .case-view {
+    grid-area: 1 / 1;
+  }
+
+  /* ── Room ── */
+  .room {
+    transform-origin: var(--zoom-x, 50%) var(--zoom-y, 50%);
+    transition:
+      transform 560ms var(--ease-out),
+      opacity 260ms ease 120ms;
+  }
+
+  .room-stage.is-zoomed .room {
+    transform: scale(2.6);
+    opacity: 0;
+    transition:
+      transform 650ms cubic-bezier(0.65, 0, 0.35, 1),
+      opacity 280ms ease 380ms;
+  }
+
+  .bookcases {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+    gap: 1.5rem 1.25rem;
+    align-items: end;
+  }
+
+  .bookcase {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+    max-width: 12rem;
+    margin-inline: auto;
+    padding: 0.5rem 0.4rem 0.6rem;
+    font: inherit;
+    color: var(--fg);
+    background: none;
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition:
+      transform 300ms var(--ease-out),
+      border-color var(--transition),
+      opacity 250ms ease;
+  }
+
+  .bookcase:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-dark);
+  }
+
+  .bookcase:focus-visible {
+    border-color: var(--fg);
+  }
+
+  .bookcase:active {
+    transform: translateY(-1px) scale(0.98);
+  }
+
+  .room-stage.is-zoomed .bookcase:not(.is-target) {
+    opacity: 0.2;
+  }
+
+  .bookcase-label {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .bookcase-count {
+    font-size: 1.1rem;
+    line-height: 1;
+    color: var(--fg-muted);
+  }
+
+  .room-floor {
+    margin-top: 0.25rem;
+    border-top: 2px solid var(--fg);
+    opacity: 0.8;
+  }
+
+  /* ── Close-up of one bookcase ── */
+  .case-view {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    align-self: start;
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+    pointer-events: none;
+    transition:
+      opacity 260ms ease,
+      transform 360ms var(--ease-out);
+  }
+
+  .case-view[hidden] {
+    display: none;
+  }
+
+  .room-stage.is-zoomed .case-view {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition:
+      opacity 320ms ease 420ms,
+      transform 420ms var(--ease-out) 420ms;
+  }
+
+  .case-head {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .case-back {
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    padding: 0.3rem 0.8rem;
+    color: var(--fg-muted);
+    background: var(--bg);
+    border: 1px solid var(--border-dark);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: border-color var(--transition), color var(--transition);
+  }
+
+  .case-back:hover,
+  .case-back:focus-visible {
+    border-color: var(--fg);
+    color: var(--fg);
+  }
+
+  .case-back:active {
+    transform: scale(0.97);
+  }
+
+  .case-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    outline: none;
+  }
+
+  .case-count {
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: var(--fg-muted);
+  }
+
+  .case-legend {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+  }
+
+  /* Each row is one shelf; the gradient draws a plank under every row */
+  .case-shelf {
+    --row: 216px;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    padding: 0 0.6rem;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 calc(var(--row) - 4px),
+        var(--fg) calc(var(--row) - 4px) var(--row)
+      ),
+      var(--surface);
+    border: 1.5px solid var(--fg);
+    border-top-width: 6px;
+    border-bottom: none;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  }
+
+  .case-slot {
+    display: flex;
+    align-items: flex-end;
+    height: var(--row);
+    padding: 0 2px 4px;
+  }
+
+  .spine {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    width: var(--spine-w);
+    height: var(--spine-h);
+    padding: 0.8rem 0 0.55rem;
+    background: var(--spine);
+    border: 1.5px solid var(--fg);
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    color: var(--fg);
+    font: inherit;
+    cursor: pointer;
+    transition:
+      transform 300ms var(--ease-out),
+      box-shadow 300ms var(--ease-out);
+  }
+
+  /* Two thin bands near the top and bottom, like printed spine decoration */
+  .spine::before,
+  .spine::after {
+    content: "";
+    position: absolute;
+    left: 0.35rem;
+    right: 0.35rem;
+    height: 0;
+    border-top: 1px solid var(--fg);
+    opacity: 0.35;
+  }
+
+  .spine::before {
+    top: 0.4rem;
+  }
+
+  .spine::after {
+    bottom: 0.3rem;
+  }
+
+  .spine:hover,
+  .spine:focus-visible {
+    transform: translateY(-8px) rotate(-1.5deg);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .spine:active {
+    transform: translateY(-4px);
+  }
+
+  .spine-title {
+    writing-mode: vertical-rl;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+
+  .spine-title:lang(zh) {
+    font-family: var(--font-cjk);
+    letter-spacing: 0.2em;
+  }
+
+  .spine-hours {
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--fg-muted);
+  }
+
+  .spine-ribbon {
+    position: absolute;
+    top: -0.9rem;
+    right: 0.45rem;
+    width: 0.45rem;
+    height: 1.6rem;
+    background: var(--accent);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .room,
+    .room-stage.is-zoomed .room,
+    .case-view,
+    .room-stage.is-zoomed .case-view {
+      transform: none;
+      transition: opacity 150ms ease;
+    }
+  }
+</style>
