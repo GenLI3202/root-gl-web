@@ -5,14 +5,10 @@ import CyclingYearLines from "@/components/CyclingYearLines.astro";
 import CyclingCalendar from "@/components/CyclingCalendar.astro";
 import CyclingRideMix from "@/components/CyclingRideMix.astro";
 import CyclingKey from "@/components/CyclingKey.astro";
+import CyclingBigDays from "@/components/CyclingBigDays.astro";
+import CyclingMap from "@/components/CyclingMap.astro";
 import { t, type Locale } from "@/i18n";
-import {
-  formatDate,
-  formatNumber,
-  loadCycling,
-  ridesText,
-  totalsThrough,
-} from "@/utils/cycling";
+import { formatDate, formatNumber, funFigures, loadCycling, loadRoutes } from "@/utils/cycling";
 
 interface Props {
   locale: Locale;
@@ -20,19 +16,26 @@ interface Props {
 
 interface CyclingCopy {
   kicker: string;
-  numbers: string;
   findMe: string;
   stravaNote: string;
   clubNote: string;
   clubName: string;
-  soFar: (year: number) => string;
-  through: (date: string) => string;
-  tiles: { distance: string; climbing: string; rides: string; time: string };
-  vsSame: (year: number) => string;
-  since: (date: string) => string;
-  synced: string;
   empty: string;
-  trainingTitle: string;
+  /** Opening sentence; the distance is wrapped in a highlighter stroke */
+  odometer: (since: string, km: string, percent: number, everests: number) => string;
+  noTargets: string;
+  mapTitle: string;
+  mapCaption: (year: number) => string;
+  mapAll: string;
+  mapFilter: string;
+  mapLabel: string;
+  mapLoading: string;
+  mapError: string;
+  mapHint: string;
+  bigTitle: string;
+  days: (n: number) => string;
+  nerdSummary: string;
+  nerdIntro: string;
   yoyTitle: string;
   yoyCaption: string;
   yoyHint: string;
@@ -42,7 +45,6 @@ interface CyclingCopy {
   keyTitle: string;
   mixTitle: string;
   mixCaption: string;
-  tableSummary: string;
   columns: string[];
 }
 
@@ -51,19 +53,27 @@ const { locale } = Astro.props;
 const COPY: Record<Locale, CyclingCopy> = {
   en: {
     kicker: "Isar mornings, weekends south of Munich",
-    numbers: "By the numbers",
     findMe: "Where to find me",
     stravaNote: "Every ride, logged.",
     clubNote: "Group rides, routes, and the club site I help build.",
     clubName: "Across Cycling Club",
-    soFar: (year) => `${year} so far`,
-    through: (date) => `through ${date}`,
-    tiles: { distance: "Distance", climbing: "Climbing", rides: "Rides", time: "Time in the saddle" },
-    vsSame: (year) => `vs. same date in ${year}`,
-    since: (date) => `Since ${date}`,
-    synced: "Synced from Strava once a day.",
-    empty: "The numbers appear after the first Strava sync.",
-    trainingTitle: "Training, year by year",
+    empty: "The rides appear after the first Strava sync.",
+    odometer: (since, km, percent, everests) =>
+      `Since ${since} the wheels have turned about <span class="marker">${km} km</span>, ${percent} % of the way around the planet, and climbed the height of Everest ${everests}×. One pedal stroke at a time.`,
+    noTargets: "No targets, no streaks. Just rides.",
+    mapTitle: "Where the wheels have been",
+    mapCaption: (year) =>
+      `Every outdoor ride with a GPS track since ${year}, on OpenStreetMap. Hover a line for its date. The first and last 500 m of every ride are left out.`,
+    mapAll: "All years",
+    mapFilter: "Show rides from",
+    mapLabel: "Map of my rides",
+    mapLoading: "Unfolding the map…",
+    mapError: "The map could not be loaded.",
+    mapHint: "On a phone, move the map with two fingers.",
+    bigTitle: "Days worth remembering",
+    days: (n) => (n === 1 ? "1 day" : `${n} days`),
+    nerdSummary: "For the number nerds",
+    nerdIntro: "Totals and year-by-year comparisons, for the curious. Nothing to chase. Synced from Strava once a day.",
     yoyTitle: "Distance, year over year",
     yoyCaption: "Running total from 1 January. Hover or use the arrow keys to compare any date.",
     yoyHint: "Use the left and right arrow keys to compare dates",
@@ -73,24 +83,31 @@ const COPY: Record<Locale, CyclingCopy> = {
     keyTitle: "Length",
     mixTitle: "How long the rides are",
     mixCaption: "Rides per year, grouped by distance.",
-    tableSummary: "All numbers as a table",
     columns: ["Year", "Rides", "Ride days", "Distance km", "Climbing m", "Hours", "Longest km", "100+ km rides", "Avg km/h"],
   },
   zh: {
     kicker: "伊萨尔河的清晨，慕尼黑以南的周末",
-    numbers: "数字",
     findMe: "在哪找到我",
     stravaNote: "每一次骑行的记录。",
     clubNote: "团骑、路线，还有我参与建设的俱乐部网站。",
     clubName: "Across 骑行俱乐部",
-    soFar: (year) => `${year} 年至今`,
-    through: (date) => `截至 ${date}`,
-    tiles: { distance: "距离", climbing: "爬升", rides: "骑行次数", time: "骑行时间" },
-    vsSame: (year) => `较 ${year} 年同期`,
-    since: (date) => `自 ${date}起`,
-    synced: "数据每天从 Strava 自动同步。",
-    empty: "首次同步 Strava 之后，这里会显示数据。",
-    trainingTitle: "训练：逐年对比",
+    empty: "首次同步 Strava 之后，这里会出现骑行记录。",
+    odometer: (since, km, percent, everests) =>
+      `自 ${since}以来，车轮大约转了 <span class="marker">${km} 公里</span>，绕地球 ${percent}%，累计爬升相当于 ${everests} 座珠峰。一脚一脚踩出来的。`,
+    noTargets: "没有目标，没有连续打卡，只有骑行。",
+    mapTitle: "车轮到过的地方",
+    mapCaption: (year) =>
+      `${year} 年以来每一次带 GPS 轨迹的户外骑行，画在 OpenStreetMap 上。悬停在线上可以看日期。每次骑行的起点和终点各 500 米已省略。`,
+    mapAll: "全部年份",
+    mapFilter: "按年份显示",
+    mapLabel: "骑行路线地图",
+    mapLoading: "地图展开中…",
+    mapError: "地图加载失败。",
+    mapHint: "手机上请用两根手指移动地图。",
+    bigTitle: "值得记住的日子",
+    days: (n) => `${n} 天`,
+    nerdSummary: "给爱看数字的人",
+    nerdIntro: "累计数字和逐年对比，给好奇的人看。没有什么要追的。数据每天从 Strava 自动同步。",
     yoyTitle: "累计里程，逐年对比",
     yoyCaption: "自 1 月 1 日起的累计距离。悬停或用方向键对比任意日期。",
     yoyHint: "用左右方向键对比日期",
@@ -100,24 +117,31 @@ const COPY: Record<Locale, CyclingCopy> = {
     keyTitle: "距离",
     mixTitle: "骑行距离分布",
     mixCaption: "每年的骑行次数，按单次距离分组。",
-    tableSummary: "查看全部数字",
     columns: ["年份", "次数", "骑行天数", "距离 km", "爬升 m", "时长 h", "最长 km", "百公里以上", "均速 km/h"],
   },
   de: {
     kicker: "Isar-Morgen, Wochenenden südlich von München",
-    numbers: "In Zahlen",
     findMe: "Wo du mich findest",
     stravaNote: "Jede Ausfahrt, protokolliert.",
     clubNote: "Gruppenausfahrten, Routen und die Club-Website, an der ich mitbaue.",
     clubName: "Across Cycling Club",
-    soFar: (year) => `${year} bisher`,
-    through: (date) => `bis ${date}`,
-    tiles: { distance: "Distanz", climbing: "Höhenmeter", rides: "Ausfahrten", time: "Zeit im Sattel" },
-    vsSame: (year) => `ggü. gleichem Datum ${year}`,
-    since: (date) => `Seit ${date}`,
-    synced: "Einmal täglich von Strava synchronisiert.",
-    empty: "Die Zahlen erscheinen nach dem ersten Strava-Sync.",
-    trainingTitle: "Training, Jahr für Jahr",
+    empty: "Die Fahrten erscheinen nach dem ersten Strava-Sync.",
+    odometer: (since, km, percent, everests) =>
+      `Seit ${since} haben sich die Räder rund <span class="marker">${km} km</span> gedreht, ${percent} % um die Erde, und die Höhe des Everest ${everests}-mal erklommen. Pedaltritt für Pedaltritt.`,
+    noTargets: "Keine Ziele, keine Serien. Nur Fahrten.",
+    mapTitle: "Wo die Räder waren",
+    mapCaption: (year) =>
+      `Jede Außenfahrt mit GPS-Spur seit ${year}, auf OpenStreetMap. Linie anfahren für das Datum. Die ersten und letzten 500 m jeder Fahrt fehlen.`,
+    mapAll: "Alle Jahre",
+    mapFilter: "Fahrten anzeigen aus",
+    mapLabel: "Karte meiner Fahrten",
+    mapLoading: "Karte wird aufgefaltet …",
+    mapError: "Die Karte konnte nicht geladen werden.",
+    mapHint: "Am Handy die Karte mit zwei Fingern bewegen.",
+    bigTitle: "Tage, die bleiben",
+    days: (n) => (n === 1 ? "1 Tag" : `${n} Tage`),
+    nerdSummary: "Für Zahlenmenschen",
+    nerdIntro: "Summen und Jahresvergleiche für Neugierige. Nichts, dem man hinterherjagen muss. Einmal täglich von Strava synchronisiert.",
     yoyTitle: "Distanz im Jahresvergleich",
     yoyCaption: "Laufende Summe seit 1. Januar. Mit der Maus oder den Pfeiltasten jedes Datum vergleichen.",
     yoyHint: "Mit den Pfeiltasten links und rechts Daten vergleichen",
@@ -127,45 +151,23 @@ const COPY: Record<Locale, CyclingCopy> = {
     keyTitle: "Länge",
     mixTitle: "Wie lang die Ausfahrten sind",
     mixCaption: "Ausfahrten pro Jahr, nach Distanz gruppiert.",
-    tableSummary: "Alle Zahlen als Tabelle",
     columns: ["Jahr", "Ausfahrten", "Fahrtage", "Distanz km", "Höhenmeter m", "Stunden", "Längste km", "100+ km", "Ø km/h"],
   },
 };
 
 const copy = COPY[locale];
 const data = loadCycling();
-
-// Year to date against the same calendar date a year earlier
-const current = data?.years.find((y) => y.year === data.year);
-const previous = data ? totalsThrough(data.rides, data.year - 1, data.asOf.slice(5)) : null;
+const routeYears = [...new Set(loadRoutes().map((r) => Number(r.d.slice(0, 4))))].sort((a, b) => b - a);
 const hours = (seconds: number): number => Math.round(seconds / 3600);
 
-function delta(now: number, before: number, unit: string): string {
-  const diff = Math.round(now - before);
-  const sign = diff > 0 ? "+" : diff < 0 ? "−" : "±";
-  return `${sign}${formatNumber(locale, Math.abs(diff))}${unit} ${copy.vsSame(data!.year - 1)}`;
-}
-
-const tiles =
-  data && current && previous
-    ? [
-        { label: copy.tiles.distance, value: formatNumber(locale, current.km), unit: "km",
-          note: previous.rides ? delta(current.km, previous.km, " km") : "" },
-        { label: copy.tiles.climbing, value: formatNumber(locale, current.m), unit: "m",
-          note: previous.rides ? delta(current.m, previous.m, " m") : "" },
-        { label: copy.tiles.rides, value: formatNumber(locale, current.rides), unit: "",
-          note: previous.rides ? delta(current.rides, previous.rides, "") : "" },
-        { label: copy.tiles.time, value: formatNumber(locale, hours(current.s)), unit: "h",
-          note: previous.rides ? delta(hours(current.s), hours(previous.s), " h") : "" },
-      ]
-    : [];
-
-const asOfDate = data ? new Date(`${data.asOf}T00:00:00Z`) : null;
-const firstDate = data ? new Date(`${data.first}T00:00:00Z`) : null;
-const sinceText =
-  data && firstDate
-    ? copy.since(formatDate(locale, firstDate, { month: "short", year: "numeric" }))
-    : "";
+const odometer = data
+  ? copy.odometer(
+      formatDate(locale, new Date(`${data.first}T00:00:00Z`), { month: "long", year: "numeric" }),
+      formatNumber(locale, Math.round(data.all.km / 100) * 100),
+      funFigures(data.all.km, data.all.m).aroundEarth,
+      funFigures(data.all.km, data.all.m).everests
+    )
+  : "";
 
 const tableRows = data
   ? [...data.years].reverse().map((y) => [
@@ -189,69 +191,73 @@ const tableRows = data
   lead={t(locale, "hobbies.cycling.lead")}
   illustration="/images/hobbies/cyclist-rider.svg"
 >
-  <section class="hobby-section">
-    <h2 class="section-title">
-      {data ? copy.soFar(data.year) : copy.numbers}
-      {asOfDate && (
-        <span class="section-sub">
-          {copy.through(formatDate(locale, asOfDate, { day: "numeric", month: "short" }))}
-        </span>
-      )}
-    </h2>
+  <section class="intro">
     {data ? (
       <>
-        <ul class="stats" role="list">
-          {tiles.map((tile) => (
-            <li class="stat">
-              <span class="stat-num">
-                {tile.value}
-                {tile.unit && <span class="stat-unit"> {tile.unit}</span>}
-              </span>
-              <span class="stat-label">{tile.label}</span>
-              {tile.note && <span class="stat-delta">{tile.note}</span>}
-            </li>
-          ))}
-        </ul>
-        <p class="stat-note">
-          {sinceText}: {formatNumber(locale, data.all.km)} km · {formatNumber(locale, data.all.m)} m ·
-          {" "}{ridesText(locale, data.all.rides)}. {copy.synced}
-        </p>
+        <p class="odometer" set:html={odometer} />
+        <p class="aside hand">{copy.noTargets}</p>
       </>
     ) : (
-      <p class="stat-note">{copy.empty}</p>
+      <p class="aside">{copy.empty}</p>
     )}
   </section>
 
+  {routeYears.length > 0 && (
+    <section class="hobby-section">
+      <h2 class="section-title">{copy.mapTitle}</h2>
+      <p class="caption">{copy.mapCaption(routeYears[routeYears.length - 1])}</p>
+      <CyclingMap
+        locale={locale}
+        years={routeYears}
+        copy={{
+          all: copy.mapAll,
+          filter: copy.mapFilter,
+          label: copy.mapLabel,
+          loading: copy.mapLoading,
+          error: copy.mapError,
+        }}
+      />
+      <p class="touch-hint">{copy.mapHint}</p>
+    </section>
+  )}
+
   {data && (
     <section class="hobby-section">
-      <h2 class="section-title">{copy.trainingTitle}</h2>
+      <h2 class="section-title">{copy.bigTitle}</h2>
+      <CyclingBigDays locale={locale} rides={data.rides} days={copy.days} />
+    </section>
+  )}
 
-      <div class="cycling-charts" data-chart-locale={locale}>
-        <article class="chart-card">
-          <h3 class="chart-title">{copy.yoyTitle}</h3>
-          <p class="chart-caption">{copy.yoyCaption}</p>
-          <CyclingYearLines data={data} locale={locale} title={copy.yoyTitle} hint={copy.yoyHint} />
-        </article>
+  {data && (
+    <section class="hobby-section">
+      <details class="nerd">
+        <summary>{copy.nerdSummary}</summary>
+        <p class="caption">{copy.nerdIntro}</p>
 
-        <article class="chart-card">
-          <h3 class="chart-title">{copy.calendarTitle}</h3>
-          <p class="chart-caption">{copy.calendarCaption}</p>
-          <CyclingKey title={copy.keyTitle} empty={copy.noRide} />
-          <CyclingCalendar data={data} locale={locale} title={copy.calendarTitle} />
-        </article>
+        <div class="cycling-charts">
+          <article class="chart-card">
+            <h3 class="chart-title">{copy.yoyTitle}</h3>
+            <p class="chart-caption">{copy.yoyCaption}</p>
+            <CyclingYearLines data={data} locale={locale} title={copy.yoyTitle} hint={copy.yoyHint} />
+          </article>
 
-        <article class="chart-card">
-          <h3 class="chart-title">{copy.mixTitle}</h3>
-          <p class="chart-caption">{copy.mixCaption}</p>
-          <CyclingKey title={copy.keyTitle} />
-          <CyclingRideMix data={data} locale={locale} title={copy.mixTitle} />
-        </article>
+          <article class="chart-card">
+            <h3 class="chart-title">{copy.calendarTitle}</h3>
+            <p class="chart-caption">{copy.calendarCaption}</p>
+            <CyclingKey title={copy.keyTitle} empty={copy.noRide} />
+            <CyclingCalendar data={data} locale={locale} title={copy.calendarTitle} />
+          </article>
 
-        <div class="chart-tip" role="tooltip" hidden></div>
-      </div>
+          <article class="chart-card">
+            <h3 class="chart-title">{copy.mixTitle}</h3>
+            <p class="chart-caption">{copy.mixCaption}</p>
+            <CyclingKey title={copy.keyTitle} />
+            <CyclingRideMix data={data} locale={locale} title={copy.mixTitle} />
+          </article>
 
-      <details class="table-view">
-        <summary>{copy.tableSummary}</summary>
+          <div class="chart-tip" role="tooltip" hidden></div>
+        </div>
+
         <div class="table-scroll">
           <table>
             <thead>
@@ -310,68 +316,69 @@ const tableRows = data
     font-size: var(--text-2xl);
   }
 
-  .section-sub {
-    margin-left: 0.6rem;
-    font-family: var(--font-body);
-    font-size: var(--text-sm);
-    font-weight: 400;
-    color: var(--fg-muted);
-  }
-
-  .stats {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-    gap: 1rem;
-  }
-
-  .stat {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 1.25rem 1.5rem;
-    border: 1.5px solid var(--border-dark);
-    border-radius: var(--radius-md);
-    background: var(--surface);
-  }
-
-  .stat-num {
-    font-family: var(--font-heading);
-    font-size: var(--text-3xl);
-    font-weight: 700;
-    color: var(--accent);
-    line-height: 1.1;
-  }
-
-  .stat-unit {
-    font-size: var(--text-lg);
-    font-weight: 400;
-    color: var(--fg-muted);
-  }
-
-  .stat-label {
+  .caption {
     font-size: var(--text-sm);
     color: var(--fg-muted);
+    max-width: 44rem;
   }
 
-  .stat-delta {
-    margin-top: 0.35rem;
+  .touch-hint {
+    display: none;
     font-size: var(--text-xs);
     color: var(--fg-muted);
   }
 
-  .stat-note {
-    font-size: var(--text-sm);
-    font-style: italic;
+  @media (hover: none) {
+    .touch-hint {
+      display: block;
+    }
+  }
+
+  /* ── Opening line ── */
+  .intro {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 44rem;
+  }
+
+  .odometer {
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    line-height: 1.45;
+  }
+
+  .aside {
+    font-size: 1.4rem;
     color: var(--fg-muted);
   }
 
-  /* ── Charts ── */
+  /* ── Numbers corner ── */
+  .nerd > summary {
+    cursor: pointer;
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: 600;
+  }
+
+  .nerd > summary:hover {
+    color: var(--accent);
+  }
+
+  .nerd[open] > summary {
+    margin-bottom: 0.5rem;
+  }
+
+  .nerd > .caption {
+    margin-bottom: 1rem;
+  }
+
   .cycling-charts {
     position: relative;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    margin-bottom: 1.5rem;
   }
 
   .chart-card {
@@ -434,19 +441,7 @@ const tableRows = data
     color: var(--fg-muted);
   }
 
-  /* ── Table view ── */
-  .table-view summary {
-    cursor: pointer;
-    font-size: var(--text-sm);
-    color: var(--fg-muted);
-  }
-
-  .table-view summary:hover {
-    color: var(--accent);
-  }
-
   .table-scroll {
-    margin-top: 0.75rem;
     overflow-x: auto;
   }
 
@@ -518,14 +513,6 @@ const tableRows = data
   }
 
   @media (max-width: 560px) {
-    .stat {
-      padding: 1rem;
-    }
-
-    .stat-num {
-      font-size: var(--text-2xl);
-    }
-
     .chart-card {
       padding: 1rem;
     }
@@ -766,4 +753,13 @@ const tableRows = data
     initCharts();
     scrollCalendarsToLatest();
   });
+
+  // The calendar has no width while its section is folded; scroll it once it opens
+  document.addEventListener(
+    "toggle",
+    (event) => {
+      if ((event.target as Element | null)?.matches?.("details.nerd[open]")) scrollCalendarsToLatest();
+    },
+    true
+  );
 </script>
