@@ -38,10 +38,14 @@
   --grain-opacity: 0.35;
 
   /* Bookshelf spines, one muted tint per category */
+  --shelf-literature: #D9E2D0;
+  --shelf-ideas:      #E2DCE9;
   --shelf-polecon:    #EAD2CC;
   --shelf-wuxia:      #E8D8C3;
   --shelf-scifi:      #D3DCE2;
-  --shelf-literature: #D9E2D0;
+
+  /* Dimmed page behind a modal dialog */
+  --scrim: rgba(31, 29, 26, 0.38);
 
   /* Warm tints for project stages and covers */
   --tint-amber: #F3E3C7;
@@ -112,10 +116,13 @@
 
   --grain-opacity: 0.18;
 
+  --shelf-literature: #2E3529;
+  --shelf-ideas:      #322C3A;
   --shelf-polecon:    #3B2B28;
   --shelf-wuxia:      #3A3127;
   --shelf-scifi:      #2B3238;
-  --shelf-literature: #2E3529;
+
+  --scrim: rgba(0, 0, 0, 0.55);
 
   --tint-amber: #3A2F1E;
   --tint-sage:  #29331F;
