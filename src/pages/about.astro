@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import HandIcon from "@/components/HandIcon.astro";
 ---
 
 <BaseLayout title="About · Gen Li" description="PhD candidate at TU Munich, operations researcher, cyclist, reader.">
@@ -14,6 +15,7 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
           I'm Gen Li (李根) — a PhD candidate in Mathematics at
           <a href="https://www.tum.de" target="_blank" rel="noopener noreferrer">TU Munich</a>,
           working at the intersection of energy systems and operations research.
+          Right now I'm a PhD intern at Huawei, working on local energy management systems.
         </p>
 
         <p>
@@ -32,15 +34,27 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
         <p>
           My PhD work lives at the TUM
           <a href="https://www.cem.tum.de" target="_blank" rel="noopener noreferrer">Center for Energy Markets</a>.
-          I focus on stochastic and robust optimisation for energy transition problems — grid planning, EV charging infrastructure, and renewable integration under uncertainty.
+          The core is stochastic and robust optimisation for energy systems under uncertainty.
+        </p>
+        <p>
+          In my PhD internship at Huawei I work on local energy management systems (LEMS):
+          coordinating a site's batteries, PV, EV charging, loads and grid connection as one
+          system, with fast local decisions that respect the site's physical limits.
+        </p>
+        <p>
+          Beyond that topic, the problem I keep thinking about is energy management for AI
+          data-center campuses. Compute load can jump from idle to peak in seconds, which turns
+          storage into a power-quality and resilience tool as much as an energy-shifting one.
+          I wrote some of this down in my
+          <a href="/posts/intersolar-2026-ems-lems-insights/">Intersolar 2026 notes</a>.
           <a href="/projects/">See projects →</a>
         </p>
         <div class="research-tags">
+          <span class="tag">Local EMS</span>
+          <span class="tag">AI Data-Center Energy</span>
+          <span class="tag">Battery Storage</span>
           <span class="tag">Stochastic Optimisation</span>
           <span class="tag">Energy Markets</span>
-          <span class="tag">MILP</span>
-          <span class="tag">Risk Management</span>
-          <span class="tag">Renewable Integration</span>
         </div>
       </div>
     </section>
@@ -105,19 +119,19 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
         </p>
         <div class="contact-links">
           <a href="mailto:hiligen723@gmail.com" class="contact-item">
-            <span class="contact-icon">✉</span>
+            <span class="contact-icon"><HandIcon name="mail" size={20} /></span>
             <span class="contact-label">hiligen723@gmail.com</span>
           </a>
           <a href="https://github.com/GenLI3202" target="_blank" rel="noopener noreferrer" class="contact-item">
-            <span class="contact-icon">⌥</span>
+            <span class="contact-icon"><HandIcon name="code" size={20} /></span>
             <span class="contact-label">github.com/GenLI3202</span>
           </a>
           <a href="https://www.linkedin.com/in/gen-li-tum723" target="_blank" rel="noopener noreferrer" class="contact-item">
-            <span class="contact-icon">↗</span>
+            <span class="contact-icon"><HandIcon name="linkedin" size={20} /></span>
             <span class="contact-label">linkedin.com/in/gen-li-tum723</span>
           </a>
           <a href="https://www.strava.com/athletes/119635546" target="_blank" rel="noopener noreferrer" class="contact-item">
-            <span class="contact-icon">🚴</span>
+            <span class="contact-icon"><HandIcon name="bike" size={20} /></span>
             <span class="contact-label">Strava</span>
           </a>
         </div>
@@ -298,9 +312,9 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
   }
 
   .contact-icon {
-    font-size: var(--text-base);
+    display: inline-flex;
+    justify-content: center;
     width: 1.25rem;
-    text-align: center;
     flex-shrink: 0;
   }
 

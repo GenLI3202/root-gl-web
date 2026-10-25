@@ -1,0 +1,36 @@
+---
+/**
+ * Red name seal (印章): Gen's own brush-written 李根, carved out of a cinnabar block.
+ * The ink texture and rough edge live inside the SVG file, so it renders the same in both themes.
+ */
+interface Props {
+  size?: number;
+  tilt?: number;
+  alt?: string;
+  class?: string;
+}
+
+const { size = 56, tilt = -4, alt = "李根", class: className = "" } = Astro.props;
+
+// viewBox of public/images/seal-ligen.svg is 108 × 158
+const SEAL_RATIO = 158 / 108;
+---
+
+<img
+  class:list={["seal", className]}
+  src="/images/seal-ligen.svg"
+  width={size}
+  height={Math.round(size * SEAL_RATIO)}
+  alt={alt}
+  style={`--seal-tilt: ${tilt}deg;`}
+  decoding="async"
+/>
+
+<style>
+  .seal {
+    display: inline-block;
+    flex-shrink: 0;
+    transform: rotate(var(--seal-tilt));
+    transition: transform 400ms var(--ease-out);
+  }
+</style>

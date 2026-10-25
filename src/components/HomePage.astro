@@ -1,0 +1,627 @@
+---
+import { getCollection } from "astro:content";
+import Seal from "@/components/Seal.astro";
+import HandIcon from "@/components/HandIcon.astro";
+import type { HandIconName } from "@/components/hand-icons";
+import SayHello from "@/components/SayHello.astro";
+import MunichClock from "@/components/MunichClock.astro";
+import { t, localizeUrl, DEFAULT_LOCALE, type Locale } from "@/i18n";
+import { NOW_ITEMS, NOW_UPDATED } from "@/data/now";
+import { formatPostDate, getPostLabels, getPostUrl, getPostsForLocale } from "@/utils/posts";
+
+interface Props {
+  locale: Locale;
+}
+
+interface HomeCopy {
+  hello: string;
+  nameLine: string;
+  intro: string;
+  notebook: string;
+  lately: string;
+  updated: string;
+  sealNote: string;
+}
+
+const { locale } = Astro.props;
+
+const allPosts = await getCollection("posts", ({ data }) => !data.draft);
+const localePosts = getPostsForLocale(allPosts, locale);
+// Locales without their own posts show the English ones instead of an empty list
+const recentPosts = (
+  localePosts.length > 0 ? localePosts : getPostsForLocale(allPosts, DEFAULT_LOCALE)
+).slice(0, 4);
+
+const COPY: Record<Locale, HomeCopy> = {
+  en: {
+    hello: "hi, glad you found this place",
+    nameLine: "I'm Gen Li.",
+    intro:
+      "I'm a PhD researcher at TU Munich's Center for Energy Markets, currently a PhD intern " +
+      "at Huawei. I work on <span class='marker'>local energy management systems</span>: the " +
+      "software that makes a site's batteries, PV, EV chargers and grid connection work as one. " +
+      "Lately I'm also hooked on energy management for AI data-center campuses. On weekends " +
+      "I'm on a bike somewhere south of Munich.",
+    notebook:
+      "This site is my notebook: research notes, rides, books, and the occasional guitar evening.",
+    lately: "Lately",
+    updated: "updated",
+    sealNote: "my name, stamped",
+  },
+  zh: {
+    hello: "你好，欢迎来坐坐",
+    nameLine: "我是李根。",
+    intro:
+      "慕尼黑工业大学能源市场中心的博士研究员，目前在华为做博士实习。我研究" +
+      "<span class='marker'>本地能量管理系统（LEMS）</span>，" +
+      "也就是让一个场站里的储能、光伏、充电桩和并网点协同工作的那套软件。" +
+      "最近还迷上了 AI 数据中心园区的能量管理。周末多半在慕尼黑以南的某条路上骑车。",
+    notebook: "这个网站是我的笔记本：研究、骑行、读书，偶尔还有一晚吉他。",
+    lately: "最近",
+    updated: "更新于",
+    sealNote: "我的名章",
+  },
+  de: {
+    hello: "hallo, schön, dass du hier bist",
+    nameLine: "Ich bin Gen Li.",
+    intro:
+      "Ich bin Doktorand am Center for Energy Markets der TU München und derzeit " +
+      "PhD-Praktikant bei Huawei. Ich arbeite an <span class='marker'>lokalen " +
+      "Energiemanagementsystemen</span>: der Software, die Batteriespeicher, PV, Ladesäulen und " +
+      "Netzanschluss eines Standorts zusammenspielen lässt. Seit Kurzem beschäftigt mich auch " +
+      "das Energiemanagement von KI-Rechenzentrumsparks. Am Wochenende sitze ich irgendwo " +
+      "südlich von München auf dem Rad.",
+    notebook:
+      "Diese Seite ist mein Notizbuch: Forschung, Ausfahrten, Bücher und ab und zu ein Gitarrenabend.",
+    lately: "Gerade",
+    updated: "aktualisiert",
+    sealNote: "mein Namensstempel",
+  },
+};
+
+const PROJECTS = [
+  {
+    title: "MAMODA Web Dashboard",
+    description: {
+      en: "Interactive knowledge hub for sustainable mining decisions. Multi-objective optimization with stakeholder-guided decision-making.",
+      zh: "可持续采矿决策的交互式知识平台，融合多目标优化与利益相关方引导决策。",
+      de: "Interaktive Wissensplattform für nachhaltige Bergbauentscheidungen mit Multi-Ziel-Optimierung.",
+    },
+    tags: ["Python", "FastAPI", "Plotly"],
+    href: "https://mamoda-web-dashboard.vercel.app/",
+  },
+  {
+    title: "ACC ClubHub",
+    description: {
+      en: "Digital hub for Across Cycling Club Munich: events, routes, gear guides, and training notes.",
+      zh: "慕尼黑 Across 骑行俱乐部的线上基地：活动、路线、装备指南和训练笔记。",
+      de: "Digitaler Treffpunkt des Across Cycling Club München: Events, Routen, Ausrüstung und Training.",
+    },
+    tags: ["Astro", "TypeScript"],
+    href: "https://www.across-cc.de/",
+  },
+  {
+    title: "EV Charging Optimizer",
+    description: {
+      en: "Stochastic MILP model for optimal EV charging station placement under grid uncertainty. PCT patent WO2025026594.",
+      zh: "基于随机混合整数规划的电动汽车充电站选址优化模型，PCT 专利 WO2025026594。",
+      de: "Stochastisches MILP-Modell für optimale EV-Ladestation-Platzierung. PCT-Patent WO2025026594.",
+    },
+    tags: ["Python", "Pyomo", "CPLEX"],
+    href: "https://patentscope.wipo.int/search/en/detail.jsf?docId=WO2025026594",
+  },
+];
+
+interface IdentityTag {
+  icon: HandIconName;
+  label: string;
+  title: string;
+  href: string;
+}
+
+const IDENTITY_TAGS: Record<Locale, IdentityTag[]> = {
+  en: [
+    { icon: "bolt", label: "Energy Research", title: "Energy systems optimization", href: "/about/" },
+    { icon: "bike", label: "Cyclist", title: "Across Cycling Club Munich", href: "/hobbies/cycling/" },
+    { icon: "book", label: "Reader", title: "Sci-fi, Wuxia, Literature", href: "/hobbies/reading/" },
+    { icon: "guitar", label: "Guitar", title: "Acoustic guitar", href: "/hobbies/guitar/" },
+  ],
+  zh: [
+    { icon: "bolt", label: "能源研究", title: "能源系统优化", href: "/zh/about/" },
+    { icon: "bike", label: "骑行者", title: "Across骑行俱乐部慕尼黑", href: "/zh/hobbies/cycling/" },
+    { icon: "book", label: "读书人", title: "科幻、武侠、文学", href: "/zh/hobbies/reading/" },
+    { icon: "guitar", label: "吉他", title: "民谣木吉他", href: "/zh/hobbies/guitar/" },
+  ],
+  de: [
+    { icon: "bolt", label: "Energieforschung", title: "Energiesystemoptimierung", href: "/de/about/" },
+    { icon: "bike", label: "Radfahrer", title: "Across Cycling Club München", href: "/de/hobbies/cycling/" },
+    { icon: "book", label: "Leser", title: "Sci-Fi, Wuxia, Literatur", href: "/de/hobbies/reading/" },
+    { icon: "guitar", label: "Gitarre", title: "Akustikgitarre", href: "/de/hobbies/guitar/" },
+  ],
+};
+
+const copy = COPY[locale];
+const nowItems = NOW_ITEMS[locale];
+const [nowYear, nowMonth] = NOW_UPDATED.split("-").map(Number);
+const nowUpdatedLabel = new Intl.DateTimeFormat(
+  { en: "en-GB", zh: "zh-CN", de: "de-DE" }[locale],
+  { month: "short", year: "numeric" }
+).format(new Date(nowYear, nowMonth - 1, 1));
+
+function isExternal(href: string): boolean {
+  return /^https?:\/\//.test(href);
+}
+---
+
+<!-- ── Hero ─────────────────────────────── -->
+<section class="hero">
+  <div class="container">
+    <p class="hero-hello hand">
+      {copy.hello}
+      <svg class="hello-arrow" viewBox="0 0 60 40" aria-hidden="true">
+        <path d="M4 6 C 22 4, 40 12, 46 30" />
+        <path d="M38 26 L 46 31 L 50 22" />
+      </svg>
+    </p>
+
+    <div class="hero-name-row">
+      <h1 class="hero-name">{copy.nameLine}</h1>
+      <span class="hero-seal" title={copy.sealNote}>
+        <Seal size={46} tilt={-5} />
+      </span>
+    </div>
+
+    <p class="hero-intro" set:html={copy.intro} />
+    <p class="hero-notebook">{copy.notebook}</p>
+
+    <MunichClock locale={locale} />
+
+    <div class="hero-tags">
+      {IDENTITY_TAGS[locale].map(({ icon, label, title, href }) => (
+        <a class="identity-tag" href={href} title={title}>
+          <HandIcon name={icon} size={16} />
+          {label}
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<!-- ── Lately ───────────────────────────── -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">{copy.lately}</h2>
+      <span class="now-stamp hand">{copy.updated} {nowUpdatedLabel}</span>
+    </div>
+
+    <ul class="now-grid" role="list">
+      {nowItems.map((item, index) => {
+        const Tag = item.href ? "a" : "div";
+        const external = item.href ? isExternal(item.href) : false;
+        return (
+          <li class="now-card" style={`--card-tilt: ${index % 2 === 0 ? -0.6 : 0.5}deg;`}>
+            <Tag
+              class="now-link"
+              href={item.href}
+              target={external ? "_blank" : undefined}
+              rel={external ? "noopener noreferrer" : undefined}
+            >
+              <span class="now-icon"><HandIcon name={item.icon} size={30} /></span>
+              <span class="now-label">{item.label}</span>
+              <span class="now-text">{item.text}</span>
+            </Tag>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+</section>
+
+<!-- ── Recent Posts ──────────────────────── -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">{t(locale, "index.writing.title")}</h2>
+      <a href={localizeUrl("/posts/", locale)} class="section-link">
+        {t(locale, "index.writing.link")}
+      </a>
+    </div>
+
+    {recentPosts.length === 0 ? (
+      <p class="empty-state">{getPostLabels(locale).empty}</p>
+    ) : (
+      <ul class="post-list" role="list">
+        {recentPosts.map((post) => (
+          <li class="post-item">
+            <a href={getPostUrl(post)} class="post-link">
+              <span class="post-date">{formatPostDate(post.data.pubDate, locale)}</span>
+              <span class="post-body">
+                <span class="post-title">{post.data.title}</span>
+                {post.data.description && (
+                  <span class="post-desc">{post.data.description}</span>
+                )}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</section>
+
+<!-- ── Selected Projects ─────────────────── -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">{t(locale, "index.projects.title")}</h2>
+      <a href={localizeUrl("/projects/", locale)} class="section-link">
+        {t(locale, "index.projects.link")}
+      </a>
+    </div>
+
+    <ul class="project-list" role="list">
+      {PROJECTS.map((project) => (
+        <li class="project-card">
+          <a href={project.href} class="project-link" target="_blank" rel="noopener noreferrer">
+            <div class="project-content">
+              <h3 class="project-title">{project.title}</h3>
+              <p class="project-desc">{project.description[locale]}</p>
+              <div class="project-tags">
+                {project.tags.map((tag) => (
+                  <span class="tag">{tag}</span>
+                ))}
+              </div>
+            </div>
+            <span class="project-arrow" aria-hidden="true">↗</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<SayHello locale={locale} />
+
+<style>
+  /* ── Hero ── */
+  .hero {
+    padding-top: 4.5rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .hero-hello {
+    position: relative;
+    display: inline-block;
+    font-size: 1.6rem;
+    transform: rotate(-2deg);
+    margin-bottom: 0.25rem;
+    margin-left: -0.15rem;
+  }
+
+  .hello-arrow {
+    position: absolute;
+    right: -3.6rem;
+    top: 0.6rem;
+    width: 3.2rem;
+    height: 2.2rem;
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .hero-name-row {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-name {
+    font-size: var(--text-hero);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-seal {
+    display: inline-flex;
+    cursor: default;
+  }
+
+  .hero-seal:hover :global(.seal) {
+    transform: rotate(4deg) scale(1.06);
+  }
+
+  .hero-intro {
+    font-size: var(--text-lg);
+    line-height: 1.75;
+    max-width: 38rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .hero-notebook {
+    font-size: var(--text-base);
+    color: var(--fg-muted);
+    max-width: 38rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .identity-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: var(--text-sm);
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--fg-muted);
+    text-decoration: none;
+    transition: border-color var(--transition), color var(--transition),
+      transform 250ms var(--ease-out);
+  }
+
+  .identity-tag:hover {
+    border-color: var(--accent);
+    color: var(--fg);
+    transform: translateY(-2px) rotate(-1deg);
+  }
+
+  /* ── Sections ── */
+  .section {
+    padding-block: 2.75rem;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    gap: 1rem;
+  }
+
+  .section-title {
+    font-size: var(--text-xl);
+    font-family: var(--font-heading);
+    font-weight: 600;
+  }
+
+  .section-link {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color var(--transition);
+  }
+
+  .section-link:hover {
+    color: var(--accent);
+  }
+
+  .empty-state {
+    color: var(--fg-muted);
+    font-style: italic;
+  }
+
+  /* ── Lately ── */
+  .now-stamp {
+    font-size: 1.15rem;
+    color: var(--fg-muted);
+    transform: rotate(-2deg);
+    white-space: nowrap;
+  }
+
+  .now-grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .now-card {
+    transform: rotate(var(--card-tilt));
+    transition: transform 300ms var(--ease-out);
+  }
+
+  .now-card:hover {
+    transform: rotate(0deg) translateY(-3px);
+  }
+
+  .now-link {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto 1fr;
+    column-gap: 0.75rem;
+    row-gap: 0.25rem;
+    height: 100%;
+    padding: 1rem 1.1rem 1.1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: inherit;
+    text-decoration: none;
+    box-shadow: var(--shadow-sm);
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+
+  a.now-link:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .now-icon {
+    grid-row: 1 / 3;
+    color: var(--fg);
+    padding-top: 0.1rem;
+  }
+
+  a.now-link:hover .now-icon {
+    color: var(--accent);
+  }
+
+  .now-label {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .now-text {
+    font-size: var(--text-sm);
+    line-height: 1.55;
+    color: var(--fg);
+  }
+
+  /* ── Post list ── */
+  .post-list {
+    list-style: none;
+  }
+
+  .post-item {
+    border-bottom: 1px dashed var(--border-dark);
+  }
+
+  .post-link {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: 1rem;
+    padding-block: 1rem;
+    text-decoration: none;
+  }
+
+  .post-date {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    padding-top: 0.1rem;
+  }
+
+  .post-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  .post-title {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--fg);
+    transition: color var(--transition);
+  }
+
+  .post-desc {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .post-link:hover .post-title {
+    color: var(--accent);
+  }
+
+  /* ── Project list ── */
+  .project-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .project-card {
+    border-bottom: 1px dashed var(--border-dark);
+  }
+
+  .project-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 1.25rem;
+    text-decoration: none;
+  }
+
+  .project-content {
+    flex: 1;
+  }
+
+  .project-title {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 0.375rem;
+    transition: color var(--transition);
+    font-family: var(--font-body);
+  }
+
+  .project-link:hover .project-title {
+    color: var(--accent);
+  }
+
+  .project-desc {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    line-height: 1.5;
+    margin-bottom: 0.625rem;
+  }
+
+  .project-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .project-arrow {
+    font-size: var(--text-lg);
+    color: var(--fg-muted);
+    flex-shrink: 0;
+    opacity: 0;
+    transform: translate(-4px, 4px);
+    transition: opacity var(--transition), transform var(--transition), color var(--transition);
+  }
+
+  .project-link:hover .project-arrow {
+    opacity: 1;
+    transform: translate(0, 0);
+    color: var(--accent);
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 560px) {
+    .hero {
+      padding-top: 3rem;
+    }
+
+    .hello-arrow {
+      display: none;
+    }
+
+    .now-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .post-link {
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+    }
+
+    .post-date {
+      order: 2;
+    }
+  }
+</style>

@@ -1,0 +1,437 @@
+---
+import type { Locale } from "@/i18n";
+import { AGENT_SKILLS } from "@/data/skills";
+
+/**
+ * Agent skills as one folded card. Opening it lists the skills; each skill is itself a
+ * folded card with its details. Built on <details> so it works without JavaScript.
+ */
+interface Props {
+  locale: Locale;
+}
+
+interface SkillsCopy {
+  title: string;
+  note: string;
+  intro: string;
+  count: (n: number) => string;
+  trySaying: string;
+  install: string;
+  installGuide: string;
+  copy: string;
+  copied: string;
+  repo: string;
+}
+
+const { locale } = Astro.props;
+
+const COPY: Record<Locale, SkillsCopy> = {
+  en: {
+    title: "Skills for AI agents",
+    note: "how I want recurring work done",
+    intro:
+      "Reusable SKILL.md workflows I wrote for Claude Code and similar agents. Each one turns a job I keep repeating into a fixed process, with gates where a human decides.",
+    count: (n) => `${n} skills`,
+    trySaying: "Try saying",
+    install: "Install",
+    installGuide: "Install guide ↗",
+    copy: "Copy",
+    copied: "Copied",
+    repo: "GitHub ↗",
+  },
+  zh: {
+    title: "给 AI 智能体写的技能",
+    note: "把反复要做的事写成流程",
+    intro:
+      "我为 Claude Code 等智能体写的可复用 SKILL.md 工作流。每个都把一件反复要做的事固定成流程，并在关键处留给人来决定。",
+    count: (n) => `${n} 个技能`,
+    trySaying: "可以这样说",
+    install: "安装",
+    installGuide: "安装说明 ↗",
+    copy: "复制",
+    copied: "已复制",
+    repo: "GitHub ↗",
+  },
+  de: {
+    title: "Skills für KI-Agenten",
+    note: "wie wiederkehrende Arbeit laufen soll",
+    intro:
+      "Wiederverwendbare SKILL.md-Workflows, die ich für Claude Code und ähnliche Agenten geschrieben habe. Jeder macht aus einer Aufgabe, die ich immer wieder erledige, einen festen Ablauf mit Haltepunkten, an denen ein Mensch entscheidet.",
+    count: (n) => `${n} Skills`,
+    trySaying: "Zum Beispiel",
+    install: "Installieren",
+    installGuide: "Installationsanleitung ↗",
+    copy: "Kopieren",
+    copied: "Kopiert",
+    repo: "GitHub ↗",
+  },
+};
+
+const copy = COPY[locale];
+---
+
+<details class="skills">
+  <summary class="skills-summary">
+    <span class="skills-tab" aria-hidden="true">~/.claude/skills</span>
+    <span class="skills-head">
+      <span class="skills-title">{copy.title}</span>
+      <span class="skills-note hand">{copy.note}</span>
+    </span>
+    <span class="skills-intro">{copy.intro}</span>
+    <span class="skills-meta">
+      <span class="skills-count">{copy.count(AGENT_SKILLS.length)}</span>
+      <span class="chevron" aria-hidden="true"></span>
+    </span>
+  </summary>
+
+  <ul class="skill-list" role="list">
+    {AGENT_SKILLS.map((skill) => (
+      <li>
+        <details class="skill">
+          <summary class="skill-summary">
+            <span class="skill-file" aria-hidden="true">SKILL.md</span>
+            <span class="skill-name">{skill.id}</span>
+            <span class="skill-tagline">{skill.tagline[locale]}</span>
+            <span class="chevron" aria-hidden="true"></span>
+          </summary>
+
+          <div class="skill-body">
+            <p class="skill-text">{skill.summary[locale]}</p>
+
+            <div class="skill-triggers">
+              <span class="skill-label">{copy.trySaying}</span>
+              {skill.triggers.map((t) => <span class="trigger hand">“{t}”</span>)}
+            </div>
+
+            <div class="skill-foot">
+              {skill.install && (
+                <div class="install">
+                  <span class="skill-label">{copy.install}</span>
+                  <div class="install-row">
+                    <code class="install-cmd">{skill.install}</code>
+                    <button
+                      type="button"
+                      class="copy-btn"
+                      data-copy={skill.install}
+                      data-copied-label={copy.copied}
+                    >
+                      {copy.copy}
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div class="skill-links">
+                {skill.installGuide && (
+                  <a href={skill.installGuide} target="_blank" rel="noopener noreferrer">{copy.installGuide}</a>
+                )}
+                <a href={skill.repo} target="_blank" rel="noopener noreferrer">{copy.repo}</a>
+              </div>
+            </div>
+          </div>
+        </details>
+      </li>
+    ))}
+  </ul>
+</details>
+
+<script>
+  function initCopyButtons(): void {
+    document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((btn) => {
+      const label = btn.textContent ?? "";
+      btn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(btn.dataset.copy ?? "");
+          btn.textContent = btn.dataset.copiedLabel ?? label;
+          window.setTimeout(() => (btn.textContent = label), 1600);
+        } catch {
+          // Clipboard can be blocked; the command stays visible for manual copying
+        }
+      });
+    });
+  }
+
+  document.addEventListener("astro:page-load", initCopyButtons);
+</script>
+
+<style>
+  /* ── Outer folded card ── */
+  .skills {
+    position: relative;
+    margin-top: 1.2rem;
+    background: var(--surface);
+    border: 1.5px solid var(--border-dark);
+    border-radius: 0 var(--radius-lg) var(--radius-lg) var(--radius-lg);
+    transition: border-color var(--transition), box-shadow 300ms var(--ease-out);
+  }
+
+  .skills:hover,
+  .skills[open] {
+    border-color: var(--fg);
+  }
+
+  .skills:not([open]):hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  summary {
+    list-style: none;
+    cursor: pointer;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .skills-summary {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.4rem 1.5rem;
+    padding: 1.4rem 1.5rem 1.4rem;
+  }
+
+  /* Folder tab on top of the card */
+  .skills-tab {
+    position: absolute;
+    top: -1.25rem;
+    left: -1.5px;
+    padding: 0.15rem 0.8rem 0.3rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    background: var(--surface);
+    border: 1.5px solid var(--border-dark);
+    border-bottom: none;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    transition: border-color var(--transition);
+  }
+
+  .skills:hover .skills-tab,
+  .skills[open] .skills-tab {
+    border-color: var(--fg);
+  }
+
+  .skills-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 1rem;
+  }
+
+  .skills-title {
+    font-family: var(--font-heading);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .skills-note {
+    font-size: 1.2rem;
+    color: var(--fg-muted);
+  }
+
+  .skills-intro {
+    grid-column: 1;
+    max-width: 44rem;
+    color: var(--fg-muted);
+    font-size: var(--text-base);
+    line-height: 1.6;
+  }
+
+  .skills-meta {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .skills-count {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    padding: 0.2rem 0.7rem;
+    border-radius: var(--radius-pill);
+    background: var(--accent-soft);
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* Hand-drawn style chevron that turns when the card opens */
+  .chevron {
+    width: 0.65rem;
+    height: 0.65rem;
+    border-right: 2px solid var(--fg);
+    border-bottom: 2px solid var(--fg);
+    transform: rotate(45deg) translate(-2px, -2px);
+    transition: transform 250ms var(--ease-out);
+    flex-shrink: 0;
+  }
+
+  .skills[open] > .skills-summary .chevron,
+  .skill[open] > .skill-summary .chevron {
+    transform: rotate(-135deg) translate(-2px, -2px);
+  }
+
+  /* ── Inner list ── */
+  .skill-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0 1.5rem 1.5rem;
+  }
+
+  .skill {
+    background: var(--bg);
+    border: 1.5px solid var(--border-dark);
+    border-radius: var(--radius-md);
+    transition: border-color var(--transition);
+  }
+
+  .skill:hover,
+  .skill[open] {
+    border-color: var(--fg);
+  }
+
+  .skill-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 0.9rem;
+    padding: 0.85rem 1.1rem;
+  }
+
+  .skill-file {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.1rem 0.45rem;
+    border: 1px solid var(--border-dark);
+    border-radius: var(--radius-sm);
+    color: var(--fg-muted);
+  }
+
+  .skill-name {
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    font-weight: 600;
+    word-break: break-word;
+  }
+
+  .skill-tagline {
+    flex: 1 1 14rem;
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+  }
+
+  .skill-summary:hover .skill-name {
+    color: var(--accent);
+  }
+
+  .skill-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 0.25rem 1.1rem 1.1rem;
+    border-top: 1px dashed var(--border-dark);
+    margin-top: 0.1rem;
+    padding-top: 0.9rem;
+  }
+
+  .skill-text {
+    font-size: var(--text-base);
+    line-height: 1.65;
+    max-width: 52rem;
+  }
+
+  .skill-label {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+
+  .skill-triggers {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.9rem;
+  }
+
+  .trigger {
+    font-size: 1.2rem;
+  }
+
+  .skill-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+  }
+
+  .install {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+    flex: 1 1 24rem;
+  }
+
+  .install-row {
+    display: flex;
+    align-items: stretch;
+    min-width: 0;
+    border: 1px solid var(--border-dark);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .install-cmd {
+    flex: 1;
+    min-width: 0;
+    padding: 0.45rem 0.7rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    white-space: nowrap;
+    overflow-x: auto;
+  }
+
+  .copy-btn {
+    flex-shrink: 0;
+    font: inherit;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    padding: 0 0.85rem;
+    border: none;
+    border-left: 1px solid var(--border-dark);
+    background: var(--bg);
+    color: var(--fg);
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  .copy-btn:hover {
+    background: var(--fg);
+    color: var(--bg);
+  }
+
+  .skill-links {
+    display: flex;
+    gap: 1rem;
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  @media (max-width: 600px) {
+    .skills-summary {
+      grid-template-columns: 1fr;
+    }
+
+    .skills-meta {
+      grid-column: 1;
+      grid-row: auto;
+    }
+  }
+</style>

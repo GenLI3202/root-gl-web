@@ -1,0 +1,477 @@
+---
+import type { Locale } from "@/i18n";
+
+/**
+ * Live line under the homepage intro: Munich time, current weather, and a guess at what
+ * Gen is doing. Slots that would normally mean riding switch to a "guess what I'm doing?"
+ * teaser when it is winter, wet, or cold. Weather comes from Open-Meteo (no API key);
+ * without it the line falls back to the season alone.
+ */
+interface Props {
+  locale: Locale;
+}
+
+/** One hour band; `noRide` replaces `text` when riding is off, `guess` turns it into a teaser */
+interface Slot {
+  text: string;
+  noRide?: string;
+  guess?: string;
+}
+
+interface ClockCopy {
+  fallback: string;
+  timeLine: string;
+  probably: string;
+  conditions: Record<string, string>;
+  reasons: Record<string, string>;
+  guessWinter: string;
+  guessWeather: string;
+  peek: string;
+  weekday: Slot[];
+  weekend: Slot[];
+}
+
+const { locale } = Astro.props;
+
+/*
+ * Hour bands in Munich time: [0–6, 6–8, 8–12, 12–14, 14–18, 18–21, 21–24].
+ * Placeholders: {time}, {weather}, {reason}, {temp}.
+ */
+const COPY: Record<Locale, ClockCopy> = {
+  en: {
+    fallback: "Written from Munich, Germany.",
+    timeLine: "It's {time} in Munich{weather}.",
+    probably: "I'm probably",
+    conditions: {
+      clear: "clear skies",
+      cloudy: "cloudy",
+      fog: "foggy",
+      drizzle: "drizzling",
+      rain: "raining",
+      snow: "snowing",
+      storm: "stormy",
+    },
+    reasons: {
+      winter: "it's winter",
+      rain: "it's raining",
+      snow: "it's snowing",
+      storm: "there's a thunderstorm",
+      cold: "it's only {temp}°C",
+    },
+    guessWinter: "In summer you'd find me riding somewhere south of Munich. But {reason}, so… guess what I'm doing?",
+    guessWeather: "Normally you'd find me riding somewhere south of Munich. But {reason}, so… guess what I'm doing?",
+    peek: "peek",
+    weekday: [
+      { text: "asleep (or should be)." },
+      {
+        text: "out for an early ride along the Isar.",
+        noRide: "skipping the early Isar ride and making coffee instead.",
+      },
+      { text: "deep in a solver log." },
+      { text: "at lunch, talking about electricity prices." },
+      { text: "writing code or a paper draft." },
+      { text: "on the bike, or reading.", noRide: "on the indoor trainer, or reading." },
+      { text: "playing guitar instead of answering email." },
+    ],
+    weekend: [
+      { text: "asleep (or should be)." },
+      {
+        text: "pumping up tyres for a group ride.",
+        noRide: "sleeping in. No group ride today.",
+      },
+      {
+        text: "on a group ride somewhere south of Munich.",
+        guess: "On the indoor trainer, pretending the living room is the Alps.",
+      },
+      {
+        text: "on a group ride somewhere south of Munich.",
+        guess: "Tea, a wuxia novel, and planning next summer's routes.",
+      },
+      {
+        text: "recovering from the ride with a book.",
+        guess: "On the sofa, practising fingerpicking.",
+      },
+      { text: "reading, or planning the next route." },
+      { text: "playing guitar instead of answering email." },
+    ],
+  },
+  zh: {
+    fallback: "写于德国慕尼黑。",
+    timeLine: "慕尼黑现在 {time}{weather}。",
+    probably: "我大概正在",
+    conditions: {
+      clear: "晴",
+      cloudy: "多云",
+      fog: "有雾",
+      drizzle: "飘着小雨",
+      rain: "下着雨",
+      snow: "下着雪",
+      storm: "打着雷",
+    },
+    reasons: {
+      winter: "现在是冬天",
+      rain: "外面在下雨",
+      snow: "外面在下雪",
+      storm: "外面在打雷",
+      cold: "外面才 {temp}°C",
+    },
+    guessWinter: "要是夏天，这会儿你多半能在慕尼黑南边的路上碰到我。可{reason}，猜猜我在干嘛？",
+    guessWeather: "平时这会儿，我多半在慕尼黑南边的路上骑车。可{reason}，猜猜我在干嘛？",
+    peek: "揭晓",
+    weekday: [
+      { text: "睡觉（或者应该在睡觉）。" },
+      { text: "沿着伊萨尔河晨骑。", noRide: "放弃晨骑，在煮咖啡。" },
+      { text: "盯着求解器的日志发呆。" },
+      { text: "吃午饭，顺便聊电价。" },
+      { text: "写代码，或者改论文。" },
+      { text: "骑车，或者看书。", noRide: "在骑行台上流汗，或者看书。" },
+      { text: "弹吉他，邮件明天再回。" },
+    ],
+    weekend: [
+      { text: "睡觉（或者应该在睡觉）。" },
+      { text: "给轮胎打气，准备团骑。", noRide: "睡懒觉。今天没有团骑。" },
+      {
+        text: "在慕尼黑以南的某条路上团骑。",
+        guess: "在客厅骑骑行台，假装这里是阿尔卑斯。",
+      },
+      {
+        text: "在慕尼黑以南的某条路上团骑。",
+        guess: "泡壶茶，看武侠，顺便规划明年夏天的路线。",
+      },
+      { text: "骑完车，捧着书恢复体力。", guess: "窝在沙发上练指弹。" },
+      { text: "看书，或者规划下一条路线。" },
+      { text: "弹吉他，邮件明天再回。" },
+    ],
+  },
+  de: {
+    fallback: "Geschrieben in München.",
+    timeLine: "In München ist es {time}{weather}.",
+    probably: "Wahrscheinlich bin ich gerade",
+    conditions: {
+      clear: "klar",
+      cloudy: "bewölkt",
+      fog: "neblig",
+      drizzle: "Nieselregen",
+      rain: "Regen",
+      snow: "Schnee",
+      storm: "Gewitter",
+    },
+    reasons: {
+      winter: "es ist Winter",
+      rain: "es regnet",
+      snow: "es schneit",
+      storm: "es gewittert",
+      cold: "es hat nur {temp} °C",
+    },
+    guessWinter: "Im Sommer würdest du mich jetzt irgendwo südlich von München auf dem Rad treffen. Aber {reason}. Rate mal, was ich mache?",
+    guessWeather: "Normalerweise wäre ich jetzt irgendwo südlich von München auf dem Rad. Aber {reason}. Rate mal, was ich mache?",
+    peek: "auflösen",
+    weekday: [
+      { text: "am Schlafen (oder sollte es sein)." },
+      {
+        text: "auf einer frühen Runde an der Isar.",
+        noRide: "beim Kaffeekochen statt auf der Isarrunde.",
+      },
+      { text: "tief in einem Solver-Log." },
+      { text: "beim Mittagessen und rede über Strompreise." },
+      { text: "am Programmieren oder an einem Paper." },
+      { text: "auf dem Rad oder am Lesen.", noRide: "auf der Rolle oder am Lesen." },
+      { text: "an der Gitarre statt im Posteingang." },
+    ],
+    weekend: [
+      { text: "am Schlafen (oder sollte es sein)." },
+      {
+        text: "am Reifenaufpumpen für die Gruppenausfahrt.",
+        noRide: "am Ausschlafen. Heute keine Gruppenausfahrt.",
+      },
+      {
+        text: "auf einer Gruppenausfahrt südlich von München.",
+        guess: "Auf der Rolle im Wohnzimmer, und ich tue so, als wären das die Alpen.",
+      },
+      {
+        text: "auf einer Gruppenausfahrt südlich von München.",
+        guess: "Tee, ein Wuxia-Roman und Routenplanung für den Sommer.",
+      },
+      {
+        text: "mit einem Buch am Erholen.",
+        guess: "Auf dem Sofa beim Fingerpicking-Üben.",
+      },
+      { text: "am Lesen oder plane die nächste Route." },
+      { text: "an der Gitarre statt im Posteingang." },
+    ],
+  },
+};
+
+const copy = COPY[locale];
+---
+
+<div class="munich-clock" data-munich-clock data-locale={locale} data-copy={JSON.stringify(copy)}>
+  <span class="clock-dot" aria-hidden="true"></span>
+  <p class="clock-text" aria-live="polite">{copy.fallback}</p>
+</div>
+
+<script>
+  interface Slot {
+    text: string;
+    noRide?: string;
+    guess?: string;
+  }
+
+  interface ClockCopy {
+    fallback: string;
+    timeLine: string;
+    probably: string;
+    conditions: Record<string, string>;
+    reasons: Record<string, string>;
+    guessWinter: string;
+    guessWeather: string;
+    peek: string;
+    weekday: Slot[];
+    weekend: Slot[];
+  }
+
+  interface Weather {
+    temp: number;
+    condition: string;
+  }
+
+  const HOUR_BANDS = [6, 8, 12, 14, 18, 21, 24];
+  const DATE_LOCALES: Record<string, string> = { en: "en-GB", zh: "zh-CN", de: "de-DE" };
+  const WEATHER_URL =
+    "https://api.open-meteo.com/v1/forecast?latitude=48.14&longitude=11.58" +
+    "&current=temperature_2m,weather_code&timezone=Europe%2FBerlin";
+  const WEATHER_CACHE_KEY = "munich-weather";
+  const WEATHER_TTL_MS = 30 * 60 * 1000;
+  const COLD_LIMIT_C = 5;
+
+  let clockTimer: number | undefined;
+  let weather: Weather | null = null;
+  // Keep the revealed answer open across the 30-second refresh
+  let revealed = false;
+
+  /** Map a WMO weather code to one of the condition keys in ClockCopy */
+  function conditionFromCode(code: number): string {
+    if (code === 0 || code === 1) return "clear";
+    if (code === 2 || code === 3) return "cloudy";
+    if (code === 45 || code === 48) return "fog";
+    if (code >= 51 && code <= 57) return "drizzle";
+    if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return "rain";
+    if ((code >= 71 && code <= 77) || code === 85 || code === 86) return "snow";
+    if (code >= 95) return "storm";
+    return "cloudy";
+  }
+
+  /** Why riding is off right now, or null when it is riding weather */
+  function noRideReason(month: number, w: Weather | null): string | null {
+    if (month === 12 || month <= 2) return "winter";
+    if (!w) return null;
+    if (w.condition === "drizzle" || w.condition === "rain") return "rain";
+    if (w.condition === "snow" || w.condition === "storm") return w.condition;
+    if (w.temp < COLD_LIMIT_C) return "cold";
+    return null;
+  }
+
+  function fill(template: string, values: Record<string, string>): string {
+    return template.replace(/\{(\w+)\}/g, (_, key: string) => values[key] ?? "");
+  }
+
+  function munichNow(locale: string): { hour: number; month: number; weekend: boolean; time: string } {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Berlin",
+      hour: "2-digit",
+      month: "numeric",
+      weekday: "short",
+      hour12: false,
+    }).formatToParts(now);
+    const get = (type: string): string => parts.find((p) => p.type === type)?.value ?? "";
+    const weekday = get("weekday");
+    return {
+      hour: Number(get("hour")) % 24,
+      month: Number(get("month")),
+      weekend: weekday === "Sat" || weekday === "Sun",
+      time: new Intl.DateTimeFormat(DATE_LOCALES[locale], {
+        timeZone: "Europe/Berlin",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).format(now),
+    };
+  }
+
+  function renderClock(el: HTMLElement): void {
+    const locale = el.dataset.locale ?? "en";
+    const copy = JSON.parse(el.dataset.copy ?? "{}") as ClockCopy;
+    const text = el.querySelector<HTMLElement>(".clock-text");
+    if (!text) return;
+
+    const { hour, month, weekend, time } = munichNow(locale);
+    const slot = (weekend ? copy.weekend : copy.weekday)[HOUR_BANDS.findIndex((h) => hour < h)];
+    const reason = noRideReason(month, weather);
+    const sep = locale === "zh" ? "" : " ";
+
+    const weatherPart = weather
+      ? (locale === "zh" ? "，" : ", ") +
+        `${Math.round(weather.temp)}${locale === "de" ? " °C" : "°C"}` +
+        (locale === "zh" ? "，" : ", ") +
+        copy.conditions[weather.condition]
+      : "";
+
+    text.replaceChildren();
+    const timeLine = fill(copy.timeLine, { time: "\u0000", weather: weatherPart });
+    const [before, after] = timeLine.split("\u0000");
+    const strong = document.createElement("strong");
+    strong.textContent = time;
+    text.append(before, strong, after, sep);
+
+    if (reason && slot.guess) {
+      const reasonText = fill(copy.reasons[reason], {
+        temp: weather ? String(Math.round(weather.temp)) : "",
+      });
+      const teaser = fill(reason === "winter" ? copy.guessWinter : copy.guessWeather, {
+        reason: reasonText,
+      });
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "clock-peek";
+      button.textContent = copy.peek;
+      button.setAttribute("aria-expanded", String(revealed));
+      const answer = document.createElement("span");
+      answer.className = "clock-answer hand";
+      answer.textContent = slot.guess;
+      answer.hidden = !revealed;
+      button.addEventListener("click", () => {
+        revealed = !revealed;
+        answer.hidden = !revealed;
+        button.setAttribute("aria-expanded", String(revealed));
+      });
+      text.append(teaser, " ", button, " ", answer);
+    } else {
+      const status = reason && slot.noRide ? slot.noRide : slot.text;
+      text.append(`${copy.probably}${sep}${status}`);
+    }
+    el.classList.add("is-live");
+  }
+
+  function readCachedWeather(): Weather | null {
+    try {
+      const raw = sessionStorage.getItem(WEATHER_CACHE_KEY);
+      if (!raw) return null;
+      const cached = JSON.parse(raw) as Weather & { at: number };
+      return Date.now() - cached.at < WEATHER_TTL_MS ? cached : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function fetchWeather(): Promise<Weather | null> {
+    const cached = readCachedWeather();
+    if (cached) return cached;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 4000);
+    try {
+      const res = await fetch(WEATHER_URL, { signal: controller.signal });
+      if (!res.ok) return null;
+      const data = (await res.json()) as {
+        current?: { temperature_2m?: number; weather_code?: number };
+      };
+      const temp = data.current?.temperature_2m;
+      const code = data.current?.weather_code;
+      if (typeof temp !== "number" || typeof code !== "number") return null;
+      const result: Weather = { temp, condition: conditionFromCode(code) };
+      try {
+        sessionStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({ ...result, at: Date.now() }));
+      } catch {
+        // Storage can be unavailable (private mode); the fetched value still works
+      }
+      return result;
+    } catch {
+      return null;
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  }
+
+  function initClock(): void {
+    window.clearInterval(clockTimer);
+    const el = document.querySelector<HTMLElement>("[data-munich-clock]");
+    if (!el) return;
+    revealed = false;
+    renderClock(el);
+    clockTimer = window.setInterval(() => renderClock(el), 30_000);
+    fetchWeather().then((w) => {
+      if (!w || !el.isConnected) return;
+      weather = w;
+      renderClock(el);
+    });
+  }
+
+  document.addEventListener("astro:page-load", initClock);
+</script>
+
+<style>
+  .munich-clock {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    margin-bottom: 1.75rem;
+    max-width: 38rem;
+  }
+
+  .clock-text {
+    color: inherit;
+    line-height: 1.6;
+  }
+
+  .clock-text :global(strong) {
+    color: var(--fg);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .clock-dot {
+    position: relative;
+    top: -0.05rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--border-dark);
+    flex-shrink: 0;
+  }
+
+  .munich-clock.is-live .clock-dot {
+    background: var(--accent);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--accent-soft); }
+    50% { box-shadow: 0 0 0 0.35rem var(--accent-soft); }
+  }
+
+  .clock-text :global(.clock-peek) {
+    font: inherit;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px dashed var(--accent);
+    border-radius: var(--radius-pill);
+    padding: 0.05rem 0.55rem;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  .clock-text :global(.clock-peek:hover) {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+
+  .clock-text :global(.clock-answer) {
+    font-size: 1.2rem;
+    white-space: normal;
+  }
+</style>

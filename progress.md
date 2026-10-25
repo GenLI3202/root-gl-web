@@ -19,7 +19,7 @@
 | Content | Blog posts (Markdown) | `src/content/posts/` |
 | Styles | Design tokens, global CSS | `src/styles/global.css` |
 | i18n | Locale utilities + JSON translations, `localeSwitchUrl()` | `src/i18n/index.ts`, `en/zh/de.json` |
-| Locale pages | Dynamic `[locale]` routes for ZH/DE (index, about, projects, hobbies) | `src/pages/[locale]/` |
+| Locale pages | Dynamic `[locale]` routes for ZH/DE (index, about, projects, hobbies/*) | `src/pages/[locale]/` |
 
 ## Completed Features
 
@@ -73,7 +73,21 @@
 - [x] **Localized blog i18n** — posts now support EN/ZH routes, translation links, localized report chrome, and Chinese typography
 - [x] **Chinese report title tuning** — reduced oversized ZH hero title and switched report headings from serif to sans-serif typography
 
+- [x] **Humanize pass, step 1 (shell + homepage)** — warm paper palette with grain, Caveat hand font for notes, red 李根 name seal (`Seal.astro`), shared `HomePage.astro` for EN/ZH/DE with greeting, live Munich clock with "probably doing" status, "Lately" cards (edit `src/data/now.ts`), `SayHello.astro` contact card, nav seal logo + pen underline, footer sign-off
+
+- [x] **Humanize pass, step 1b** — name seal now uses Gen's own brush-written 李根 (traced from a photo, cinnabar stamp texture, `public/images/seal-ligen.svg`); all emoji replaced by pen-drawn `HandIcon` SVGs (`src/components/hand-icons.ts`)
+- [x] **Munich clock: season + weather** — `MunichClock.astro` reads live Munich weather (Open-Meteo, no key, cached 30 min) and the month; riding slots switch to a "guess what I'm doing?" teaser with a reveal button in winter, rain, snow, or below 5 °C
+- [x] **Content update (Oct 2026)** — research copy now covers the Huawei PhD internship, local EMS, and AIDC campus EMS (home, Lately, About in EN/ZH/DE); club spelled "Across" everywhere with links to across-cc.de; Three-Body cards for Luo Ji, Zhang Beihai, Cheng Xin with sketch avatars and Gen's notes
+- [x] **Reading bookshelf + sketch portraits** — `Bookshelf.astro` (spines by category, filters, detail card, optional reading notes in `src/data/books.ts`, jumps to carousel characters); all seven carousel portraits redrawn in one pen-sketch style via `scripts/sketch-portraits.py`, rules in `docs/illustration-style.md`
+- [x] **Hobbies split into sub-pages** — `/hobbies/` index plus `/hobbies/cycling/`, `/hobbies/reading/`, `/hobbies/guitar/` (EN/ZH/DE) built on `HobbyShell.astro`; horizontal tab panels and the character carousel removed; memorable characters now sit inside their book on the shelf
+- [x] **Projects page redesign** — `ProjectsPage.astro` built around "Optimization across the energy storage value chain": stage diagram (Plan / Operate / Trade / Hedge) as research questions, sketch covers (`ProjectSketch.astro`), research vs other builds, researcher invitation; data in `src/data/projects.ts`; LEMS added
+- [x] **Agent skills collection** — Projects page section listing public SKILL.md repos (html-presentation-deck, paper-study, acc-content-posting-system) with prompts, install commands and copy buttons; data in `src/data/skills.ts`; GridKey added to the Trade stage
+
 ## Remaining Work
+
+- [ ] **Humanize pass, step 2** — carry the new style into About, Projects, Hobbies, and Posts pages
+- [ ] **Reading notes** — write notes for 毛泽东传, 邓小平时代, 置身事内 together with Gen
+- [ ] **Posters** — add poster content
 
 - [ ] **Lighthouse / performance audit** — run after content stabilises
 
@@ -109,9 +123,9 @@
 | `prefixDefaultLocale: false` for i18n | EN stays at `/`, ZH/DE get `/zh/`, `/de/` prefix — cleaner URLs for primary audience | 2026-03-21 |
 | Long content in page frontmatter (not JSON) | Bio paragraphs contain HTML links and are too long for JSON; locale-keyed objects in `.astro` frontmatter | 2026-03-21 |
 | Hobbies horizontal panels via CSS transform (not GSAP) | Delivers the panel-switching UX without a 25KB dependency; GSAP upgrade deferred to immersive spec | 2026-03-22 |
+| Notebook look: warm paper, ink, red pen | Humanize the site; red accent doubles as cycling red and correction pen | 2026-10-25 |
 | `CharacterCarousel` as a standalone Astro component | Shared between EN and ZH/DE hobbies pages; quotes are language-native, no translation needed | 2026-03-22 |
 
 ## Known Issues / Tech Debt
 
-- Project bento cards use CSS gradients as image placeholders (no real screenshots yet)
 - esbuild parses typographic quotes (`"` U+201C) as string terminators in TS frontmatter — use `「」` or `''` instead

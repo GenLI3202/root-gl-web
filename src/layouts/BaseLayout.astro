@@ -18,7 +18,7 @@ const inferredLocale = getLocaleFromUrl(Astro.url) as Locale;
 
 const {
   title = "Gen Li",
-  description = "PhD Researcher at TU Munich. Energy systems optimization, cycling club manager, and occasional guitarist.",
+  description = "PhD researcher at TU Munich and PhD intern at Huawei, working on local energy management. Cyclist, reader, occasional guitarist.",
   ogImage = "/og-default.png",
   locale = inferredLocale,
   translationLinks = {},
@@ -72,6 +72,13 @@ const fullTitle = title === "Gen Li" ? title : `${title} — Gen Li`;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </head>
   <body>
+    <!-- Shared wobble filter for HandIcon strokes -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+      <filter id="hand-wobble" x="-10%" y="-10%" width="120%" height="120%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="3" />
+        <feDisplacementMap in="SourceGraphic" scale="1.6" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
     <Nav locale={locale} translationLinks={translationLinks} />
     <main id="main-content">
       <slot />

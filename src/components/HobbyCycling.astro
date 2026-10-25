@@ -1,0 +1,194 @@
+---
+import HobbyShell from "@/components/HobbyShell.astro";
+import HandIcon from "@/components/HandIcon.astro";
+import { t, type Locale } from "@/i18n";
+
+interface Props {
+  locale: Locale;
+}
+
+interface CyclingCopy {
+  kicker: string;
+  numbers: string;
+  findMe: string;
+  stravaNote: string;
+  clubNote: string;
+  clubName: string;
+}
+
+const { locale } = Astro.props;
+
+const COPY: Record<Locale, CyclingCopy> = {
+  en: {
+    kicker: "Isar mornings, weekends south of Munich",
+    numbers: "By the numbers",
+    findMe: "Where to find me",
+    stravaNote: "Every ride, logged.",
+    clubNote: "Group rides, routes, and the club site I help build.",
+    clubName: "Across Cycling Club",
+  },
+  zh: {
+    kicker: "伊萨尔河的清晨，慕尼黑以南的周末",
+    numbers: "数字",
+    findMe: "在哪找到我",
+    stravaNote: "每一次骑行的记录。",
+    clubNote: "团骑、路线，还有我参与建设的俱乐部网站。",
+    clubName: "Across 骑行俱乐部",
+  },
+  de: {
+    kicker: "Isar-Morgen, Wochenenden südlich von München",
+    numbers: "In Zahlen",
+    findMe: "Wo du mich findest",
+    stravaNote: "Jede Ausfahrt, protokolliert.",
+    clubNote: "Gruppenausfahrten, Routen und die Club-Website, an der ich mitbaue.",
+    clubName: "Across Cycling Club",
+  },
+};
+
+const STATS = [
+  { value: "4 800", unit: "km", key: "hobbies.cycling.stat.distance" },
+  { value: "42 000", unit: "m", key: "hobbies.cycling.stat.elevation" },
+  { value: "180", unit: "×", key: "hobbies.cycling.stat.rides" },
+];
+
+const copy = COPY[locale];
+---
+
+<HobbyShell
+  locale={locale}
+  hobby="cycling"
+  kicker={copy.kicker}
+  lead={t(locale, "hobbies.cycling.lead")}
+  illustration="/images/hobbies/cyclist-rider.svg"
+>
+  <section class="hobby-section">
+    <h2 class="section-title">{copy.numbers}</h2>
+    <ul class="stats" role="list">
+      {STATS.map((stat) => (
+        <li class="stat">
+          <span class="stat-num">{stat.value}<span class="stat-unit"> {stat.unit}</span></span>
+          <span class="stat-label">{t(locale, stat.key)}</span>
+        </li>
+      ))}
+    </ul>
+    <p class="stat-note">{t(locale, "hobbies.cycling.stat.note")}</p>
+  </section>
+
+  <section class="hobby-section">
+    <h2 class="section-title">{copy.findMe}</h2>
+    <ul class="links" role="list">
+      <li>
+        <a class="link-card" href="https://www.strava.com/athletes/119635546" target="_blank" rel="noopener noreferrer">
+          <HandIcon name="route" size={28} />
+          <span class="link-text">
+            <span class="link-title">Strava ↗</span>
+            <span class="link-note">{copy.stravaNote}</span>
+          </span>
+        </a>
+      </li>
+      <li>
+        <a class="link-card" href="https://www.across-cc.de/" target="_blank" rel="noopener noreferrer">
+          <HandIcon name="bike" size={28} />
+          <span class="link-text">
+            <span class="link-title">{copy.clubName} ↗</span>
+            <span class="link-note">{copy.clubNote}</span>
+          </span>
+        </a>
+      </li>
+    </ul>
+  </section>
+</HobbyShell>
+
+<style>
+  .hobby-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .section-title {
+    font-size: var(--text-2xl);
+  }
+
+  .stats {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1rem;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1.25rem 1.5rem;
+    border: 1.5px solid var(--border-dark);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+
+  .stat-num {
+    font-family: var(--font-heading);
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+
+  .stat-unit {
+    font-size: var(--text-lg);
+    font-weight: 400;
+    color: var(--fg-muted);
+  }
+
+  .stat-label {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+  }
+
+  .stat-note {
+    font-size: var(--text-sm);
+    font-style: italic;
+    color: var(--fg-muted);
+  }
+
+  .links {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1rem;
+  }
+
+  .link-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    height: 100%;
+    padding: 1.1rem 1.25rem;
+    border: 1.5px solid var(--border-dark);
+    border-radius: var(--radius-md);
+    color: var(--fg);
+    text-decoration: none;
+    transition: border-color var(--transition), transform 250ms var(--ease-out);
+  }
+
+  .link-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .link-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .link-title {
+    font-weight: 600;
+  }
+
+  .link-note {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+  }
+</style>
