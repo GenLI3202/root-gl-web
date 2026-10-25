@@ -1,13 +1,15 @@
 ---
 import type { Locale } from "@/i18n";
-import BookcaseSketch from "@/components/BookcaseSketch.astro";
 import BookDialog from "@/components/BookDialog.astro";
+import StudyBookcase, { type CaseShape } from "@/components/StudyBookcase.astro";
+import StudyScene from "@/components/StudyScene.astro";
 import { CATEGORY_LABELS, CATEGORY_ORDER, type BookCategory } from "@/data/books";
 import { LIBRARY, toHours, type ShelfBook } from "@/data/library";
 
 /**
- * The reading room: one bookcase per category. Picking a bookcase zooms the room in on it
- * and fades to a close-up of its shelf; picking a spine there opens the book's dialog.
+ * The reading room: a small 3D study with one rosewood bookcase per category. Picking a
+ * bookcase moves the camera up to it and fades to a close-up of its shelves; picking a spine
+ * there opens the book's dialog.
  */
 interface Props {
   locale: Locale;
@@ -56,15 +58,30 @@ const COPY: Record<Locale, RoomCopy> = {
   },
 };
 
+/** Tall cases stand along the back wall; the two smallest are low cabinets at the front */
+const CASE_SHAPES: Record<BookCategory, CaseShape> = {
+  literature: { w: 26, h: 36, d: 8 },
+  ideas: { w: 16, h: 36, d: 8 },
+  polecon: { w: 15, h: 36, d: 8 },
+  wuxia: { w: 16, h: 15, d: 9 },
+  scifi: { w: 14, h: 15, d: 9 },
+};
+
 // Spine heights cycle so a shelf looks hand-stacked, not uniform
 const SPINE_HEIGHTS = [150, 134, 158, 140, 128, 152, 138];
 const MAX_SPINE_HEIGHT = 196;
 
 const copy = COPY[locale];
+/** Tab order through the room follows where cases stand: back row left to right, then front */
+const ROOM_ORDER: BookCategory[] = ["ideas", "literature", "polecon", "wuxia", "scifi"];
+
 const bookcases: Bookcase[] = CATEGORY_ORDER.map((category) => ({
   category,
   books: LIBRARY.filter((b) => b.category === category),
 })).filter((c) => c.books.length > 0);
+const roomCases: Bookcase[] = [...bookcases].sort(
+  (a, b) => ROOM_ORDER.indexOf(a.category) - ROOM_ORDER.indexOf(b.category)
+);
 const maxSeconds = Math.max(0, ...LIBRARY.map((b) => b.reading?.seconds ?? 0));
 
 const CJK = /[㐀-鿿]/;
@@ -90,25 +107,30 @@ function spineHeight(book: ShelfBook, index: number): number {
 
   <div class="room-stage" data-stage>
     <div class="room" data-room>
-      <ul class="bookcases" role="list">
-        {bookcases.map(({ category, books }) => (
-          <li>
-            <button
-              type="button"
-              class="bookcase"
-              data-open-case={category}
-              aria-controls={`case-${category}`}
-              aria-expanded="false"
-              style={`--spine: var(--shelf-${category});`}
-            >
-              <BookcaseSketch category={category} books={books} maxSeconds={maxSeconds} />
-              <span class="bookcase-label">{CATEGORY_LABELS[category][locale]}</span>
-              <span class="bookcase-count hand">{copy.count(books.length)}</span>
-            </button>
-          </li>
+      <StudyScene>
+        {roomCases.map(({ category, books }) => (
+          <button
+            type="button"
+            class="case"
+            data-open-case={category}
+            data-case-h={CASE_SHAPES[category].h}
+            aria-label={`${CATEGORY_LABELS[category][locale]}, ${copy.count(books.length)}`}
+            aria-controls={`case-${category}`}
+            aria-expanded="false"
+            style={`--spine: var(--shelf-${category});`}
+          >
+            <StudyBookcase
+              category={category}
+              books={books}
+              maxSeconds={maxSeconds}
+              shape={CASE_SHAPES[category]}
+              label={CATEGORY_LABELS[category][locale]}
+              count={copy.count(books.length)}
+              orchid={category === "scifi"}
+            />
+          </button>
         ))}
-      </ul>
-      <div class="room-floor" aria-hidden="true"></div>
+      </StudyScene>
     </div>
 
     {bookcases.map(({ category, books }) => (
@@ -158,8 +180,16 @@ function spineHeight(book: ShelfBook, index: number): number {
 </section>
 
 <script>
-  const ZOOM_MS = 650;
-  const FADE_OUT_MS = 420;
+  const CAMERA_MS = 700;
+  const FADE_OUT_MS = 480;
+  /** How much of the stage height the picked bookcase fills at the end of the camera move */
+  const FILL = 0.92;
+  const MAX_MAGNIFY = 3;
+
+  /** Reads a unitless custom property as a number */
+  function numberVar(style: CSSStyleDeclaration, name: string): number {
+    return parseFloat(style.getPropertyValue(name)) || 0;
+  }
 
   function initReadingRoom(): void {
     const root = document.querySelector<HTMLElement>("[data-reading-room]");
@@ -167,23 +197,49 @@ function spineHeight(book: ShelfBook, index: number): number {
 
     const stage = root.querySelector<HTMLElement>("[data-stage]")!;
     const room = root.querySelector<HTMLElement>("[data-room]")!;
+    const world = root.querySelector<HTMLElement>("[data-world]")!;
     const views = Array.from(root.querySelectorAll<HTMLElement>("[data-case-view]"));
     const cases = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-open-case]"));
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const CAMERA_VARS = ["--cam-x", "--cam-y", "--cam-tz", "--cam-ry", "--cam-z"];
 
     let openView: HTMLElement | null = null;
     let trigger: HTMLButtonElement | null = null;
     let timer = 0;
 
+    /**
+     * Moves the camera rig so the bookcase's front face turns square to the viewer at eye level
+     * and fills most of the stage height; `is-flying` lowers the eye to the stage middle.
+     */
+    function aimCamera(button: HTMLButtonElement): void {
+      const scene = getComputedStyle(world);
+      const spot = getComputedStyle(button);
+      const p = numberVar(scene, "--P");
+      const floor = numberVar(scene, "--floor");
+      const stageH = numberVar(scene, "--stage-h");
+      const h = Number(button.dataset.caseH) || 20;
+      const magnify = Math.min(MAX_MAGNIFY, (stageH * FILL) / h);
+      const camera: Record<string, number> = {
+        "--cam-x": -numberVar(spot, "--x"),
+        "--cam-y": -(floor - h / 2),
+        "--cam-tz": -numberVar(spot, "--z"),
+        "--cam-ry": -numberVar(spot, "--ry"),
+        "--cam-z": p * (1 - 1 / magnify),
+      };
+      Object.entries(camera).forEach(([name, value]) =>
+        world.style.setProperty(name, value.toFixed(2))
+      );
+      stage.classList.add("is-flying");
+    }
+
+    function resetCamera(): void {
+      CAMERA_VARS.forEach((name) => world.style.removeProperty(name));
+      stage.classList.remove("is-flying");
+    }
+
     function open(button: HTMLButtonElement): void {
       const view = views.find((v) => v.dataset.caseView === button.dataset.openCase);
       if (!view || openView) return;
-
-      // Zoom toward the middle of the picked bookcase
-      const roomBox = room.getBoundingClientRect();
-      const box = button.getBoundingClientRect();
-      room.style.setProperty("--zoom-x", `${box.left - roomBox.left + box.width / 2}px`);
-      room.style.setProperty("--zoom-y", `${box.top - roomBox.top + box.height * 0.45}px`);
 
       window.clearTimeout(timer);
       views.forEach((v) => (v.hidden = v !== view));
@@ -192,16 +248,20 @@ function spineHeight(book: ShelfBook, index: number): number {
       openView = view;
       trigger = button;
 
+      if (!reduceMotion.matches) aimCamera(button);
       void view.offsetWidth; // start the fade-in from the hidden state
       stage.classList.add("is-zoomed");
       room.inert = true;
 
       if (stage.getBoundingClientRect().top < 0) {
-        stage.scrollIntoView({ behavior: reduceMotion.matches ? "auto" : "smooth", block: "start" });
+        stage.scrollIntoView({
+          behavior: reduceMotion.matches ? "auto" : "smooth",
+          block: "start",
+        });
       }
       timer = window.setTimeout(
         () => view.querySelector<HTMLElement>(".case-title")?.focus({ preventScroll: true }),
-        reduceMotion.matches ? 0 : ZOOM_MS
+        reduceMotion.matches ? 0 : CAMERA_MS
       );
     }
 
@@ -213,6 +273,7 @@ function spineHeight(book: ShelfBook, index: number): number {
       trigger = null;
 
       window.clearTimeout(timer);
+      resetCamera();
       stage.classList.remove("is-zoomed");
       room.inert = false;
       button.setAttribute("aria-expanded", "false");
@@ -281,10 +342,12 @@ function spineHeight(book: ShelfBook, index: number): number {
 
   /* Room and close-up share one grid cell, so one can fade into the other in place */
   .room-stage {
+    container: room / inline-size;
     display: grid;
     overflow: hidden;
-    padding: 0.75rem 0.5rem 0.5rem;
+    border: 1px solid var(--border);
     border-radius: var(--radius-md);
+    background: var(--surface);
   }
 
   .room,
@@ -294,84 +357,134 @@ function spineHeight(book: ShelfBook, index: number): number {
 
   /* ── Room ── */
   .room {
-    transform-origin: var(--zoom-x, 50%) var(--zoom-y, 50%);
-    transition:
-      transform 560ms var(--ease-out),
-      opacity 260ms ease 120ms;
+    transition: opacity 300ms ease;
   }
 
   .room-stage.is-zoomed .room {
-    transform: scale(2.6);
     opacity: 0;
-    transition:
-      transform 650ms cubic-bezier(0.65, 0, 0.35, 1),
-      opacity 280ms ease 380ms;
+    transition: opacity 320ms ease 420ms;
   }
 
-  .bookcases {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
-    gap: 1.5rem 1.25rem;
-    align-items: end;
+  /* Everything but the picked bookcase thins out while the camera moves in */
+  .room-stage.is-zoomed :global(.study-fade),
+  .room-stage.is-zoomed :global(.tea-table) :global(.box-face),
+  .room-stage.is-zoomed :global(.tea-set),
+  .room-stage.is-zoomed .case:not(.is-target) :global(.box-face),
+  .room-stage.is-zoomed .case:not(.is-target) :global(.case-orchid) {
+    opacity: 0;
   }
 
-  .bookcase {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.35rem;
-    width: 100%;
-    max-width: 12rem;
-    margin-inline: auto;
-    padding: 0.5rem 0.4rem 0.6rem;
+  .room-stage.is-zoomed :global(.study-fade) {
+    opacity: 0.35;
+  }
+
+  /*
+   * Where each bookcase stands: x and z of its front face in room units, turned by --ry.
+   * Tall cases line the back wall; the low cabinets sit forward, angled toward the middle.
+   */
+  .case {
+    --lift: 0;
+    --depth-k: calc((var(--P) - var(--z)) / var(--P));
+
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    padding: 0;
     font: inherit;
-    color: var(--fg);
+    color: inherit;
     background: none;
-    border: 1.5px solid transparent;
-    border-radius: var(--radius-md);
+    border: 0;
     cursor: pointer;
-    transition:
-      transform 300ms var(--ease-out),
-      border-color var(--transition),
-      opacity 250ms ease;
+    transform-style: preserve-3d;
+    transform: translate3d(
+        calc(var(--x) * var(--u)),
+        calc(var(--floor) * var(--u)),
+        calc((var(--z) + var(--lift)) * var(--u))
+      )
+      rotateY(calc(var(--ry) * 1deg));
+    transition: transform 320ms var(--ease-out);
   }
 
-  .bookcase:hover {
-    transform: translateY(-4px);
-    border-color: var(--border-dark);
+  .case[data-open-case="ideas"] {
+    --x: -40;
+    --z: -42;
+    --ry: 0;
   }
 
-  .bookcase:focus-visible {
-    border-color: var(--fg);
+  .case[data-open-case="literature"] {
+    --x: -6;
+    --z: -42;
+    --ry: 0;
   }
 
-  .bookcase:active {
-    transform: translateY(-1px) scale(0.98);
+  .case[data-open-case="polecon"] {
+    --x: 41.5;
+    --z: -42;
+    --ry: 0;
   }
 
-  .room-stage.is-zoomed .bookcase:not(.is-target) {
-    opacity: 0.2;
+  .case[data-open-case="wuxia"] {
+    --x: -38;
+    --z: 2;
+    --ry: 26;
   }
 
-  .bookcase-label {
-    font-family: var(--font-heading);
-    font-size: var(--text-lg);
-    font-weight: 600;
-    line-height: 1.2;
-    text-align: center;
+  .case[data-open-case="scifi"] {
+    --x: 39;
+    --z: 2;
+    --ry: -26;
   }
 
-  .bookcase-count {
-    font-size: 1.1rem;
-    line-height: 1;
-    color: var(--fg-muted);
+  @container room (max-width: 560px) {
+    .case[data-open-case="ideas"] {
+      --x: -23;
+    }
+
+    .case[data-open-case="literature"] {
+      --x: 0;
+    }
+
+    .case[data-open-case="polecon"] {
+      --x: 22.5;
+    }
+
+    .case[data-open-case="wuxia"] {
+      --x: -12.5;
+      --z: 6;
+      --ry: 14;
+    }
+
+    .case[data-open-case="scifi"] {
+      --x: 12.5;
+      --z: 6;
+      --ry: -14;
+    }
   }
 
-  .room-floor {
-    margin-top: 0.25rem;
-    border-top: 2px solid var(--fg);
-    opacity: 0.8;
+  .case:hover {
+    --lift: 1.4;
+  }
+
+  .case:active {
+    --lift: 0.5;
+  }
+
+  .case:focus-visible {
+    outline: none;
+  }
+
+  /* Rings sit inside the front face; outside it they would hide behind the case's own sides */
+  .case:hover :global(.box-front),
+  .case:focus-visible :global(.box-front) {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .case:focus-visible :global(.box-front) {
+    outline-width: 3px;
+    outline-offset: -3px;
   }
 
   /* ── Close-up of one bookcase ── */
@@ -380,6 +493,7 @@ function spineHeight(book: ShelfBook, index: number): number {
     flex-direction: column;
     gap: 0.9rem;
     align-self: start;
+    padding: 1rem;
     opacity: 0;
     transform: scale(0.96) translateY(10px);
     pointer-events: none;
@@ -397,8 +511,8 @@ function spineHeight(book: ShelfBook, index: number): number {
     transform: none;
     pointer-events: auto;
     transition:
-      opacity 320ms ease 420ms,
-      transform 420ms var(--ease-out) 420ms;
+      opacity 320ms ease 520ms,
+      transform 420ms var(--ease-out) 520ms;
   }
 
   .case-head {
@@ -452,32 +566,41 @@ function spineHeight(book: ShelfBook, index: number): number {
     color: var(--fg-muted);
   }
 
-  /* Each row is one shelf; the gradient draws a plank under every row */
+  /*
+   * The bookcase seen square-on: a rosewood frame, cornice and base around dark recessed shelves.
+   * Each row is one shelf; the gradient draws a plank under every row.
+   */
   .case-shelf {
     --row: 216px;
+    --plank: 9px;
     list-style: none;
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
-    padding: 0 0.6rem;
+    padding: 0 0.75rem;
     background:
       repeating-linear-gradient(
         to bottom,
-        transparent 0 calc(var(--row) - 4px),
-        var(--fg) calc(var(--row) - 4px) var(--row)
+        transparent 0 calc(var(--row) - var(--plank)),
+        var(--wood-top) calc(var(--row) - var(--plank)) calc(var(--row) - var(--plank) + 2px),
+        var(--wood) calc(var(--row) - var(--plank) + 2px) var(--row)
       ),
-      var(--surface);
-    border: 1.5px solid var(--fg);
-    border-top-width: 6px;
-    border-bottom: none;
-    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      linear-gradient(to bottom, var(--wood-line), transparent 3.5rem),
+      var(--wood-recess);
+    border: 10px solid var(--wood);
+    border-top-width: 18px;
+    border-bottom-width: 14px;
+    border-radius: var(--radius-sm);
+    box-shadow:
+      inset 0 0 0 1px var(--wood-line),
+      0 -2px 0 var(--wood-top);
   }
 
   .case-slot {
     display: flex;
     align-items: flex-end;
     height: var(--row);
-    padding: 0 2px 4px;
+    padding: 0 2px var(--plank);
   }
 
   .spine {
@@ -490,7 +613,7 @@ function spineHeight(book: ShelfBook, index: number): number {
     height: var(--spine-h);
     padding: 0.8rem 0 0.55rem;
     background: var(--spine);
-    border: 1.5px solid var(--fg);
+    border: 1.5px solid var(--wood-line);
     border-bottom: none;
     border-radius: 3px 3px 0 0;
     color: var(--fg);
@@ -527,6 +650,10 @@ function spineHeight(book: ShelfBook, index: number): number {
     box-shadow: var(--shadow-hover);
   }
 
+  .spine:focus-visible {
+    outline-color: var(--accent);
+  }
+
   .spine:active {
     transform: translateY(-4px);
   }
@@ -561,13 +688,14 @@ function spineHeight(book: ShelfBook, index: number): number {
     clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
   }
 
+  /* Reduced motion: no camera move, only a short crossfade between room and close-up */
   @media (prefers-reduced-motion: reduce) {
     .room,
     .room-stage.is-zoomed .room,
     .case-view,
     .room-stage.is-zoomed .case-view {
       transform: none;
-      transition: opacity 150ms ease;
+      transition: opacity 180ms ease !important;
     }
   }
 </style>
