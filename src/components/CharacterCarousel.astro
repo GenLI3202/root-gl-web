@@ -1,5 +1,33 @@
 ---
-const characters = [
+import type { Locale } from "@/i18n";
+
+interface Props {
+  locale?: Locale;
+}
+
+interface Character {
+  id: string;
+  name: string;
+  nameEn: string;
+  work: string;
+  author: string;
+  quote: string;
+  translation: string;
+  avatar: string;
+  slideFrom: "left" | "right";
+  /** Gen's own reading of the character, shown as a handwritten margin note */
+  note?: Record<Locale, string>;
+}
+
+const { locale = "en" } = Astro.props;
+
+const NOTE_LABEL: Record<Locale, string> = {
+  en: "my take",
+  zh: "我的理解",
+  de: "meine Lesart",
+};
+
+const characters: Character[] = [
   {
     id: "guo-jing",
     name: "郭靖",
@@ -39,12 +67,72 @@ const characters = [
     nameEn: "Ye Wenjie",
     work: "三体",
     author: "刘慈欣 Liu Cixin",
-    quote: "给岁月以文明，给文明以岁月。",
-    translation: "To give civilization to the ages, and ages to civilization.",
+    quote: "到这里来吧，我将帮助你们获得这个世界。我的文明已无力解决自己的问题，需要你们的力量来介入。",
+    translation:
+      "Come here. I will help you gain this world. My civilization can no longer solve its own problems; it needs your strength to step in.",
     avatar: "/images/hobbies/ye-wenjie.png",
     slideFrom: "right",
   },
+  {
+    id: "luo-ji",
+    name: "罗辑",
+    nameEn: "Luo Ji",
+    work: "三体 II · 黑暗森林",
+    author: "刘慈欣 Liu Cixin",
+    quote: "第一，生存是文明的第一需要。第二，文明不断增长和扩张，但宇宙中的物质总量保持不变。",
+    translation:
+      "First, survival is the primary need of civilization. Second, civilization keeps growing and expanding, but the total matter in the universe stays constant.",
+    avatar: "/images/hobbies/luo-ji.svg",
+    slideFrom: "left",
+    note: {
+      en: "He never asked for the job. Fate picked him, and he became the Swordholder anyway: a saviour by assignment, not ambition.",
+      zh: "他从没想当救世主，是命运选中了他。被推到面壁者、执剑人的位置上，他接下了这份躲不开的使命。",
+      de: "Er wollte die Rolle nie. Das Schicksal hat ihn ausgewählt, und er wurde trotzdem zum Schwerthalter: ein Retter aus Auftrag, nicht aus Ehrgeiz.",
+    },
+  },
+  {
+    id: "zhang-beihai",
+    name: "章北海",
+    nameEn: "Zhang Beihai",
+    work: "三体 II · 黑暗森林",
+    author: "刘慈欣 Liu Cixin",
+    quote: "没关系的，都一样。",
+    translation: "It doesn't matter. It's all the same.",
+    avatar: "/images/hobbies/zhang-beihai.svg",
+    slideFrom: "right",
+    note: {
+      en: "Cold, complete rationality in service of humanity as a whole. Which ship survives doesn't matter, as long as someone does.",
+      zh: "为了人类整体利益的最大化，可以理性到极致。哪艘船活下来不重要，只要人类还在。",
+      de: "Kalte, vollständige Rationalität im Dienst der ganzen Menschheit. Welches Schiff überlebt, ist egal, solange überhaupt jemand überlebt.",
+    },
+  },
+  {
+    id: "cheng-xin",
+    name: "程心",
+    nameEn: "Cheng Xin",
+    work: "三体 III · 死神永生",
+    author: "刘慈欣 Liu Cixin",
+    quote: "我选择人性。",
+    translation: "I choose humanity.",
+    avatar: "/images/hobbies/cheng-xin.svg",
+    slideFrom: "left",
+    note: {
+      en: "Deep care for every single life. She stands for refusing to sacrifice one person for the greater total, even when the arithmetic says otherwise.",
+      zh: "对每一个个体命运的极度关怀。她代表的价值观是：哪怕为了整体利益，也不愿去伤害个人。",
+      de: "Tiefe Fürsorge für jedes einzelne Leben. Sie steht dafür, keinen Menschen für das große Ganze zu opfern, auch wenn die Rechnung dafür spricht.",
+    },
+  },
 ];
+
+const EPIGRAPH = {
+  quote: "给岁月以文明，而不是给文明以岁月。",
+  source: "《三体 II · 黑暗森林》",
+  translation: {
+    en: "Give civilization to the years, not years to civilization.",
+    zh: "改写自帕斯卡：给时光以生命，而不是给生命以时光。",
+    de: "Gib den Jahren Zivilisation, nicht der Zivilisation Jahre.",
+  } as Record<Locale, string>,
+};
 ---
 
 <div class="char-carousel" role="region" aria-label="Literary Characters" data-carousel>
@@ -75,6 +163,12 @@ const characters = [
               <span class="qmark" aria-hidden="true">❝</span>{char.quote}<span class="qmark" aria-hidden="true">❞</span>
             </blockquote>
             <p class="char-translation">{char.translation}</p>
+            {char.note && (
+              <p class="char-note">
+                <span class="char-note-label">{NOTE_LABEL[locale]}</span>
+                <span class="hand">{char.note[locale]}</span>
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -97,6 +191,14 @@ const characters = [
     <button class="ctrl-btn next" aria-label="Next character">→</button>
   </div>
 </div>
+
+<figure class="char-epigraph">
+  <blockquote>{EPIGRAPH.quote}</blockquote>
+  <figcaption>
+    <span class="epigraph-source">— {EPIGRAPH.source}</span>
+    <span class="epigraph-translation">{EPIGRAPH.translation[locale]}</span>
+  </figcaption>
+</figure>
 
 <style>
   .char-carousel {
@@ -210,6 +312,53 @@ const characters = [
     font-style: italic;
     line-height: 1.6;
     max-width: 52ch;
+  }
+
+  /* Gen's margin note */
+  .char-note {
+    margin: 0.25rem 0 0;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--border-dark);
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    max-width: 52ch;
+  }
+  .char-note-label {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+  .char-note .hand {
+    font-size: 1.2rem;
+    line-height: 1.35;
+  }
+
+  /* Epigraph below the carousel */
+  .char-epigraph {
+    margin: 1.75rem 0 0;
+    padding-left: 1rem;
+    border-left: 3px solid var(--accent);
+  }
+  .char-epigraph blockquote {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--fg);
+    letter-spacing: 0.02em;
+  }
+  .char-epigraph figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    margin-top: 0.35rem;
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+  }
+  .epigraph-translation {
+    font-style: italic;
   }
 
   /* Controls */
