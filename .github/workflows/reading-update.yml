@@ -1,0 +1,52 @@
+name: Update reading data
+
+# Pulls public reading stats and shelf books from WeChat Reading (微信读书) into
+# src/data/reading.json, then commits the result so Vercel redeploys.
+#
+# Setup (one time):
+#   - Repo secret  WEREAD_API_KEY  — WeRead agent API key (wrk-…)
+# Until the secret is set the job fails with a clear message and commits nothing.
+
+on:
+  schedule:
+    - cron: "17 4 * * *" # every day at 04:17 UTC
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Re-check reading time for every book on the shelf"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reading-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Pull WeRead data
+        env:
+          WEREAD_API_KEY: ${{ secrets.WEREAD_API_KEY }}
+        run: node scripts/update-reading.mjs ${{ inputs.full && '--full' || '' }}
+
+      - name: Commit and push if changed
+        run: |
+          if [[ -n "$(git status --porcelain src/data/reading.json)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/data/reading.json
+            git commit -m "chore(reading): daily WeRead data update"
+            git push
+          else
+            echo "No reading changes today."
+          fi
