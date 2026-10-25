@@ -1,11 +1,11 @@
 /* ============================================
    gen-web Design System
-   Black & White Minimalist + Cycling Red
+   Warm paper, ink, and a red pen (cycling red)
    Principle: Progressive Disclosure
    ============================================ */
 
 /* Google Fonts — must precede all other statements */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Inter:wght@400;500;600;700&family=Long+Cang&family=Noto+Sans+SC:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -15,20 +15,26 @@
    Design Tokens — Light Mode (default)
    ---------------------------------------- */
 :root {
-  /* Core */
-  --bg:           #FAFAFA;
-  --fg:           #1A1A1A;
-  --fg-muted:     #6B6B6B;
+  /* Core — warm paper and ink */
+  --bg:           #FBF9F4;
+  --fg:           #1F1D1A;
+  --fg-muted:     #6E6A62;
 
   /* Accent — Cycling Red */
   --accent:       #E63946;
   --accent-soft:  rgba(230, 57, 70, 0.08);
   --accent-hover: #C1121F;
 
+  /* Highlighter stroke behind key words */
+  --marker:       rgba(230, 57, 70, 0.16);
+
   /* Surfaces */
-  --surface:      #F5F5F5;
-  --border:       #E5E5E5;
-  --border-dark:  #D0D0D0;
+  --surface:      #F3EFE6;
+  --border:       #E8E3D9;
+  --border-dark:  #D3CCBE;
+
+  /* Paper grain overlay */
+  --grain-opacity: 0.35;
 
   /* Typography */
   --font-heading: "Playfair Display", Georgia, serif;
@@ -36,6 +42,7 @@
   --font-cjk:     "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-cjk-heading: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-mono:    "JetBrains Mono", "Fira Code", monospace;
+  --font-hand:    "Caveat", "Long Cang", "Segoe Print", cursive;
 
   /* Type scale */
   --text-xs:   0.75rem;    /* 12px */
@@ -60,6 +67,7 @@
 
   /* Transitions */
   --transition: 150ms ease;
+  --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
 
   /* Shadows (minimal) */
   --shadow-sm:    0 1px 2px rgba(0, 0, 0, 0.05);
@@ -73,17 +81,21 @@
    Design Tokens — Dark Mode
    ---------------------------------------- */
 .theme-dark {
-  --bg:           #111111;
-  --fg:           #ECECEC;
-  --fg-muted:     #999999;
+  --bg:           #15130F;
+  --fg:           #EDE8DE;
+  --fg-muted:     #A39D91;
 
   --accent:       #FF6B6B;
   --accent-soft:  rgba(255, 107, 107, 0.12);
   --accent-hover: #FF8F8F;
 
-  --surface:      #1A1A1A;
-  --border:       #2A2A2A;
-  --border-dark:  #3A3A3A;
+  --marker:       rgba(255, 107, 107, 0.22);
+
+  --surface:      #1E1B16;
+  --border:       #2E2A23;
+  --border-dark:  #403A30;
+
+  --grain-opacity: 0.18;
 
   --shadow-sm:    0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
@@ -114,6 +126,22 @@ body {
   color: var(--fg);
   background-color: var(--bg);
   transition: background-color var(--transition), color var(--transition);
+}
+
+/* Fine paper grain over the whole page; pointer-events off so it never blocks input */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.45 0 0 0 0 0.4 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.theme-dark body::before {
+  mix-blend-mode: screen;
 }
 
 html:lang(zh) {
@@ -307,18 +335,59 @@ a:hover {
   display: inline-block;
   font-size: var(--text-xs);
   font-weight: 500;
-  padding: 0.25rem 0.625rem;
+  padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
   text-decoration: none;
   letter-spacing: 0.02em;
-  transition: background var(--transition);
+  transition: background var(--transition), color var(--transition),
+    border-color var(--transition);
 }
 
 .tag:hover {
-  background: var(--accent);
-  color: white;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ----------------------------------------
+   Handwritten notes & highlighter
+   ---------------------------------------- */
+.hand {
+  font-family: var(--font-hand);
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--accent);
+}
+
+/* Marker stroke under a word, slightly uneven like a real highlighter */
+.marker {
+  background-image: linear-gradient(
+    100deg,
+    transparent 0.2em,
+    var(--marker) 0.3em,
+    var(--marker) calc(100% - 0.3em),
+    transparent calc(100% - 0.15em)
+  );
+  background-size: 100% 0.55em;
+  background-position: 0 88%;
+  background-repeat: no-repeat;
+  padding-inline: 0.1em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* ----------------------------------------
+   Reduced motion
+   ---------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ----------------------------------------
