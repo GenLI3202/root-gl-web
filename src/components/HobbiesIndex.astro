@@ -1,7 +1,7 @@
 ---
 import HandIcon from "@/components/HandIcon.astro";
 import { t, localizeUrl, type Locale } from "@/i18n";
-import { BOOKS } from "@/data/books";
+import { LIBRARY } from "@/data/library";
 import type { HandIconName } from "@/components/hand-icons";
 import type { HobbyId } from "@/data/hobbies";
 
@@ -41,9 +41,9 @@ const ENTRIES: HobbyEntry[] = [
       de: "Wuxia, Science-Fiction und gerade Politik und Wirtschaft.",
     },
     fact: {
-      en: `${BOOKS.length} books on the shelf`,
-      zh: `书架上 ${BOOKS.length} 本书`,
-      de: `${BOOKS.length} Bücher im Regal`,
+      en: `${LIBRARY.length} books on the shelf`,
+      zh: `书架上 ${LIBRARY.length} 本书`,
+      de: `${LIBRARY.length} Bücher im Regal`,
     },
   },
   {
