@@ -1,52 +1,18 @@
 ---
 import HobbyShell from "@/components/HobbyShell.astro";
-import Bookshelf from "@/components/Bookshelf.astro";
-import { t, type Locale } from "@/i18n";
+import ReadingRoom from "@/components/ReadingRoom.astro";
+import ReadingStats from "@/components/ReadingStats.astro";
+import type { Locale } from "@/i18n";
 
+/** Hobbies → Reading: the study header inside ReadingRoom serves as the page heading */
 interface Props {
   locale: Locale;
 }
 
 const { locale } = Astro.props;
-
-const KICKER: Record<Locale, string> = {
-  en: "lately: how politics and economies work in real life",
-  zh: "最近在读：现实里的政治和经济",
-  de: "gerade: wie Politik und Wirtschaft wirklich funktionieren",
-};
-
-const APP_LINK: Record<Locale, string> = {
-  en: "微信读书 WeChat Reading ↗",
-  zh: "微信读书 ↗",
-  de: "WeChat Reading ↗",
-};
 ---
 
-<HobbyShell
-  locale={locale}
-  hobby="reading"
-  kicker={KICKER[locale]}
-  lead={t(locale, "hobbies.reading.lead")}
-  illustration="/images/hobbies/book.svg"
->
-  <p slot="header-extra" class="app-note">
-    {t(locale, "hobbies.reading.app")}
-    <a href="https://weread.qq.com/" target="_blank" rel="noopener noreferrer">{APP_LINK[locale]}</a>
-  </p>
-
-  <Bookshelf locale={locale} />
+<HobbyShell locale={locale} hobby="reading">
+  <ReadingRoom locale={locale} />
+  <ReadingStats locale={locale} />
 </HobbyShell>
-
-<style>
-  .app-note {
-    margin-top: 1rem;
-    font-size: var(--text-sm);
-    color: var(--fg-muted);
-    max-width: 38rem;
-  }
-
-  .app-note a {
-    margin-left: 0.25rem;
-    white-space: nowrap;
-  }
-</style>

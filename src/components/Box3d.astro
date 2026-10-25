@@ -1,0 +1,80 @@
+---
+/**
+ * A solid box for the 3D study scene. Its origin is the bottom-centre of the front face, so a
+ * parent places it on the floor with one translate. Sizes are in room units (`--u`); the front
+ * face holds the default slot, the top face the "top" slot, and the "extra" slot adds free-standing
+ * pieces in the box's own space. A soft contact shadow sits under it.
+ */
+interface Props {
+  /** Width, height and depth in room units */
+  w: number;
+  h: number;
+  d: number;
+  class?: string;
+}
+
+const { w, h, d, class: className } = Astro.props;
+---
+
+<span class:list={["box", className]} style={`--w: ${w}; --h: ${h}; --d: ${d};`}>
+  <span class="box-face box-shadow"></span>
+  <span class="box-face box-side box-left"></span>
+  <span class="box-face box-side box-right"></span>
+  <span class="box-face box-top"><slot name="top" /></span>
+  <span class="box-face box-front"><slot /></span>
+  <slot name="extra" />
+</span>
+
+<style>
+  .box {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    transform-style: preserve-3d;
+  }
+
+  .box-face {
+    position: absolute;
+    display: block;
+    left: calc(var(--w) * var(--u) / -2);
+    top: calc(var(--h) * var(--u) * -1);
+    width: calc(var(--w) * var(--u));
+    height: calc(var(--h) * var(--u));
+    transition: opacity 260ms ease;
+  }
+
+  .box-front {
+    background: var(--box-front, var(--wood));
+  }
+
+  .box-side {
+    width: calc(var(--d) * var(--u));
+    background: var(--box-side, var(--wood-side));
+    transform-origin: 0 50%;
+    transform: rotateY(90deg);
+  }
+
+  .box-right {
+    left: calc(var(--w) * var(--u) / 2);
+  }
+
+  .box-top {
+    height: calc(var(--d) * var(--u));
+    background: var(--box-top, var(--wood-top));
+    transform-origin: 50% 0;
+    transform: rotateX(-90deg);
+  }
+
+  /* Lies on the floor a hair above it, a little wider than the footprint */
+  .box-shadow {
+    left: calc((var(--w) / -2 - 2.5) * var(--u));
+    top: 0;
+    width: calc((var(--w) + 5) * var(--u));
+    height: calc((var(--d) + 5) * var(--u));
+    background: radial-gradient(closest-side, var(--room-shadow), transparent);
+    transform-origin: 50% 0;
+    transform: translate3d(0, calc(var(--u) * -0.05), calc(var(--u) * 2)) rotateX(-90deg);
+  }
+</style>

@@ -1,0 +1,495 @@
+---
+import type { Locale } from "@/i18n";
+import { seeded, sketchCurve, type Point } from "@/utils/sketch";
+
+/**
+ * Header band of the reading room: the brush-written title with a cinnabar seal, a spaced
+ * small-caps subtitle, a two-line tagline, a Su Shi couplet, and a faint ink-wash mountain
+ * range that fades into the paper behind them.
+ */
+interface Props {
+  locale: Locale;
+}
+
+interface HeaderCopy {
+  title: string;
+  /** Two characters cut into the seal beside the title */
+  seal: string;
+  subtitle: string;
+  tagline: [string, string];
+  /** Second tagline line in the dark (night) theme */
+  night: string;
+  quote: [string, string];
+  author: string;
+}
+
+const { locale } = Astro.props;
+
+const COPY: Record<Locale, HeaderCopy> = {
+  zh: {
+    title: "书房",
+    seal: "闲读",
+    subtitle: "My Library",
+    tagline: ["一室书香，阅见更大的世界。", "书籍是山水，推门即远行。"],
+    night: "月照江南，书伴长夜。",
+    quote: ["粗缯大布裹生涯，", "腹有诗书气自华。"],
+    author: "苏轼",
+  },
+  en: {
+    title: "The Study",
+    seal: "书房",
+    subtitle: "Shūfáng · My Library",
+    tagline: [
+      "One room of books, a wider world.",
+      "Books are hills and rivers: open the door and go.",
+    ],
+    night: "Moon over the southern rivers, books through the long night.",
+    quote: [
+      "A life wrapped in coarse silk and plain cloth;",
+      "with poems and books within, the spirit shines.",
+    ],
+    author: "Su Shi",
+  },
+  de: {
+    title: "Das Studierzimmer",
+    seal: "书房",
+    subtitle: "Shūfáng · Meine Bibliothek",
+    tagline: [
+      "Ein Zimmer voller Bücher, eine weitere Welt.",
+      "Bücher sind Berge und Flüsse: Tür auf, und los.",
+    ],
+    night: "Mond über dem Süden der Flüsse, Bücher für die lange Nacht.",
+    quote: [
+      "Ein Leben in grobe Seide und schlichtes Tuch gehüllt;",
+      "wer Verse und Bücher in sich trägt, dem strahlt der Geist von selbst.",
+    ],
+    author: "Su Shi",
+  },
+};
+
+const copy = COPY[locale];
+const isZh = locale === "zh";
+
+/** Ink-wash ridges on a 600 × 150 canvas, far (pale) to near (darker) */
+const rand = seeded(19370108);
+const WIDTH = 600;
+const HEIGHT = 150;
+
+function ridge(base: number, amp: number, peaks: number[], step = 30): string {
+  const points: Point[] = [];
+  for (let x = -20; x <= WIDTH + 20; x += step) {
+    const lift = peaks.reduce((sum, px) => sum + amp * Math.exp(-(((x - px) / 70) ** 2)), 0);
+    points.push([x, base - lift - rand() * amp * 0.18]);
+  }
+  return `${sketchCurve(points, rand, 2)} L${WIDTH + 20} ${HEIGHT} L-20 ${HEIGHT} Z`;
+}
+
+/**
+ * Night water town for the dark theme: white-walled houses with stepped gables seen as
+ * silhouettes on the shore, a few lit windows, and their reflections in the river.
+ */
+interface House {
+  x: number;
+  w: number;
+  h: number;
+  gable: boolean;
+}
+
+const SHORE = 116;
+const HOUSES: House[] = [
+  { x: 236, w: 26, h: 16, gable: false },
+  { x: 266, w: 34, h: 24, gable: true },
+  { x: 304, w: 22, h: 14, gable: false },
+  { x: 330, w: 40, h: 28, gable: true },
+  { x: 374, w: 28, h: 18, gable: false },
+  { x: 406, w: 30, h: 22, gable: true },
+  { x: 476, w: 36, h: 20, gable: false },
+  { x: 516, w: 28, h: 26, gable: true },
+];
+
+function housePath({ x, w, h, gable }: House): string {
+  const top = SHORE - h;
+  if (gable) {
+    const step = w / 5;
+    return [
+      `M${x} ${SHORE} V${top + 6} H${x + step} V${top + 2} H${x + step * 2} V${top - 3}`,
+      `H${x + step * 3} V${top + 2} H${x + step * 4} V${top + 6} H${x + w} V${SHORE} Z`,
+    ].join(" ");
+  }
+  return `M${x} ${SHORE} V${top + 3} Q${x + w / 2} ${top - 2} ${x + w} ${top + 3} V${SHORE} Z`;
+}
+
+/** Lit windows, as [x, y] of their top-left corners */
+const WINDOWS: Point[] = [
+  [276, 100],
+  [344, 96],
+  [356, 104],
+  [384, 104],
+  [418, 100],
+  [490, 102],
+  [526, 98],
+];
+
+/** A stone bridge arch between the two groups of houses */
+const BRIDGE = "M440 116 Q456 96 472 116";
+
+const RIDGES: string[] = [
+  ridge(96, 58, [250, 330, 470]),
+  ridge(112, 40, [200, 390, 540], 24),
+  ridge(132, 22, [150, 300, 440, 560], 20),
+];
+
+---
+
+<header class:list={["study-head", { "is-zh": isZh }]}>
+  <svg
+    class="head-hills"
+    viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+    preserveAspectRatio="xMidYMax slice"
+    aria-hidden="true"
+    focusable="false"
+  >
+    {RIDGES.map((d, i) => <path class={`hill hill-${i}`} d={d} />)}
+  </svg>
+
+  <svg
+    class="head-night"
+    viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+    preserveAspectRatio="xMaxYMax meet"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <circle class="night-halo" cx="470" cy="32" r="30" />
+    <circle class="night-moon" cx="470" cy="32" r="13" />
+    <path class="night-water" d={`M0 ${SHORE} H${WIDTH} V${HEIGHT} H0 Z`} />
+    <path class="night-moon-trail" d="M470 122 v3 M466 128 h8 M463 134 h14 M467 140 h6" />
+    <path class="night-bridge" d={BRIDGE} />
+    {HOUSES.map((h) => <path class="night-house" d={housePath(h)} />)}
+    {WINDOWS.map(([x, y]) => (
+      <g>
+        <rect class="night-window" x={x} y={y} width="3" height="4" />
+        <path class="night-reflection" d={`M${x + 1.5} ${2 * SHORE - y - 2} v8`} />
+      </g>
+    ))}
+  </svg>
+
+  <div class="head-title">
+    <h1 class:list={["head-heading", { brush: isZh }]} id="room-heading">{copy.title}</h1>
+    <span class="head-seal" aria-hidden="true">{copy.seal}</span>
+    <p class="head-subtitle">{copy.subtitle}</p>
+  </div>
+
+  <p class="head-tagline">
+    <span class="tagline-main">{copy.tagline[0]}</span>
+    <span class="tagline-sub tagline-day">{copy.tagline[1]}</span>
+    <span class="tagline-sub tagline-night">{copy.night}</span>
+  </p>
+
+  <figure class="head-quote">
+    <blockquote lang={isZh ? undefined : "zh"} class:list={{ "quote-zh": !isZh }}>
+      {isZh ? (
+        <p>「{copy.quote[0]}{copy.quote[1]}」</p>
+      ) : (
+        <p>粗缯大布裹生涯，腹有诗书气自华。</p>
+      )}
+    </blockquote>
+    {!isZh && (
+      <p class="quote-translation">
+        {copy.quote[0]}
+        <br />
+        {copy.quote[1]}
+      </p>
+    )}
+    <figcaption>{isZh ? "——" : "—"} {copy.author}</figcaption>
+  </figure>
+</header>
+
+<style>
+  /*
+   * Title left, tagline in the middle, the couplet right; the hills sit behind the last two.
+   * A long title pushes the couplet onto a second line, still at the right.
+   */
+  .study-head {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 2rem;
+    padding: 0.5rem 0 1.25rem;
+    isolation: isolate;
+    background: linear-gradient(to bottom, var(--night-sky), transparent);
+  }
+
+  .head-hills {
+    position: absolute;
+    z-index: -1;
+    right: 0;
+    bottom: 0;
+    width: min(70%, 40rem);
+    height: 100%;
+    pointer-events: none;
+    -webkit-mask-image:
+      linear-gradient(to right, transparent, black 30%, black 80%, transparent),
+      linear-gradient(to bottom, black 40%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(to right, transparent, black 30%, black 80%, transparent),
+      linear-gradient(to bottom, black 40%, transparent);
+    mask-composite: intersect;
+  }
+
+  .hill {
+    fill: var(--room-ink);
+  }
+
+  /* Night layer: only the dark theme raises --night-opacity */
+  .head-night {
+    position: absolute;
+    z-index: -1;
+    right: 12rem;
+    bottom: 0;
+    width: min(70%, 40rem);
+    height: 100%;
+    pointer-events: none;
+    opacity: var(--night-opacity);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 30%, black 85%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 30%, black 85%, transparent);
+  }
+
+  .night-halo {
+    fill: var(--night-moon);
+    opacity: 0.12;
+  }
+
+  .night-moon {
+    fill: var(--night-moon);
+    opacity: 0.92;
+  }
+
+  .night-water {
+    fill: var(--night-water);
+    opacity: 0.5;
+  }
+
+  .night-moon-trail,
+  .night-reflection {
+    fill: none;
+    stroke-linecap: round;
+  }
+
+  .night-moon-trail {
+    stroke: var(--night-moon);
+    stroke-width: 1.4;
+    opacity: 0.35;
+  }
+
+  .night-reflection {
+    stroke: var(--night-lamp);
+    stroke-width: 1.6;
+    stroke-dasharray: 2 2;
+    opacity: 0.4;
+  }
+
+  .night-house {
+    fill: var(--night-house);
+    opacity: 0.7;
+  }
+
+  .night-bridge {
+    fill: none;
+    stroke: var(--night-house);
+    stroke-width: 3;
+    opacity: 0.85;
+  }
+
+  .night-window {
+    fill: var(--night-lamp);
+  }
+
+  /* The day line of the tagline gives way to the night line in the dark theme */
+  .tagline-night,
+  :global(.theme-dark) .tagline-day {
+    display: none;
+  }
+
+  :global(.theme-dark) .tagline-night {
+    display: block;
+  }
+
+  .hill-0 {
+    opacity: 0.07;
+  }
+
+  .hill-1 {
+    opacity: 0.1;
+  }
+
+  .hill-2 {
+    opacity: 0.13;
+  }
+
+  /* Title and seal side by side, the subtitle under both */
+  .head-title {
+    flex: none;
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: start;
+    justify-content: start;
+    column-gap: 0.5rem;
+    padding-right: 2rem;
+    border-right: 1px solid var(--border-dark);
+  }
+
+  .head-heading {
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 4.2vw, 2.75rem);
+    font-style: italic;
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+
+  .head-heading.brush {
+    font-family: var(--font-brush);
+    font-size: clamp(3.4rem, 7vw, 4.6rem);
+    font-style: normal;
+    font-weight: 400;
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+  }
+
+  /* Cinnabar seal: two characters read top to bottom, slightly worn at the corners */
+  .head-seal {
+    margin-top: 0.35rem;
+    padding: 0.2rem 0.12rem;
+    writing-mode: vertical-rl;
+    font-family: var(--font-cjk-heading);
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.1em;
+    color: var(--on-accent);
+    background: var(--accent);
+    border-radius: 3px 2px 4px 2px;
+    box-shadow: inset 0 0 0 1.5px var(--accent), inset 0 0 0 2.5px var(--on-accent);
+    opacity: 0.92;
+  }
+
+  .head-subtitle {
+    grid-column: 1 / -1;
+    margin-top: 0.45rem;
+    font-family: var(--font-heading);
+    font-size: var(--text-xs);
+    font-variant: small-caps;
+    letter-spacing: 0.42em;
+    line-height: 1.2;
+    text-transform: lowercase;
+    color: var(--fg-muted);
+  }
+
+  .head-tagline {
+    flex: 1 1 15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .tagline-main {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-style: italic;
+    color: var(--fg);
+  }
+
+  .tagline-sub {
+    font-size: var(--text-sm);
+    letter-spacing: 0.02em;
+    color: var(--fg-muted);
+  }
+
+  .is-zh .tagline-main {
+    font-style: normal;
+    letter-spacing: 0.12em;
+  }
+
+  .is-zh .tagline-sub {
+    letter-spacing: 0.14em;
+  }
+
+  .head-quote {
+    flex: 0 1 18rem;
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .head-quote blockquote p {
+    font-family: var(--font-cjk-heading);
+    font-size: var(--text-sm);
+    letter-spacing: 0.12em;
+    line-height: 1.7;
+    color: var(--fg);
+  }
+
+  .quote-zh p {
+    font-size: var(--text-xs);
+    color: var(--fg-muted);
+  }
+
+  .quote-translation {
+    margin-top: 0.15rem;
+    font-family: var(--font-heading);
+    font-size: var(--text-sm);
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--fg);
+  }
+
+  .head-quote figcaption {
+    margin-top: 0.3rem;
+    font-size: var(--text-xs);
+    letter-spacing: 0.2em;
+    color: var(--fg-muted);
+  }
+
+  /* Narrow: title row on top, tagline and couplet stacked under it */
+  @media (max-width: 760px) {
+    .study-head {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.9rem;
+    }
+
+    .head-tagline,
+    .head-quote {
+      flex: none;
+      margin-left: 0;
+    }
+
+    .head-title {
+      padding-right: 0;
+      border-right: 0;
+    }
+
+    .head-night {
+      right: 0;
+      width: 100%;
+      height: 45%;
+      top: 0;
+      bottom: auto;
+    }
+
+    .head-hills {
+      width: 100%;
+      height: 60%;
+      top: 0;
+      bottom: auto;
+    }
+
+    .head-quote {
+      max-width: none;
+      text-align: left;
+      padding-left: 0.9rem;
+      border-left: 2px solid var(--border-dark);
+    }
+  }
+</style>

@@ -1,0 +1,613 @@
+---
+import type { Locale } from "@/i18n";
+import BookDialog from "@/components/BookDialog.astro";
+import ShelfCloseup from "@/components/ShelfCloseup.astro";
+import StudyBookcase, { type CaseShape, type CaseTopper } from "@/components/StudyBookcase.astro";
+import StudyHeader from "@/components/StudyHeader.astro";
+import StudyScene from "@/components/StudyScene.astro";
+import { CATEGORY_LABELS, CATEGORY_ORDER, type BookCategory } from "@/data/books";
+import { LIBRARY, type ShelfBook } from "@/data/library";
+
+/**
+ * The reading room: a header band, then a small 3D study with one walnut bookcase per
+ * category around a moon gate. Picking a bookcase moves the camera up to it and fades to a
+ * close-up of its shelves; picking a spine there opens the book's dialog. A quiet four-step
+ * hint under the stage marks where the visitor is in that flow.
+ */
+interface Props {
+  locale: Locale;
+}
+
+interface RoomCopy {
+  section: string;
+  hint: string;
+  back: string;
+  legend: string;
+  total: (books: number, cases: number) => string;
+  count: (count: number) => string;
+  flow: [string, string, string, string];
+}
+
+interface Bookcase {
+  category: BookCategory;
+  books: ShelfBook[];
+}
+
+const { locale } = Astro.props;
+
+const COPY: Record<Locale, RoomCopy> = {
+  en: {
+    section: "The whole room",
+    hint: "pick a bookcase to step closer",
+    back: "Back to the room",
+    legend: "Thicker spine, more hours read. Red ribbon: read in the last 30 days.",
+    total: (n, c) => `${n} books · ${c} bookcases`,
+    count: (n) => `${n} books`,
+    flow: ["Pick a case", "Step closer", "Browse", "Open a book"],
+  },
+  zh: {
+    section: "书房全景",
+    hint: "点击书架，走近看看",
+    back: "回到书房",
+    legend: "书脊越厚，读得越久。红签：最近 30 天读过。",
+    total: (n, c) => `${n} 本书 · ${c} 个书架`,
+    count: (n) => `${n} 本`,
+    flow: ["选择书架", "镜头推进", "查看书籍", "打开详情"],
+  },
+  de: {
+    section: "Das ganze Zimmer",
+    hint: "wähl ein Regal und tritt näher",
+    back: "Zurück ins Zimmer",
+    legend: "Dickerer Rücken, mehr Lesestunden. Rotes Band: in den letzten 30 Tagen gelesen.",
+    total: (n, c) => `${n} Bücher · ${c} Regale`,
+    count: (n) => `${n} Bücher`,
+    flow: ["Regal wählen", "Näher treten", "Stöbern", "Buch öffnen"],
+  },
+};
+
+/** Tall cases stand by the moon gate and the left wall; wuxia and sci-fi are lower cabinets */
+const CASE_SHAPES: Record<BookCategory, CaseShape> = {
+  literature: { w: 22, h: 34, d: 7 },
+  ideas: { w: 14, h: 34, d: 7 },
+  polecon: { w: 13, h: 34, d: 7 },
+  wuxia: { w: 13, h: 22, d: 7 },
+  scifi: { w: 14, h: 22, d: 7 },
+};
+
+/** What stands on top of each case */
+const CASE_TOPPERS: Partial<Record<BookCategory, CaseTopper>> = {
+  ideas: "incense",
+  literature: "bonsai",
+  polecon: "vase",
+};
+
+/** The widest case; each close-up keeps its case's width relative to this one */
+const WIDEST_CASE = Math.max(...Object.values(CASE_SHAPES).map((s) => s.w));
+
+const copy = COPY[locale];
+/** Tab order follows where cases stand: left to right (on phones, back row first) */
+const ROOM_ORDER: BookCategory[] = ["ideas", "literature", "polecon", "wuxia", "scifi"];
+
+const bookcases: Bookcase[] = CATEGORY_ORDER.map((category) => ({
+  category,
+  books: LIBRARY.filter((b) => b.category === category),
+})).filter((c) => c.books.length > 0);
+const roomCases: Bookcase[] = [...bookcases].sort(
+  (a, b) => ROOM_ORDER.indexOf(a.category) - ROOM_ORDER.indexOf(b.category)
+);
+const maxSeconds = Math.max(0, ...LIBRARY.map((b) => b.reading?.seconds ?? 0));
+
+/** Spine tint and front-face size, so the button covers the case it stands for */
+function caseStyle(category: BookCategory): string {
+  const { w, h } = CASE_SHAPES[category];
+  return `--spine: var(--shelf-${category}); --case-w: ${w}; --case-h: ${h};`;
+}
+---
+
+<section class="reading-room" data-reading-room data-step="1" aria-labelledby="room-heading">
+  <StudyHeader locale={locale} />
+
+  <div class="room-label">
+    <span class="label-num" aria-hidden="true">01</span>
+    <span class="label-name">{copy.section}</span>
+    <span class="label-hint">{copy.hint}</span>
+    <span class="label-total">{copy.total(LIBRARY.length, bookcases.length)}</span>
+  </div>
+
+  <div class="room-stage" data-stage>
+    <div class="room" data-room>
+      <StudyScene>
+        {roomCases.map(({ category, books }) => (
+          <button
+            type="button"
+            class="case"
+            data-open-case={category}
+            data-case-h={CASE_SHAPES[category].h}
+            aria-label={`${CATEGORY_LABELS[category][locale]}, ${copy.count(books.length)}`}
+            aria-controls={`case-${category}`}
+            aria-expanded="false"
+            style={caseStyle(category)}
+          >
+            <StudyBookcase
+              category={category}
+              books={books}
+              maxSeconds={maxSeconds}
+              shape={CASE_SHAPES[category]}
+              label={CATEGORY_LABELS[category][locale]}
+              count={copy.count(books.length)}
+              topper={CASE_TOPPERS[category]}
+            />
+          </button>
+        ))}
+      </StudyScene>
+    </div>
+
+    {bookcases.map(({ category, books }) => (
+      <ShelfCloseup
+        category={category}
+        books={books}
+        label={CATEGORY_LABELS[category][locale]}
+        count={copy.count(books.length)}
+        back={copy.back}
+        legend={copy.legend}
+        share={CASE_SHAPES[category].w / WIDEST_CASE}
+        maxSeconds={maxSeconds}
+      />
+    ))}
+  </div>
+
+  <ol class="room-flow" aria-hidden="true">
+    {copy.flow.map((step, i) => <li data-flow-step={i + 1}>{step}</li>)}
+  </ol>
+
+  {LIBRARY.map((book) => <BookDialog book={book} locale={locale} />)}
+</section>
+
+<script>
+  const CAMERA_MS = 700;
+  const FADE_OUT_MS = 480;
+  /** How much of the stage height the picked bookcase fills at the end of the camera move */
+  const FILL = 0.92;
+  const MAX_MAGNIFY = 3;
+
+  /** Reads a unitless custom property as a number */
+  function numberVar(style: CSSStyleDeclaration, name: string): number {
+    return parseFloat(style.getPropertyValue(name)) || 0;
+  }
+
+  function initReadingRoom(): void {
+    const root = document.querySelector<HTMLElement>("[data-reading-room]");
+    if (!root) return;
+
+    const stage = root.querySelector<HTMLElement>("[data-stage]")!;
+    const room = root.querySelector<HTMLElement>("[data-room]")!;
+    const world = root.querySelector<HTMLElement>("[data-world]")!;
+    const views = Array.from(root.querySelectorAll<HTMLElement>("[data-case-view]"));
+    const cases = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-open-case]"));
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const CAMERA_VARS = ["--cam-x", "--cam-y", "--cam-tz", "--cam-ry", "--cam-z"];
+
+    let openView: HTMLElement | null = null;
+    let trigger: HTMLButtonElement | null = null;
+    let timer = 0;
+
+    /** Marks the current step of the flow hint under the stage (1 room … 4 book details) */
+    function setStep(step: number): void {
+      root!.dataset.step = String(step);
+    }
+
+    /**
+     * Moves the camera rig so the bookcase's front face turns square to the viewer at eye level
+     * and fills most of the stage height; `is-flying` lowers the eye to the stage middle.
+     */
+    function aimCamera(button: HTMLButtonElement): void {
+      const scene = getComputedStyle(world);
+      const spot = getComputedStyle(button);
+      const p = numberVar(scene, "--P");
+      const floor = numberVar(scene, "--floor");
+      const stageH = numberVar(scene, "--stage-h");
+      const h = Number(button.dataset.caseH) || 20;
+      const magnify = Math.min(MAX_MAGNIFY, (stageH * FILL) / h);
+      const camera: Record<string, number> = {
+        "--cam-x": -numberVar(spot, "--x"),
+        "--cam-y": -(floor - h / 2),
+        "--cam-tz": -numberVar(spot, "--z"),
+        "--cam-ry": -numberVar(spot, "--ry"),
+        "--cam-z": p * (1 - 1 / magnify),
+      };
+      Object.entries(camera).forEach(([name, value]) =>
+        world.style.setProperty(name, value.toFixed(2))
+      );
+      stage.classList.add("is-flying");
+    }
+
+    function resetCamera(): void {
+      CAMERA_VARS.forEach((name) => world.style.removeProperty(name));
+      stage.classList.remove("is-flying");
+    }
+
+    function open(button: HTMLButtonElement): void {
+      const view = views.find((v) => v.dataset.caseView === button.dataset.openCase);
+      if (!view || openView) return;
+
+      window.clearTimeout(timer);
+      views.forEach((v) => (v.hidden = v !== view));
+      cases.forEach((c) => c.classList.toggle("is-target", c === button));
+      button.setAttribute("aria-expanded", "true");
+      openView = view;
+      trigger = button;
+
+      if (!reduceMotion.matches) aimCamera(button);
+      setStep(reduceMotion.matches ? 3 : 2);
+      void view.offsetWidth; // start the fade-in from the hidden state
+      stage.classList.add("is-zoomed");
+      room.inert = true;
+
+      if (stage.getBoundingClientRect().top < 0) {
+        stage.scrollIntoView({
+          behavior: reduceMotion.matches ? "auto" : "smooth",
+          block: "start",
+        });
+      }
+      timer = window.setTimeout(
+        () => {
+          setStep(3);
+          view.querySelector<HTMLElement>(".case-title")?.focus({ preventScroll: true });
+        },
+        reduceMotion.matches ? 0 : CAMERA_MS
+      );
+    }
+
+    function close(): void {
+      if (!openView || !trigger) return;
+      const view = openView;
+      const button = trigger;
+      openView = null;
+      trigger = null;
+
+      window.clearTimeout(timer);
+      resetCamera();
+      setStep(1);
+      stage.classList.remove("is-zoomed");
+      room.inert = false;
+      button.setAttribute("aria-expanded", "false");
+      button.focus({ preventScroll: true });
+      if (stage.getBoundingClientRect().top < 0) {
+        stage.scrollIntoView({
+          behavior: reduceMotion.matches ? "auto" : "smooth",
+          block: "start",
+        });
+      }
+      timer = window.setTimeout(
+        () => {
+          view.hidden = true;
+          button.classList.remove("is-target");
+        },
+        reduceMotion.matches ? 0 : FADE_OUT_MS
+      );
+    }
+
+    cases.forEach((c) => c.addEventListener("click", () => open(c)));
+    root
+      .querySelectorAll<HTMLButtonElement>("[data-close-case]")
+      .forEach((b) => b.addEventListener("click", close));
+
+    root.querySelectorAll<HTMLButtonElement>("[data-open-book]").forEach((spine) =>
+      spine.addEventListener("click", () => {
+        const dialog = document.getElementById(`book-${spine.dataset.openBook}`);
+        if (dialog instanceof HTMLDialogElement) {
+          dialog.showModal();
+          setStep(4);
+        }
+      })
+    );
+
+    // A click on the dialog element itself landed on the backdrop
+    root.querySelectorAll<HTMLDialogElement>("dialog").forEach((dialog) => {
+      dialog.addEventListener("click", (event) => {
+        if (event.target === dialog) dialog.close();
+      });
+      dialog.addEventListener("close", () => setStep(openView ? 3 : 1));
+    });
+
+    // Escape steps back out of the close-up; an open dialog handles its own Escape first
+    root.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && openView && !root.querySelector("dialog[open]")) close();
+    });
+  }
+
+  document.addEventListener("astro:page-load", initReadingRoom);
+</script>
+
+<style>
+  .reading-room {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  /* Section label over the stage: number, name, hint, and the live counts on the right */
+  .room-label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 1rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .label-num {
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-style: italic;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  .label-name {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  .label-hint {
+    font-size: var(--text-sm);
+    letter-spacing: 0.1em;
+    color: var(--fg-muted);
+  }
+
+  .label-total {
+    margin-left: auto;
+    font-family: var(--font-hand);
+    font-size: 1.2rem;
+    line-height: 1;
+    color: var(--fg-muted);
+  }
+
+  /* Room and close-up share one grid cell, so one can fade into the other in place */
+  .room-stage {
+    container: room / inline-size;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    background: var(--room-stage);
+    scroll-margin-top: var(--scroll-offset);
+  }
+
+  .room {
+    grid-area: 1 / 1;
+    transition: opacity 300ms ease;
+  }
+
+  .room-stage.is-zoomed .room {
+    opacity: 0;
+    transition: opacity 320ms ease 420ms;
+  }
+
+  /* Everything but the picked bookcase thins out while the camera moves in */
+  .room-stage.is-zoomed :global(.study-fade) {
+    opacity: 0.35;
+  }
+
+  .room-stage.is-zoomed :global(.study-prop),
+  .room-stage.is-zoomed .case:not(.is-target) :global(.box-face),
+  .room-stage.is-zoomed .case:not(.is-target) :global(.case-topper) {
+    opacity: 0;
+  }
+
+  /*
+   * Where each bookcase stands: x and z of its front face in room units, turned by --ry.
+   * Literature, politics and wuxia line the back wall beside the moon gate; ideas stands
+   * forward by the left wall and sci-fi by the right, both angled toward the middle.
+   * The button is as large as the case's front face, with its bottom centre on that spot,
+   * so its own box is the click target and carries the focus ring.
+   */
+  .case {
+    --lift: 0;
+    --depth-k: calc((var(--P) - var(--z)) / var(--P));
+
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(var(--case-w) * var(--u));
+    height: calc(var(--case-h) * var(--u));
+    margin: calc(var(--case-h) * var(--u) * -1) 0 0 calc(var(--case-w) * var(--u) / -2);
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transform: translate3d(
+        calc(var(--x) * var(--u)),
+        calc(var(--floor) * var(--u)),
+        calc((var(--z) + var(--lift)) * var(--u))
+      )
+      rotateY(calc(var(--ry) * 1deg));
+    transform-origin: 50% 100%;
+    transition: transform 320ms var(--ease-out);
+  }
+
+  /* The drawn box keeps its origin at the bottom centre of the front face */
+  .case > :global(.box) {
+    left: 50%;
+    top: 100%;
+  }
+
+  .case[data-open-case="ideas"] {
+    --x: -45.5;
+    --z: -27;
+    --ry: 32;
+  }
+
+  .case[data-open-case="literature"] {
+    --x: -30;
+    --z: -39;
+    --ry: 0;
+  }
+
+  .case[data-open-case="polecon"] {
+    --x: 25.5;
+    --z: -39;
+    --ry: 0;
+  }
+
+  .case[data-open-case="wuxia"] {
+    --x: 40;
+    --z: -39;
+    --ry: 0;
+  }
+
+  .case[data-open-case="scifi"] {
+    --x: 47;
+    --z: -23;
+    --ry: -32;
+  }
+
+  /* Phone: three tall cases on the back wall, the two low cabinets in front */
+  @container room (max-width: 560px) {
+    .case[data-open-case="ideas"] {
+      --x: -21;
+      --z: -39;
+      --ry: 0;
+    }
+
+    .case[data-open-case="literature"] {
+      --x: 0;
+    }
+
+    .case[data-open-case="polecon"] {
+      --x: 20.5;
+    }
+
+    .case[data-open-case="wuxia"] {
+      --x: -11;
+      --z: 0;
+      --ry: 6;
+    }
+
+    .case[data-open-case="scifi"] {
+      --x: 11;
+      --z: 0;
+      --ry: -6;
+    }
+  }
+
+  .case:hover,
+  .case:focus-visible {
+    --lift: 1.4;
+  }
+
+  .case:active {
+    --lift: 0.5;
+  }
+
+  /* Hover: the shelves brighten and a thin ring is drawn on the case frame */
+  .case :global(.case-art) {
+    transition: filter 200ms ease;
+  }
+
+  .case:hover :global(.case-art) {
+    filter: brightness(1.08);
+  }
+
+  .case:hover :global(.box-front) {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  /*
+   * Keyboard focus: a ring around the whole case, with a paper-coloured band between ring and
+   * wood so it reads against the floor and the wall alike
+   */
+  .case:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 4px var(--bg);
+  }
+
+  /* Flow hint: four quiet steps, the current one inked in */
+  .room-flow {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem 0;
+    padding: 0.25rem 0 0;
+    list-style: none;
+    font-size: var(--text-xs);
+    letter-spacing: 0.12em;
+    color: var(--fg-muted);
+  }
+
+  .room-flow li {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    transition: color 200ms ease;
+  }
+
+  .room-flow li::before {
+    content: "";
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: var(--border-dark);
+    transition: background 200ms ease, transform 200ms ease;
+  }
+
+  .room-flow li + li::after {
+    order: -1;
+    content: "";
+    width: 2.2rem;
+    height: 1px;
+    margin-inline: 0.7rem 0.25rem;
+    background: var(--border-dark);
+  }
+
+  .reading-room[data-step="1"] [data-flow-step="1"],
+  .reading-room[data-step="2"] [data-flow-step="2"],
+  .reading-room[data-step="3"] [data-flow-step="3"],
+  .reading-room[data-step="4"] [data-flow-step="4"] {
+    color: var(--fg);
+  }
+
+  .reading-room[data-step="1"] [data-flow-step="1"]::before,
+  .reading-room[data-step="2"] [data-flow-step="2"]::before,
+  .reading-room[data-step="3"] [data-flow-step="3"]::before,
+  .reading-room[data-step="4"] [data-flow-step="4"]::before {
+    background: var(--accent);
+    transform: scale(1.3);
+  }
+
+  /* Phones: dots only between steps, so the four steps fit on one line */
+  @media (max-width: 560px) {
+    .room-flow {
+      flex-wrap: nowrap;
+      gap: 0 0.75rem;
+      font-size: 0.6875rem;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .room-flow li {
+      gap: 0.3rem;
+    }
+
+    .room-flow li + li::after {
+      display: none;
+    }
+  }
+
+  /* Reduced motion: no camera move, only a short crossfade between room and close-up */
+  @media (prefers-reduced-motion: reduce) {
+    .room,
+    .room-stage.is-zoomed .room {
+      transform: none;
+      transition: opacity 180ms ease !important;
+    }
+  }
+</style>

@@ -1,0 +1,667 @@
+---
+import Box3d from "@/components/Box3d.astro";
+import type { BookCategory } from "@/data/books";
+import type { ShelfBook } from "@/data/library";
+import { seeded, seedOf, sketchRect } from "@/utils/sketch";
+
+/**
+ * One walnut bookcase in the study, drawn as a 3D box. The front face is a soft painting:
+ * two open shelves lit from above, ivory spines that grow thicker with reading hours (a red
+ * ribbon marks a book read in the last 30 days), a scholar's object wherever a shelf has
+ * room to spare, and a lower door panel with the category's line icon, name and book count.
+ * A small object can stand on top of the case.
+ */
+export interface CaseShape {
+  /** Width, height and depth in room units */
+  w: number;
+  h: number;
+  d: number;
+}
+
+export type CaseTopper = "bonsai" | "vase" | "incense";
+
+interface Props {
+  category: BookCategory;
+  books: ShelfBook[];
+  /** Longest reading time on the whole shelf, for scaling spine thickness */
+  maxSeconds: number;
+  shape: CaseShape;
+  label: string;
+  count: string;
+  topper?: CaseTopper;
+}
+
+interface Compartment {
+  x: number;
+  top: number;
+  bottom: number;
+  width: number;
+}
+
+interface Spine {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  tone: string;
+  recent: boolean;
+}
+
+type ObjectKind = "vase" | "bonsai" | "stone" | "incense" | "globe" | "stack";
+
+/** One filled or stroked path of a shelf object, with its class */
+interface Stroke {
+  cls: string;
+  d: string;
+}
+
+const { category, books, maxSeconds, shape, label, count, topper } = Astro.props;
+const rand = seeded(seedOf(`study-${category}`));
+
+/** SVG units per room unit */
+const S = 10;
+const W = shape.w * S;
+const H = shape.h * S;
+const CORNICE = 18;
+const STILE = 11;
+const BOARD = 6;
+const BASE = Math.round(H * 0.27);
+const ROWS = 2;
+const GAP = 1.2;
+const PAD = 4;
+
+const shelfTop = CORNICE;
+const shelfBottom = H - BASE;
+const rowHeight = (shelfBottom - shelfTop) / ROWS;
+
+const compartments: Compartment[] = Array.from({ length: ROWS }, (_, r) => ({
+  x: STILE,
+  top: shelfTop + r * rowHeight + (r === 0 ? 0 : BOARD),
+  bottom: shelfTop + (r + 1) * rowHeight,
+  width: W - 2 * STILE,
+}));
+
+/** Objects each category keeps on its shelves, used in this order */
+const OBJECTS: Record<BookCategory, ObjectKind[]> = {
+  ideas: ["stone", "bonsai", "vase"],
+  literature: ["vase", "bonsai", "stone"],
+  polecon: ["globe", "bonsai", "vase"],
+  wuxia: ["incense", "stone", "vase"],
+  scifi: ["globe", "stone", "vase"],
+};
+
+function thickness(book: ShelfBook): number {
+  if (!book.reading || maxSeconds === 0) return 8;
+  return 5.5 + 8.5 * Math.sqrt(book.reading.seconds / maxSeconds);
+}
+
+/** Mostly ivory and cream, now and then an ink-dark cloth binding */
+function bookTone(): string {
+  const r = rand();
+  if (r < 0.14) return "tone-ink";
+  if (r < 0.46) return "tone-cream";
+  if (r < 0.78) return "tone-ivory";
+  return "tone-paper";
+}
+
+const spines: Spine[] = [];
+const rowEnd: number[] = compartments.map(() => STILE + PAD);
+let row = 0;
+let x = STILE + PAD;
+for (const book of books) {
+  const w = thickness(book);
+  if (x + w > W - STILE - PAD) {
+    row += 1;
+    x = STILE + PAD;
+  }
+  if (row >= compartments.length) break;
+  const { top, bottom } = compartments[row];
+  const room = bottom - top;
+  const h = Math.min(room - 12, room * (0.62 + rand() * 0.22));
+  spines.push({ x, y: bottom - h, w, h, tone: bookTone(), recent: book.recent });
+  x += w + GAP;
+  rowEnd[row] = x;
+}
+
+const r1 = (n: number): number => Math.round(n * 10) / 10;
+const circle = (cx: number, cy: number, r: number): string =>
+  `M${r1(cx - r)} ${r1(cy)} a${r1(r)} ${r1(r)} 0 1 0 ${r1(2 * r)} 0 a${r1(r)} ${r1(r)} 0 1 0 ${r1(
+    -2 * r
+  )} 0 Z`;
+
+/** Draws one object standing on a shelf at bottom `b`, centred on `cx`, at most `hgt` tall */
+function drawObject(kind: ObjectKind, cx: number, b: number, hgt: number): Stroke[] {
+  const s = hgt / 50;
+  const p = (dx: number, dy: number): string => `${r1(cx + dx * s)} ${r1(b - dy * s)}`;
+  switch (kind) {
+    case "vase":
+      return [
+        {
+          cls: "obj-porcelain",
+          d: `M${p(-6, 0)} C${p(-4, 16)} ${p(-17, 30)} ${p(-9, 41)} L${p(-4, 45)} L${p(-4, 50)}
+            L${p(4, 50)} L${p(4, 45)} L${p(9, 41)} C${p(17, 30)} ${p(4, 16)} ${p(6, 0)} Z`,
+        },
+        { cls: "obj-brush", d: `M${p(-8, 30)} C${p(-3, 33)} ${p(3, 27)} ${p(8, 30)}` },
+      ];
+    case "bonsai":
+      return [
+        { cls: "obj-clay", d: `M${p(-12, 9)} L${p(12, 9)} L${p(9, 0)} L${p(-9, 0)} Z` },
+        { cls: "obj-trunk", d: `M${p(0, 9)} C${p(-6, 20)} ${p(8, 26)} ${p(2, 36)}` },
+        { cls: "obj-leaf", d: circle(cx - 8 * s, b - 34 * s, 7 * s) },
+        { cls: "obj-leaf", d: circle(cx + 6 * s, b - 40 * s, 8 * s) },
+        { cls: "obj-leaf", d: circle(cx + 12 * s, b - 28 * s, 5 * s) },
+      ];
+    case "stone":
+      return [
+        { cls: "obj-stand", d: `M${p(-13, 4)} L${p(13, 4)} L${p(11, 0)} L${p(-11, 0)} Z` },
+        {
+          cls: "obj-stone",
+          d: `M${p(-9, 4)} C${p(-14, 16)} ${p(-4, 18)} ${p(-8, 30)} C${p(-6, 40)} ${p(6, 36)}
+            ${p(4, 28)} C${p(12, 24)} ${p(13, 12)} ${p(8, 4)} Z ${circle(cx, b - 22 * s, 2.6 * s)}`,
+        },
+      ];
+    case "incense":
+      return [
+        { cls: "obj-bronze", d: `M${p(-11, 14)} C${p(-11, 4)} ${p(11, 4)} ${p(11, 14)} Z` },
+        {
+          cls: "obj-line",
+          d: `M${p(-7, 5)} L${p(-9, 0)} M${p(7, 5)} L${p(9, 0)} M${p(-13, 15)} L${p(13, 15)}`,
+        },
+        {
+          cls: "obj-smoke",
+          d: `M${p(0, 16)} C${p(-5, 22)} ${p(5, 27)} ${p(0, 33)} S${p(4, 42)} ${p(-1, 46)}`,
+        },
+      ];
+    case "globe":
+      return [
+        { cls: "obj-line", d: `M${p(-8, 0)} L${p(8, 0)} M${p(0, 0)} L${p(0, 9)}` },
+        { cls: "obj-bronze-ring", d: circle(cx, b - 24 * s, 14 * s) },
+        {
+          cls: "obj-line",
+          d: `M${p(-15, 18)} C${p(-6, 28)} ${p(8, 34)} ${p(15, 30)} M${p(-10, 36)} L${p(10, 12)}`,
+        },
+      ];
+    case "stack":
+      return [
+        { cls: "tone-cream", d: `M${p(-20, 0)} h${r1(40 * s)} v${r1(-6 * s)} h${r1(-40 * s)} Z` },
+        { cls: "tone-ink", d: `M${p(-17, 6)} h${r1(34 * s)} v${r1(-5 * s)} h${r1(-34 * s)} Z` },
+        { cls: "tone-ivory", d: `M${p(-18, 11)} h${r1(37 * s)} v${r1(-5 * s)} h${r1(-37 * s)} Z` },
+      ];
+  }
+}
+
+/** Objects go where a shelf ends early or stands empty; an empty shelf also gets a lying stack */
+const kinds = OBJECTS[category];
+const objects: Stroke[] = [];
+let used = 0;
+compartments.forEach((c, i) => {
+  const free = W - STILE - PAD - rowEnd[i];
+  const room = c.bottom - c.top;
+  const hgt = Math.min(56, room * 0.66);
+  const empty = rowEnd[i] === STILE + PAD;
+  if (empty) {
+    objects.push(...drawObject("stack", c.x + c.width * 0.3, c.bottom, hgt * 0.9));
+    objects.push(...drawObject(kinds[used++ % kinds.length], c.x + c.width * 0.72, c.bottom, hgt));
+  } else if (free >= 32) {
+    const cx = rowEnd[i] + Math.min(free, 60) / 2 + 2;
+    objects.push(...drawObject(kinds[used++ % kinds.length], cx, c.bottom, hgt));
+  }
+});
+
+const doorTop = H - BASE + BOARD;
+const doorGap = 3;
+const doorW = (W - 2 * STILE - doorGap) / 2;
+const doors = [STILE, STILE + doorW + doorGap];
+const doorH = BASE - BOARD - 9;
+
+const ink: string[] = [
+  sketchRect(0, 0, W, H, rand, 0.7),
+  ...compartments.map((c) => sketchRect(c.x, c.top, c.width, c.bottom - c.top, rand, 0.5)),
+  ...doors.map((dx) => sketchRect(dx, doorTop, doorW, doorH, rand, 0.5)),
+];
+
+const ribbons = spines
+  .filter((s) => s.recent)
+  .map((s) => {
+    const rx = s.x + s.w * 0.62;
+    return `M${r1(rx - 1.3)} ${r1(s.y - 4)} h2.6 v${r1(18)} l-1.3 -2.4 l-1.3 2.4 Z`;
+  });
+
+/** Short ink marks for a spine's title, centred under its head band */
+function titleMarks(sp: Spine): string {
+  const cx = sp.x + sp.w / 2;
+  const len = Math.min(26, sp.h * 0.32);
+  return `M${r1(cx)} ${r1(sp.y + 13)} v${r1(len * 0.55)} M${r1(cx)} ${r1(
+    sp.y + 16 + len * 0.6
+  )} v${r1(len * 0.4)}`;
+}
+
+/** Line icons for the door panel, on a 24 × 24 grid */
+const ICONS: Record<BookCategory, string[]> = {
+  ideas: [
+    "M4.5 11.5h15",
+    "M6 11.5c0 4 2.6 6 6 6s6-2 6-6",
+    "M8.5 17l-1.5 3.5M15.5 17l1.5 3.5M12 17.5v3",
+    "M7 11.5c-.6-1.4.2-2.5 1.4-2.5M17 11.5c.6-1.4-.2-2.5-1.4-2.5",
+    "M12 9c-1.6-1.2 1.4-2.2 0-3.6S13.2 3 12 1.8",
+  ],
+  literature: [
+    "M20 3.5l-9 9",
+    "M10 11.4l2.4 2.4",
+    "M10.6 13.6c-2.4.3-4 1.9-4.6 4.4-.4 1.5-1.2 2.6-2.5 3.5 " +
+      "2.6.3 5-.5 6.5-2.2 1.2-1.4 1.6-3 1.8-4.4",
+  ],
+  polecon: [
+    "M3 9l9-5 9 5z",
+    "M6 10.5v6.5M10 10.5v6.5M14 10.5v6.5M18 10.5v6.5",
+    "M4 18h16M3 20.5h18",
+  ],
+  wuxia: [
+    "M4 4l11.5 11.5M20 4L8.5 15.5",
+    "M13 18l5-5M11 18l-5-5",
+    "M16.5 16.5l3 3M7.5 16.5l-3 3",
+  ],
+  scifi: [
+    "M12 6.5a5.5 5.5 0 1 1 0 11a5.5 5.5 0 1 1 0-11z",
+    "M6.4 10.4C3.2 12.6 2 14.7 2.9 15.7c1.5 1.6 7-.5 12.2-4.5S22.5 3.9 21 2.4c-.8-.9-3 -.4-5.6.9",
+    "M19.5 19.5h.01M4.5 5h.01",
+  ],
+};
+
+const glowId = `case-glow-${category}`;
+const sideId = `case-side-${category}`;
+const TOPPER_H: Record<CaseTopper, number> = { bonsai: 7, vase: 6.5, incense: 5 };
+---
+
+<Box3d w={shape.w} h={shape.h} d={shape.d} class="study-case">
+  <svg
+    class="case-art"
+    viewBox={`0 0 ${W} ${H}`}
+    preserveAspectRatio="none"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <defs>
+      <linearGradient id={glowId} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" class="glow-strong" />
+        <stop offset="0.75" class="glow-clear" />
+      </linearGradient>
+      <linearGradient id={sideId} x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" class="side-dark" />
+        <stop offset="0.18" class="side-clear" />
+        <stop offset="0.82" class="side-clear" />
+        <stop offset="1" class="side-dark" />
+      </linearGradient>
+    </defs>
+    <rect class="art-cornice" x="0" y="0" width={W} height={CORNICE - 4} />
+    <rect class="art-molding" x="0" y={CORNICE - 6} width={W} height="2" />
+    {compartments.map((c) => (
+      <g>
+        <rect
+          class="art-recess"
+          x={c.x}
+          y={r1(c.top)}
+          width={c.width}
+          height={r1(c.bottom - c.top)}
+        />
+        <rect
+          x={c.x}
+          y={r1(c.top)}
+          width={c.width}
+          height={r1(c.bottom - c.top)}
+          fill={`url(#${glowId})`}
+        />
+        <rect
+          x={c.x}
+          y={r1(c.top)}
+          width={c.width}
+          height={r1(c.bottom - c.top)}
+          fill={`url(#${sideId})`}
+        />
+      </g>
+    ))}
+    {spines.map((s) => (
+      <rect
+        class={`art-spine ${s.tone}`}
+        x={r1(s.x)}
+        y={r1(s.y)}
+        width={r1(s.w)}
+        height={r1(s.h)}
+      />
+    ))}
+    <g class="art-marks">
+      {spines.map((s) => (
+        <path
+          class={s.tone === "tone-ink" ? "mark-light" : undefined}
+          d={`M${r1(s.x)} ${r1(s.y + 6)} h${r1(s.w)} ${titleMarks(s)}`}
+        />
+      ))}
+    </g>
+    {objects.map((o) => <path class={o.cls} d={o.d} />)}
+    {compartments.map((c) => (
+      <g>
+        <rect class="art-lamp" x={c.x + 4} y={r1(c.top)} width={c.width - 8} height="2.2" />
+        <rect class="art-lip" x={c.x} y={r1(c.bottom)} width={c.width} height="1.6" />
+      </g>
+    ))}
+    {doors.map((dx) => (
+      <rect
+        class="art-door"
+        x={r1(dx + 5)}
+        y={r1(doorTop + 5)}
+        width={r1(doorW - 10)}
+        height={r1(doorH - 10)}
+      />
+    ))}
+    <g class="art-ink" filter="url(#hand-wobble)">
+      {ink.map((d) => <path d={d} />)}
+    </g>
+    <g class="art-ribbon">
+      {ribbons.map((d) => <path d={d} />)}
+    </g>
+  </svg>
+  <span
+    class:list={["case-plate", { "is-long": label.length > shape.w }]}
+    style={`--plate-top: ${r1((doorTop / H) * 100)}%;`}
+  >
+    <svg class="plate-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      {ICONS[category].map((d) => <path d={d} />)}
+    </svg>
+    <span class="plate-text">
+      <span class="plate-name">{label}</span>
+      <span class="plate-count">{count}</span>
+    </span>
+  </span>
+  {topper && (
+    <svg
+      slot="extra"
+      class={`case-topper topper-${topper}`}
+      style={`--topper-h: ${TOPPER_H[topper]};`}
+      viewBox="0 0 60 60"
+      preserveAspectRatio="xMidYMax meet"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {topper === "bonsai" && (
+        <g>
+          <path class="obj-trunk" d="M30 50 C22 40 38 32 28 20 C24 15 30 10 36 8" />
+          <path class="obj-trunk thin" d="M29 34 C20 32 14 30 8 24" />
+          <path class="obj-leaf" d={circle(10, 22, 7)} />
+          <path class="obj-leaf" d={circle(36, 10, 9)} />
+          <path class="obj-leaf" d={circle(24, 18, 6)} />
+          <path class="obj-leaf" d={circle(46, 16, 6)} />
+          <path class="obj-clay" d="M16 50 L44 50 L41 59 L19 59 Z" />
+        </g>
+      )}
+      {topper === "vase" && (
+        <g>
+          <path
+            class="obj-porcelain"
+            d="M24 59 C26 50 12 40 22 30 L26 26 L26 18 L34 18 L34 26 L38 30 C48 40 34 50 36 59 Z"
+          />
+          <path class="obj-trunk thin" d="M30 18 C28 10 20 6 14 2" />
+          <path class="obj-trunk thin" d="M31 18 C34 10 42 8 48 4" />
+          <path class="obj-bloom" d={circle(14, 3, 2.4)} />
+          <path class="obj-bloom" d={circle(48, 5, 2.2)} />
+          <path class="obj-bloom" d={circle(22, 7, 1.8)} />
+        </g>
+      )}
+      {topper === "incense" && (
+        <g>
+          <path class="obj-bronze" d="M16 46 C16 58 44 58 44 46 Z" />
+          <path class="obj-line" d="M20 55 L18 59 M40 55 L42 59 M13 46 L47 46" />
+          <path class="obj-smoke" d="M30 44 C24 36 36 30 30 22 S34 10 28 2" />
+        </g>
+      )}
+    </svg>
+  )}
+</Box3d>
+
+<style>
+  :global(.study-case) {
+    --box-front: var(--case-wood);
+    --box-side: var(--case-wood-side);
+    --box-top: var(--case-wood-top);
+  }
+
+  .case-art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .art-cornice {
+    fill: var(--case-wood-top);
+  }
+
+  .art-molding {
+    fill: var(--case-wood-side);
+    opacity: 0.8;
+  }
+
+  .art-recess {
+    fill: var(--case-recess);
+  }
+
+  .glow-strong {
+    stop-color: var(--room-glow);
+  }
+
+  .glow-clear {
+    stop-color: var(--room-glow);
+    stop-opacity: 0;
+  }
+
+  .side-dark {
+    stop-color: var(--wood-line);
+    stop-opacity: 0.45;
+  }
+
+  .side-clear {
+    stop-color: var(--wood-line);
+    stop-opacity: 0;
+  }
+
+  .tone-ivory {
+    fill: var(--book-ivory);
+  }
+
+  .tone-cream {
+    fill: var(--book-cream);
+  }
+
+  .tone-paper {
+    fill: var(--book-paper);
+  }
+
+  .tone-ink {
+    fill: var(--book-ink);
+  }
+
+  .art-marks path {
+    fill: none;
+    stroke: var(--book-mark);
+    stroke-width: 1.1;
+    stroke-linecap: round;
+  }
+
+  .art-marks .mark-light {
+    stroke: var(--book-cream);
+    opacity: 0.55;
+  }
+
+  .art-lamp {
+    fill: var(--room-lamp);
+  }
+
+  .art-lip {
+    fill: var(--case-wood-top);
+  }
+
+  .art-door {
+    fill: none;
+    stroke: var(--case-wood-top);
+    stroke-width: 1.4;
+    opacity: 0.7;
+  }
+
+  .art-ink path {
+    fill: none;
+    stroke: var(--wood-line);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.7;
+  }
+
+  .art-ribbon path {
+    fill: var(--accent);
+  }
+
+  /* Shelf objects, shared with the topper */
+  .obj-porcelain {
+    fill: var(--book-ivory);
+    stroke: var(--wood-line);
+    stroke-width: 1;
+  }
+
+  .obj-brush {
+    fill: none;
+    stroke: var(--garden-bamboo);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+  }
+
+  .obj-clay {
+    fill: var(--clay);
+  }
+
+  .obj-trunk {
+    fill: none;
+    stroke: var(--wood-line);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+  }
+
+  .obj-trunk.thin {
+    stroke-width: 1.4;
+  }
+
+  .obj-leaf {
+    fill: var(--garden-bamboo);
+    opacity: 0.88;
+  }
+
+  .obj-bloom {
+    fill: var(--accent);
+    opacity: 0.8;
+  }
+
+  .obj-stand {
+    fill: var(--wood-line);
+  }
+
+  .obj-stone {
+    fill: var(--garden-rock);
+    fill-rule: evenodd;
+    stroke: var(--wood-line);
+    stroke-width: 0.8;
+  }
+
+  .obj-bronze {
+    fill: var(--clay);
+    stroke: var(--wood-line);
+    stroke-width: 0.8;
+  }
+
+  .obj-bronze-ring {
+    fill: none;
+    stroke: var(--room-lamp);
+    stroke-width: 1.6;
+    opacity: 0.85;
+  }
+
+  .obj-line {
+    fill: none;
+    stroke: var(--room-lamp);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    opacity: 0.85;
+  }
+
+  .obj-smoke {
+    fill: none;
+    stroke: var(--book-cream);
+    stroke-width: 0.9;
+    stroke-linecap: round;
+    opacity: 0.6;
+  }
+
+  /* Icon, name and count on the door panel, held at a steady on-screen size */
+  .case-plate {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--plate-top);
+    bottom: 6%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35em;
+    padding-inline: 5%;
+    font-size: calc(var(--plate-px) * var(--depth-k, 1));
+    line-height: 1.15;
+    color: var(--wood-label);
+  }
+
+  .plate-icon {
+    flex: none;
+    width: 1.5em;
+    height: 1.5em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.9;
+  }
+
+  .plate-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .plate-name {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-wrap: balance;
+  }
+
+  /* A label longer than the case is wide gets a smaller hand */
+  .case-plate.is-long {
+    font-size: calc(var(--plate-px) * var(--depth-k, 1) * 0.8);
+  }
+
+  .plate-count {
+    white-space: nowrap;
+    font-size: 0.85em;
+    letter-spacing: 0.06em;
+    opacity: 0.8;
+  }
+
+  /* A topper stands upright on the middle of the case top */
+  .case-topper {
+    position: absolute;
+    left: calc(var(--topper-h) * var(--u) / -2);
+    top: calc((var(--h) + var(--topper-h)) * var(--u) * -1);
+    width: calc(var(--topper-h) * var(--u));
+    height: calc(var(--topper-h) * var(--u));
+    transform: translateZ(calc(var(--d) * var(--u) * -0.45));
+    transition: opacity 260ms ease;
+    overflow: visible;
+  }
+</style>
