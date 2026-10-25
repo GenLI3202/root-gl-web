@@ -33,13 +33,13 @@ export const NOW_ITEMS: Record<Locale, NowItem[]> = {
       icon: "book",
       label: "Reading",
       text: "Wuxia and science fiction on WeChat Reading. Zhang Beihai, Luo Ji and Cheng Xin from the Three-Body trilogy stay on my mind.",
-      href: "/hobbies/",
+      href: "/hobbies/reading/",
     },
     {
       icon: "guitar",
       label: "Playing",
       text: "Twenty minutes of fingerpicking after long days. Still learning.",
-      href: "/hobbies/",
+      href: "/hobbies/guitar/",
     },
   ],
   zh: [
@@ -59,13 +59,13 @@ export const NOW_ITEMS: Record<Locale, NowItem[]> = {
       icon: "book",
       label: "在读",
       text: "微信读书上的武侠和科幻。《三体》里的章北海、罗辑、程心，时常还会想起。",
-      href: "/zh/hobbies/",
+      href: "/zh/hobbies/reading/",
     },
     {
       icon: "guitar",
       label: "在弹",
       text: "累了一天之后，弹二十分钟指弹。还在学。",
-      href: "/zh/hobbies/",
+      href: "/zh/hobbies/guitar/",
     },
   ],
   de: [
@@ -85,13 +85,13 @@ export const NOW_ITEMS: Record<Locale, NowItem[]> = {
       icon: "book",
       label: "Lesen",
       text: "Wuxia und Science-Fiction in WeChat Reading. Zhang Beihai, Luo Ji und Cheng Xin aus der Trisolaris-Trilogie gehen mir nicht aus dem Kopf.",
-      href: "/de/hobbies/",
+      href: "/de/hobbies/reading/",
     },
     {
       icon: "guitar",
       label: "Gitarre",
       text: "Zwanzig Minuten Fingerpicking nach langen Tagen. Ich lerne noch.",
-      href: "/de/hobbies/",
+      href: "/de/hobbies/guitar/",
     },
   ],
 };
