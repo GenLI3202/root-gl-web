@@ -19,7 +19,7 @@
 | Content | Blog posts (Markdown) | `src/content/posts/` |
 | Styles | Design tokens, global CSS | `src/styles/global.css` |
 | i18n | Locale utilities + JSON translations, `localeSwitchUrl()` | `src/i18n/index.ts`, `en/zh/de.json` |
-| Locale pages | Dynamic `[locale]` routes for ZH/DE (index, about, projects, hobbies) | `src/pages/[locale]/` |
+| Locale pages | Dynamic `[locale]` routes for ZH/DE (index, about, projects, hobbies/*) | `src/pages/[locale]/` |
 
 ## Completed Features
 
@@ -79,6 +79,7 @@
 - [x] **Munich clock: season + weather** — `MunichClock.astro` reads live Munich weather (Open-Meteo, no key, cached 30 min) and the month; riding slots switch to a "guess what I'm doing?" teaser with a reveal button in winter, rain, snow, or below 5 °C
 - [x] **Content update (Oct 2026)** — research copy now covers the Huawei PhD internship, local EMS, and AIDC campus EMS (home, Lately, About in EN/ZH/DE); club spelled "Across" everywhere with links to across-cc.de; Three-Body cards for Luo Ji, Zhang Beihai, Cheng Xin with sketch avatars and Gen's notes
 - [x] **Reading bookshelf + sketch portraits** — `Bookshelf.astro` (spines by category, filters, detail card, optional reading notes in `src/data/books.ts`, jumps to carousel characters); all seven carousel portraits redrawn in one pen-sketch style via `scripts/sketch-portraits.py`, rules in `docs/illustration-style.md`
+- [x] **Hobbies split into sub-pages** — `/hobbies/` index plus `/hobbies/cycling/`, `/hobbies/reading/`, `/hobbies/guitar/` (EN/ZH/DE) built on `HobbyShell.astro`; horizontal tab panels and the character carousel removed; memorable characters now sit inside their book on the shelf
 
 ## Remaining Work
 
