@@ -1,0 +1,293 @@
+---
+import { HIGHLIGHTS } from "@/data/cycling-highlights";
+import type { Locale } from "@/i18n";
+import { LOCALE_TAGS } from "@/utils/cycling";
+
+/**
+ * Every outdoor ride on OpenStreetMap tiles, drawn from public/data/cycling-routes.json.
+ * Leaflet and the routes load when the map scrolls into view. The highlights get a
+ * handwritten label at the middle of their track.
+ */
+interface Props {
+  locale: Locale;
+  years: number[];
+  copy: { all: string; filter: string; label: string; loading: string; error: string };
+}
+
+const { locale, years, copy } = Astro.props;
+
+const notes = HIGHLIGHTS.map((h) => ({
+  from: h.from,
+  to: h.to,
+  minKm: h.minKm ?? 0,
+  label: h.title[locale],
+}));
+---
+
+<div class="route-map-wrap" data-locale={LOCALE_TAGS[locale]}>
+  <div class="filters" role="group" aria-label={copy.filter}>
+    <button type="button" class="chip" data-year="all" aria-pressed="true">{copy.all}</button>
+    {years.map((year) => (
+      <button type="button" class="chip" data-year={year} aria-pressed="false">{year}</button>
+    ))}
+  </div>
+  <div
+    class="route-map"
+    role="region"
+    aria-label={copy.label}
+    data-src="/data/cycling-routes.json"
+    data-notes={JSON.stringify(notes)}
+    data-error={copy.error}
+  >
+    <p class="status">{copy.loading}</p>
+  </div>
+</div>
+
+<style>
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .chip {
+    padding: 0.3rem 0.85rem;
+    border: 1px solid var(--border-dark);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    font: inherit;
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    cursor: pointer;
+    transition: border-color var(--transition), color var(--transition);
+  }
+
+  .chip:hover {
+    border-color: var(--accent);
+    color: var(--fg);
+  }
+
+  .chip[aria-pressed="true"] {
+    border-color: var(--fg);
+    background: var(--fg);
+    color: var(--bg);
+  }
+
+  .chip:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .route-map {
+    position: relative;
+    height: 480px;
+    border: 1px solid var(--border-dark);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  .status {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+  }
+
+  /* Tiles are light; soften and invert them in the dark theme */
+  :global(.theme-dark) .route-map :global(.leaflet-tile-pane) {
+    filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85);
+  }
+
+  .route-map :global(.leaflet-container) {
+    background: var(--bg);
+    font-family: var(--font-body);
+  }
+
+  .route-map :global(.route-note) {
+    background: none;
+    border: none;
+  }
+
+  .route-map :global(.route-note span) {
+    display: inline-block;
+    padding: 0 0.35rem;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    font-family: var(--font-hand);
+    font-size: 1.2rem;
+    line-height: 1.3;
+    white-space: nowrap;
+    color: var(--fg);
+    transform: translate(8px, -22px) rotate(-3deg);
+  }
+
+  @media (max-width: 560px) {
+    .route-map {
+      height: 360px;
+    }
+  }
+</style>
+
+<script>
+  import "leaflet/dist/leaflet.css";
+  import { decodePolyline } from "../utils/polyline.mjs";
+
+  interface Route {
+    d: string;
+    km: number;
+    p: string[];
+  }
+
+  interface Note {
+    from: string;
+    to: string;
+    minKm: number;
+    label: string;
+  }
+
+  const TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+  const ATTRIBUTION =
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  /** The first view frames rides within this distance of the typical ride; faraway trips stay a pan away */
+  const HOME_RADIUS_KM = 900;
+  const EARTH_RADIUS_KM = 6371;
+
+  function distanceKm(a: [number, number], b: [number, number]): number {
+    const rad = Math.PI / 180;
+    const h =
+      Math.sin(((b[0] - a[0]) * rad) / 2) ** 2 +
+      Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(((b[1] - a[1]) * rad) / 2) ** 2;
+    return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(h));
+  }
+
+  function median(values: number[]): number {
+    const sorted = [...values].sort((a, b) => a - b);
+    return sorted[Math.floor(sorted.length / 2)];
+  }
+
+  async function startMap(el: HTMLElement): Promise<void> {
+    const wrap = el.closest<HTMLElement>(".route-map-wrap");
+    const status = el.querySelector(".status");
+    try {
+      const [L, response] = await Promise.all([import("leaflet"), fetch(el.dataset.src ?? "")]);
+      if (!response.ok) throw new Error(`routes: HTTP ${response.status}`);
+      const { routes } = (await response.json()) as { routes: Route[] };
+      status?.remove();
+
+      const style = getComputedStyle(document.documentElement);
+      const accent = (): string => style.getPropertyValue("--accent").trim();
+      const locale = wrap?.dataset.locale ?? "en";
+      const dateFormat = new Intl.DateTimeFormat(locale, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        timeZone: "UTC",
+      });
+      const notes = JSON.parse(el.dataset.notes ?? "[]") as Note[];
+
+      const map = L.map(el, {
+        preferCanvas: true,
+        scrollWheelZoom: false,
+        // One finger scrolls the page on a phone; two fingers move the map
+        dragging: !L.Browser.mobile,
+        zoomSnap: 0.5,
+      });
+      L.tileLayer(TILE_URL, { maxZoom: 18, attribution: ATTRIBUTION }).addTo(map);
+
+      const base = { color: accent(), weight: 2.5, opacity: 0.5, lineJoin: "round" as const };
+      const lines = routes.map((route) => {
+        const picked = notes.some((n) => route.d >= n.from && route.d <= n.to && route.km >= n.minKm);
+        const line = L.polyline(
+          route.p.map((piece) => decodePolyline(piece)),
+          { ...base, weight: picked ? 3.5 : base.weight, opacity: picked ? 0.85 : base.opacity }
+        );
+        const tip = document.createElement("span");
+        tip.textContent = `${dateFormat.format(new Date(`${route.d}T00:00:00Z`))} · ${Math.round(route.km)} km`;
+        line.bindTooltip(tip, { sticky: true });
+        line.on("mouseover", () => line.setStyle({ weight: 5, opacity: 1 }).bringToFront());
+        line.on("mouseout", () => line.setStyle({ weight: picked ? 3.5 : base.weight, opacity: picked ? 0.85 : base.opacity }));
+        return { route, year: route.d.slice(0, 4), line, picked };
+      });
+
+      // A handwritten label at the middle of the longest piece of each highlight's first ride
+      const labels = notes.flatMap((note) => {
+        const first = lines.find(
+          (l) => l.route.d >= note.from && l.route.d <= note.to && l.route.km >= note.minKm
+        );
+        if (!first) return [];
+        const longest = first.route.p.map((p) => decodePolyline(p)).sort((a, b) => b.length - a.length)[0];
+        const [lat, lon] = longest[Math.floor(longest.length / 2)];
+        const text = document.createElement("span");
+        text.textContent = note.label;
+        const marker = L.marker([lat, lon], {
+          interactive: false,
+          keyboard: false,
+          icon: L.divIcon({ className: "route-note", html: text, iconSize: [0, 0] }),
+        });
+        return [{ year: first.year, marker }];
+      });
+
+      function show(year: string): void {
+        const visible = lines.filter((l) => year === "all" || l.year === year);
+        for (const l of lines) {
+          if (visible.includes(l)) l.line.addTo(map);
+          else l.line.remove();
+        }
+        for (const l of labels) {
+          if (year === "all" || l.year === year) l.marker.addTo(map);
+          else l.marker.remove();
+        }
+
+        // Frame the rides near the typical one, so a trip overseas does not shrink the rest
+        const centers = visible.map((l) => {
+          const c = l.line.getBounds().getCenter();
+          return [c.lat, c.lng] as [number, number];
+        });
+        if (!centers.length) return;
+        const typical: [number, number] = [median(centers.map((c) => c[0])), median(centers.map((c) => c[1]))];
+        const near = visible.filter((_, i) => distanceKm(centers[i], typical) <= HOME_RADIUS_KM);
+        const bounds = L.latLngBounds([]);
+        for (const l of near) bounds.extend(l.line.getBounds());
+        map.fitBounds(bounds, { padding: [24, 24] });
+      }
+
+      wrap?.querySelectorAll<HTMLButtonElement>(".chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          wrap.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c === chip)));
+          show(chip.dataset.year ?? "all");
+        });
+      });
+
+      // Keep the lines readable when the theme flips between the two accent reds
+      new MutationObserver(() => lines.forEach((l) => l.line.setStyle({ color: accent() }))).observe(
+        document.documentElement,
+        { attributes: true, attributeFilter: ["class"] }
+      );
+
+      show("all");
+    } catch {
+      if (status) status.textContent = el.dataset.error ?? "";
+    }
+  }
+
+  function initMaps(): void {
+    document.querySelectorAll<HTMLElement>(".route-map:not([data-started])").forEach((el) => {
+      el.dataset.started = "true";
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((e) => e.isIntersecting)) return;
+          observer.disconnect();
+          void startMap(el);
+        },
+        { rootMargin: "300px" }
+      );
+      observer.observe(el);
+    });
+  }
+
+  document.addEventListener("astro:page-load", initMaps);
+</script>

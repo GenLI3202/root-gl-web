@@ -1,0 +1,159 @@
+---
+import { HIGHLIGHTS } from "@/data/cycling-highlights";
+import type { Locale } from "@/i18n";
+import {
+  formatNumber,
+  LOCALE_TAGS,
+  loadRoutes,
+  routesBetween,
+  sketchPaths,
+  type Ride,
+} from "@/utils/cycling";
+
+/**
+ * Postcards for the rides worth remembering: a route sketch, the place, the dates, and
+ * Gen's own line. The sketch appears once the Strava sync has written routes; the card
+ * works without it.
+ */
+interface Props {
+  locale: Locale;
+  rides: Ride[];
+  days: (n: number) => string;
+}
+
+const { locale, rides, days } = Astro.props;
+
+const WIDTH = 320;
+const HEIGHT = 190;
+const routes = loadRoutes();
+const dates = new Intl.DateTimeFormat(LOCALE_TAGS[locale], {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+function utc(date: string): Date {
+  return new Date(`${date}T00:00:00Z`);
+}
+
+const cards = HIGHLIGHTS.map((h) => {
+  const inRange = rides.filter((r) => r.d >= h.from && r.d <= h.to && r.km >= (h.minKm ?? 0));
+  const span = Math.round((utc(h.to).getTime() - utc(h.from).getTime()) / 86_400_000) + 1;
+  return {
+    id: h.id,
+    title: h.title[locale],
+    note: h.note[locale],
+    when: h.from === h.to ? dates.format(utc(h.from)) : dates.formatRange(utc(h.from), utc(h.to)),
+    facts: `${formatNumber(locale, inRange.reduce((sum, r) => sum + r.km, 0))} km · ${days(span)}`,
+    paths: sketchPaths(routesBetween(routes, h.from, h.to, h.minKm), WIDTH, HEIGHT),
+  };
+});
+---
+
+<ul class="postcards" role="list">
+  {cards.map((card) => (
+    <li class="postcard" data-highlight={card.id}>
+      <div class="sketch" aria-hidden="true">
+        {card.paths.length > 0 && (
+          <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="xMidYMid meet">
+            {card.paths.map((d) => <path d={d} />)}
+          </svg>
+        )}
+      </div>
+      <div class="text">
+        <p class="when">{card.when}</p>
+        <h3 class="title">{card.title}</h3>
+        <p class="note hand">{card.note}</p>
+        <p class="facts">{card.facts}</p>
+      </div>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .postcards {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    gap: 1.25rem;
+  }
+
+  .postcard {
+    display: flex;
+    flex-direction: column;
+    border: 1.5px solid var(--border-dark);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .postcard:nth-child(odd) {
+    transform: rotate(-0.4deg);
+  }
+
+  .postcard:nth-child(even) {
+    transform: rotate(0.4deg);
+  }
+
+  .sketch {
+    border-bottom: 1px dashed var(--border-dark);
+    background: var(--bg);
+  }
+
+  .sketch:empty {
+    display: none;
+  }
+
+  .sketch svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .sketch path {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1rem 1.25rem 1.1rem;
+  }
+
+  .when {
+    font-size: var(--text-xs);
+    letter-spacing: 0.04em;
+    color: var(--fg-muted);
+  }
+
+  .title {
+    font-size: var(--text-lg);
+  }
+
+  .note {
+    font-size: 1.25rem;
+    line-height: 1.35;
+  }
+
+  .facts {
+    margin-top: 0.25rem;
+    font-size: var(--text-xs);
+    color: var(--fg-muted);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .postcard {
+      transition: transform 250ms var(--ease-out);
+    }
+
+    .postcard:hover {
+      transform: rotate(0deg) translateY(-3px);
+    }
+  }
+</style>
