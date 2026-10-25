@@ -67,6 +67,9 @@ const CASE_SHAPES: Record<BookCategory, CaseShape> = {
   scifi: { w: 14, h: 15, d: 9 },
 };
 
+/** The widest case; each close-up keeps its case's width relative to this one */
+const WIDEST_CASE = Math.max(...Object.values(CASE_SHAPES).map((s) => s.w));
+
 // Spine heights cycle so a shelf looks hand-stacked, not uniform
 const SPINE_HEIGHTS = [150, 134, 158, 140, 128, 152, 138];
 const MAX_SPINE_HEIGHT = 196;
@@ -89,6 +92,17 @@ const CJK = /[㐀-鿿]/;
 function spineWidth(book: ShelfBook): number {
   if (!book.reading || maxSeconds === 0) return 40;
   return Math.round(34 + 26 * Math.sqrt(book.reading.seconds / maxSeconds));
+}
+
+/** Spine tint and front-face size, so the button covers the case it stands for */
+function caseStyle(category: BookCategory): string {
+  const { w, h } = CASE_SHAPES[category];
+  return `--spine: var(--shelf-${category}); --case-w: ${w}; --case-h: ${h};`;
+}
+
+function closeUpStyle(category: BookCategory): string {
+  const share = (CASE_SHAPES[category].w / WIDEST_CASE).toFixed(3);
+  return `--spine: var(--shelf-${category}); --case-share: ${share};`;
 }
 
 /** Cycled height, raised so the vertical title and the hours label both fit */
@@ -117,7 +131,7 @@ function spineHeight(book: ShelfBook, index: number): number {
             aria-label={`${CATEGORY_LABELS[category][locale]}, ${copy.count(books.length)}`}
             aria-controls={`case-${category}`}
             aria-expanded="false"
-            style={`--spine: var(--shelf-${category});`}
+            style={caseStyle(category)}
           >
             <StudyBookcase
               category={category}
@@ -139,7 +153,7 @@ function spineHeight(book: ShelfBook, index: number): number {
         id={`case-${category}`}
         data-case-view={category}
         aria-labelledby={`case-${category}-title`}
-        style={`--spine: var(--shelf-${category});`}
+        style={closeUpStyle(category)}
         hidden
       >
         <div class="case-head">
@@ -278,6 +292,12 @@ function spineHeight(book: ShelfBook, index: number): number {
       room.inert = false;
       button.setAttribute("aria-expanded", "false");
       button.focus({ preventScroll: true });
+      if (stage.getBoundingClientRect().top < 0) {
+        stage.scrollIntoView({
+          behavior: reduceMotion.matches ? "auto" : "smooth",
+          block: "start",
+        });
+      }
       timer = window.setTimeout(
         () => {
           view.hidden = true;
@@ -344,10 +364,12 @@ function spineHeight(book: ShelfBook, index: number): number {
   .room-stage {
     container: room / inline-size;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     overflow: hidden;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     background: var(--surface);
+    scroll-margin-top: var(--scroll-offset);
   }
 
   .room,
@@ -381,6 +403,8 @@ function spineHeight(book: ShelfBook, index: number): number {
   /*
    * Where each bookcase stands: x and z of its front face in room units, turned by --ry.
    * Tall cases line the back wall; the low cabinets sit forward, angled toward the middle.
+   * The button is as large as the case's front face, with its bottom centre on that spot,
+   * so its own box is the click target and carries the focus ring.
    */
   .case {
     --lift: 0;
@@ -389,8 +413,9 @@ function spineHeight(book: ShelfBook, index: number): number {
     position: absolute;
     left: 0;
     top: 0;
-    width: 0;
-    height: 0;
+    width: calc(var(--case-w) * var(--u));
+    height: calc(var(--case-h) * var(--u));
+    margin: calc(var(--case-h) * var(--u) * -1) 0 0 calc(var(--case-w) * var(--u) / -2);
     padding: 0;
     font: inherit;
     color: inherit;
@@ -404,7 +429,14 @@ function spineHeight(book: ShelfBook, index: number): number {
         calc((var(--z) + var(--lift)) * var(--u))
       )
       rotateY(calc(var(--ry) * 1deg));
+    transform-origin: 50% 100%;
     transition: transform 320ms var(--ease-out);
+  }
+
+  /* The drawn box keeps its origin at the bottom centre of the front face */
+  .case > :global(.box) {
+    left: 50%;
+    top: 100%;
   }
 
   .case[data-open-case="ideas"] {
@@ -463,7 +495,8 @@ function spineHeight(book: ShelfBook, index: number): number {
     }
   }
 
-  .case:hover {
+  .case:hover,
+  .case:focus-visible {
     --lift: 1.4;
   }
 
@@ -471,28 +504,31 @@ function spineHeight(book: ShelfBook, index: number): number {
     --lift: 0.5;
   }
 
-  .case:focus-visible {
-    outline: none;
-  }
-
-  /* Rings sit inside the front face; outside it they would hide behind the case's own sides */
-  .case:hover :global(.box-front),
-  .case:focus-visible :global(.box-front) {
+  /* Hover: a thin ring drawn on the door frame */
+  .case:hover :global(.box-front) {
     outline: 2px solid var(--accent);
     outline-offset: -2px;
   }
 
-  .case:focus-visible :global(.box-front) {
-    outline-width: 3px;
-    outline-offset: -3px;
+  /* Keyboard focus: a ring around the whole case, set off against the wall rather than the wood */
+  .case:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
   }
 
-  /* ── Close-up of one bookcase ── */
+  /*
+   * ── Close-up of one bookcase ──
+   * As wide relative to the stage as the case is relative to the widest one, and centred
+   * where the camera came to rest.
+   */
   .case-view {
     display: flex;
     flex-direction: column;
     gap: 0.9rem;
     align-self: start;
+    justify-self: center;
+    width: max(min(100%, 26rem), calc(var(--case-share) * 100%));
     padding: 1rem;
     opacity: 0;
     transform: scale(0.96) translateY(10px);
@@ -515,11 +551,12 @@ function spineHeight(book: ShelfBook, index: number): number {
       transform 420ms var(--ease-out) 520ms;
   }
 
+  /* Back button, title and legend share one line where it is wide enough */
   .case-head {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.35rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 1rem;
   }
 
   .case-back {
@@ -547,6 +584,7 @@ function spineHeight(book: ShelfBook, index: number): number {
 
   .case-title {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
     gap: 0.6rem;
     font-family: var(--font-heading);
@@ -556,12 +594,14 @@ function spineHeight(book: ShelfBook, index: number): number {
   }
 
   .case-count {
+    white-space: nowrap;
     font-size: 1.25rem;
     font-weight: 400;
     color: var(--fg-muted);
   }
 
   .case-legend {
+    flex: 1 1 18rem;
     font-size: var(--text-sm);
     color: var(--fg-muted);
   }
@@ -594,6 +634,35 @@ function spineHeight(book: ShelfBook, index: number): number {
     box-shadow:
       inset 0 0 0 1px var(--wood-line),
       0 -2px 0 var(--wood-top);
+  }
+
+  /*
+   * On narrow stages the case is one long shelf that pans sideways, so the close-up stays
+   * no taller than the room and the Back button stays in view.
+   */
+  @container room (max-width: 760px) {
+    .case-view {
+      width: 100%;
+    }
+
+    .case-shelf {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x proximity;
+      scrollbar-width: thin;
+      scrollbar-color: var(--wood-top) var(--wood-recess);
+      /* Headroom for ribbons and lifted spines, which the scroller would otherwise clip */
+      padding-top: 1rem;
+      background-position: 0 1rem;
+      background-size: 100% var(--row);
+      background-repeat: no-repeat;
+    }
+
+    .case-slot {
+      flex: none;
+      scroll-snap-align: start;
+    }
   }
 
   .case-slot {
@@ -675,7 +744,7 @@ function spineHeight(book: ShelfBook, index: number): number {
   .spine-hours {
     font-size: 1rem;
     line-height: 1;
-    color: var(--fg-muted);
+    color: var(--fg);
   }
 
   .spine-ribbon {

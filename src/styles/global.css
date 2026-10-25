@@ -95,6 +95,7 @@
   --nav-width:        960px;  /* Nav max-width */
   --wide-width:       960px;  /* Hobby sub-pages and other wide layouts */
   --container-pad:    1.5rem; /* Side padding */
+  --scroll-offset:    4.5rem; /* Clearance under the sticky header when scrolling to a section */
 
   /* Border radii */
   --radius-sm:   4px;
