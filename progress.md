@@ -73,7 +73,12 @@
 - [x] **Localized blog i18n** — posts now support EN/ZH routes, translation links, localized report chrome, and Chinese typography
 - [x] **Chinese report title tuning** — reduced oversized ZH hero title and switched report headings from serif to sans-serif typography
 
+- [x] **Humanize pass, step 1 (shell + homepage)** — warm paper palette with grain, Caveat hand font for notes, red 李根 name seal (`Seal.astro`), shared `HomePage.astro` for EN/ZH/DE with greeting, live Munich clock with "probably doing" status, "Lately" cards (edit `src/data/now.ts`), `SayHello.astro` contact card, nav seal logo + pen underline, footer sign-off
+
 ## Remaining Work
+
+- [ ] **Humanize pass, step 2** — carry the new style into About, Projects, Hobbies, and Posts pages
+- [ ] **Posters** — add poster content
 
 - [ ] **Lighthouse / performance audit** — run after content stabilises
 
@@ -109,6 +114,7 @@
 | `prefixDefaultLocale: false` for i18n | EN stays at `/`, ZH/DE get `/zh/`, `/de/` prefix — cleaner URLs for primary audience | 2026-03-21 |
 | Long content in page frontmatter (not JSON) | Bio paragraphs contain HTML links and are too long for JSON; locale-keyed objects in `.astro` frontmatter | 2026-03-21 |
 | Hobbies horizontal panels via CSS transform (not GSAP) | Delivers the panel-switching UX without a 25KB dependency; GSAP upgrade deferred to immersive spec | 2026-03-22 |
+| Notebook look: warm paper, ink, red pen | Humanize the site; red accent doubles as cycling red and correction pen | 2026-10-25 |
 | `CharacterCarousel` as a standalone Astro component | Shared between EN and ZH/DE hobbies pages; quotes are language-native, no translation needed | 2026-03-22 |
 
 ## Known Issues / Tech Debt
