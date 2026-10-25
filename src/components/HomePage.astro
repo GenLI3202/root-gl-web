@@ -4,6 +4,7 @@ import Seal from "@/components/Seal.astro";
 import HandIcon from "@/components/HandIcon.astro";
 import type { HandIconName } from "@/components/hand-icons";
 import SayHello from "@/components/SayHello.astro";
+import MunichClock from "@/components/MunichClock.astro";
 import { t, localizeUrl, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import { NOW_ITEMS, NOW_UPDATED } from "@/data/now";
 import { formatPostDate, getPostLabels, getPostUrl, getPostsForLocale } from "@/utils/posts";
@@ -17,17 +18,9 @@ interface HomeCopy {
   nameLine: string;
   intro: string;
   notebook: string;
-  clockFallback: string;
-  clockPrefix: string;
-  clockMiddle: string;
   lately: string;
   updated: string;
   sealNote: string;
-}
-
-interface ClockStatuses {
-  weekday: string[];
-  weekend: string[];
 }
 
 const { locale } = Astro.props;
@@ -49,9 +42,6 @@ const COPY: Record<Locale, HomeCopy> = {
       "uncertainty. On weekends I'm on a bike somewhere south of Munich.",
     notebook:
       "This site is my notebook: research notes, rides, books, and the occasional guitar evening.",
-    clockFallback: "Written from Munich, Germany.",
-    clockPrefix: "It's",
-    clockMiddle: "in Munich. I'm probably",
     lately: "Lately",
     updated: "updated",
     sealNote: "my name, stamped",
@@ -64,9 +54,6 @@ const COPY: Record<Locale, HomeCopy> = {
       "<span class='marker'>电池和充电桩</span>在不确定性下做更好的决策；" +
       "周末多半在慕尼黑以南的某条路上骑车。",
     notebook: "这个网站是我的笔记本：研究、骑行、读书，偶尔还有一晚吉他。",
-    clockFallback: "写于德国慕尼黑。",
-    clockPrefix: "慕尼黑现在是",
-    clockMiddle: "，我大概正在",
     lately: "最近",
     updated: "更新于",
     sealNote: "我的名章",
@@ -81,79 +68,9 @@ const COPY: Record<Locale, HomeCopy> = {
       "auf dem Rad.",
     notebook:
       "Diese Seite ist mein Notizbuch: Forschung, Ausfahrten, Bücher und ab und zu ein Gitarrenabend.",
-    clockFallback: "Geschrieben in München.",
-    clockPrefix: "In München ist es",
-    clockMiddle: ". Wahrscheinlich bin ich gerade",
     lately: "Gerade",
     updated: "aktualisiert",
     sealNote: "mein Namensstempel",
-  },
-};
-
-/*
- * Guesses for what Gen is doing, indexed by hour band in Munich time:
- * [0–6, 6–8, 8–12, 12–14, 14–18, 18–21, 21–24]
- */
-const CLOCK_STATUSES: Record<Locale, ClockStatuses> = {
-  en: {
-    weekday: [
-      "asleep (or should be).",
-      "out for an early ride along the Isar.",
-      "deep in a solver log.",
-      "at lunch, talking about electricity prices.",
-      "writing code or a paper draft.",
-      "on the bike, or reading.",
-      "playing guitar instead of answering email.",
-    ],
-    weekend: [
-      "asleep (or should be).",
-      "pumping up tyres for a group ride.",
-      "on a group ride somewhere south of Munich.",
-      "on a group ride somewhere south of Munich.",
-      "recovering from the ride with a book.",
-      "reading, or planning the next route.",
-      "playing guitar instead of answering email.",
-    ],
-  },
-  zh: {
-    weekday: [
-      "睡觉（或者应该在睡觉）。",
-      "沿着伊萨尔河晨骑。",
-      "盯着求解器的日志发呆。",
-      "吃午饭，顺便聊电价。",
-      "写代码，或者改论文。",
-      "骑车，或者看书。",
-      "弹吉他，邮件明天再回。",
-    ],
-    weekend: [
-      "睡觉（或者应该在睡觉）。",
-      "给轮胎打气，准备团骑。",
-      "在慕尼黑以南的某条路上团骑。",
-      "在慕尼黑以南的某条路上团骑。",
-      "骑完车，捧着书恢复体力。",
-      "看书，或者规划下一条路线。",
-      "弹吉他，邮件明天再回。",
-    ],
-  },
-  de: {
-    weekday: [
-      "am Schlafen (oder sollte es sein).",
-      "auf einer frühen Runde an der Isar.",
-      "tief in einem Solver-Log.",
-      "beim Mittagessen und rede über Strompreise.",
-      "am Programmieren oder an einem Paper.",
-      "auf dem Rad oder am Lesen.",
-      "an der Gitarre statt im Posteingang.",
-    ],
-    weekend: [
-      "am Schlafen (oder sollte es sein).",
-      "am Reifenaufpumpen für die Gruppenausfahrt.",
-      "auf einer Gruppenausfahrt südlich von München.",
-      "auf einer Gruppenausfahrt südlich von München.",
-      "mit einem Buch am Erholen.",
-      "am Lesen oder plane die nächste Route.",
-      "an der Gitarre statt im Posteingang.",
-    ],
   },
 };
 
@@ -252,17 +169,7 @@ function isExternal(href: string): boolean {
     <p class="hero-intro" set:html={copy.intro} />
     <p class="hero-notebook">{copy.notebook}</p>
 
-    <p
-      class="hero-clock"
-      data-munich-clock
-      data-locale={locale}
-      data-prefix={copy.clockPrefix}
-      data-middle={copy.clockMiddle}
-      data-statuses={JSON.stringify(CLOCK_STATUSES[locale])}
-    >
-      <span class="clock-dot" aria-hidden="true"></span>
-      <span class="clock-text">{copy.clockFallback}</span>
-    </p>
+    <MunichClock locale={locale} />
 
     <div class="hero-tags">
       {IDENTITY_TAGS[locale].map(({ icon, label, title, href }) => (
@@ -371,63 +278,6 @@ function isExternal(href: string): boolean {
 
 <SayHello locale={locale} />
 
-<script>
-  interface ClockStatuses {
-    weekday: string[];
-    weekend: string[];
-  }
-
-  const HOUR_BANDS = [6, 8, 12, 14, 18, 21, 24];
-  const DATE_LOCALES: Record<string, string> = { en: "en-GB", zh: "zh-CN", de: "de-DE" };
-  let clockTimer: number | undefined;
-
-  function bandIndex(hour: number): number {
-    return HOUR_BANDS.findIndex((limit) => hour < limit);
-  }
-
-  function renderClock(el: HTMLElement): void {
-    const locale = el.dataset.locale ?? "en";
-    const statuses = JSON.parse(el.dataset.statuses ?? "{}") as ClockStatuses;
-    const now = new Date();
-    const parts = new Intl.DateTimeFormat("en-GB", {
-      timeZone: "Europe/Berlin",
-      hour: "2-digit",
-      minute: "2-digit",
-      weekday: "short",
-      hour12: false,
-    }).formatToParts(now);
-    const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 12) % 24;
-    const weekday = parts.find((p) => p.type === "weekday")?.value ?? "Mon";
-    const isWeekend = weekday === "Sat" || weekday === "Sun";
-    const time = new Intl.DateTimeFormat(DATE_LOCALES[locale], {
-      timeZone: "Europe/Berlin",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }).format(now);
-    const list = isWeekend ? statuses.weekend : statuses.weekday;
-    const status = list?.[bandIndex(hour)] ?? "";
-    const text = el.querySelector(".clock-text");
-    if (!text) return;
-    const sep = locale === "zh" ? "" : " ";
-    const middle = el.dataset.middle ?? "";
-    const middleSep = middle.startsWith(".") || middle.startsWith("，") ? "" : sep;
-    text.innerHTML =
-      `${el.dataset.prefix}${sep}<strong>${time}</strong>${middleSep}${middle}${sep}${status}`;
-    el.classList.add("is-live");
-  }
-
-  function initClock(): void {
-    window.clearInterval(clockTimer);
-    const el = document.querySelector<HTMLElement>("[data-munich-clock]");
-    if (!el) return;
-    renderClock(el);
-    clockTimer = window.setInterval(() => renderClock(el), 30_000);
-  }
-
-  document.addEventListener("astro:page-load", initClock);
-</script>
-
 <style>
   /* ── Hero ── */
   .hero {
@@ -493,41 +343,6 @@ function isExternal(href: string): boolean {
     color: var(--fg-muted);
     max-width: 38rem;
     margin-bottom: 1.5rem;
-  }
-
-  .hero-clock {
-    display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
-    font-size: var(--text-sm);
-    color: var(--fg-muted);
-    margin-bottom: 1.75rem;
-  }
-
-  .hero-clock :global(strong) {
-    color: var(--fg);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .clock-dot {
-    position: relative;
-    top: -0.05rem;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    background: var(--border-dark);
-    flex-shrink: 0;
-  }
-
-  .hero-clock.is-live .clock-dot {
-    background: var(--accent);
-    animation: pulse 2.4s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 var(--accent-soft); }
-    50% { box-shadow: 0 0 0 0.35rem var(--accent-soft); }
   }
 
   .hero-tags {
