@@ -20,7 +20,7 @@ export const NOW_ITEMS: Record<Locale, NowItem[]> = {
     {
       icon: "battery",
       label: "Researching",
-      text: "Battery storage and site-level energy management. Still unpacking my Intersolar 2026 notes.",
+      text: "Local EMS in my PhD internship at Huawei. On the side: energy management for AI data-center campuses.",
       href: "/posts/intersolar-2026-ems-lems-insights/",
     },
     {
@@ -46,7 +46,7 @@ export const NOW_ITEMS: Record<Locale, NowItem[]> = {
     {
       icon: "battery",
       label: "在研究",
-      text: "储能与场站级能量管理。Intersolar 2026 的笔记还在慢慢消化。",
+      text: "在华为博士实习，做本地 EMS。另一个兴趣点：AI 数据中心园区的能量管理。",
       href: "/zh/posts/intersolar-2026-ems-lems-insights/",
     },
     {
@@ -72,7 +72,7 @@ export const NOW_ITEMS: Record<Locale, NowItem[]> = {
     {
       icon: "battery",
       label: "Forschung",
-      text: "Batteriespeicher und Energiemanagement auf Standortebene. Meine Intersolar-2026-Notizen sortiere ich noch.",
+      text: "Lokales EMS in meinem PhD-Praktikum bei Huawei. Daneben: Energiemanagement für KI-Rechenzentrumsparks.",
       href: "/posts/intersolar-2026-ems-lems-insights/",
     },
     {
