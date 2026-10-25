@@ -1,0 +1,184 @@
+---
+import type { SketchName } from "@/data/projects";
+
+/**
+ * Pen-sketch cover for a project card, drawn on a 200 × 120 canvas in the page ink colour.
+ * Uses the shared #hand-wobble filter from BaseLayout so lines look hand-drawn.
+ */
+interface Props {
+  name: SketchName;
+}
+
+const { name } = Astro.props;
+
+/** Hand-drawn circle: four Béziers that end slightly past the start */
+function circle(cx: number, cy: number, r: number): string {
+  const k = r * 0.56;
+  return (
+    `M${cx} ${cy - r} C${cx + k} ${cy - r} ${cx + r} ${cy - k} ${cx + r} ${cy} ` +
+    `C${cx + r} ${cy + k} ${cx + k} ${cy + r} ${cx} ${cy + r} ` +
+    `C${cx - k} ${cy + r} ${cx - r} ${cy + k} ${cx - r} ${cy} ` +
+    `C${cx - r} ${cy - k} ${cx - k} ${cy - r + 0.4} ${cx + 1} ${cy - r + 0.2}`
+  );
+}
+
+/** Map pin with its point at (x, y) */
+function pin(x: number, y: number): string {
+  return (
+    `M${x} ${y} C${x - 2} ${y - 5} ${x - 8} ${y - 9} ${x - 8} ${y - 15} ` +
+    `C${x - 8} ${y - 20} ${x - 4.4} ${y - 23} ${x} ${y - 23} ` +
+    `C${x + 4.4} ${y - 23} ${x + 8} ${y - 20} ${x + 8} ${y - 15} ` +
+    `C${x + 8} ${y - 9} ${x + 2} ${y - 5} ${x - 0.4} ${y + 0.4}`
+  );
+}
+
+interface Drawing {
+  ink: string[];
+  dashed?: string[];
+  accent?: string[];
+  labels?: { x: number; y: number; text: string }[];
+}
+
+const DRAWINGS: Record<SketchName, Drawing> = {
+  // LEMS: PV, battery container, charger and grid, coordinated by one EMS
+  site: {
+    ink: [
+      "M8 101 C60 99.6 140 101.4 192 99.8",
+      circle(26, 24, 7),
+      "M26 10 L26 13 M26 35 L26 38 M12 24 L15 24 M37 24 L40 24 M16 14 L18 16 M34 32 L36 34 M16 34 L18 32 M34 16 L36 14",
+      "M16 72 L56 63 L64 81 L24 90.4 L16.4 72.6",
+      "M29 69.2 L37 87.4 M42 66.2 L50 84.4 M20 81 L60 72",
+      "M30 89 L30 100 M58 80 L58 100",
+      "M76 61.6 C94 61.2 114 61.4 130 62 L130 100 M76 62 L76 100.4",
+      "M86 67 L86.4 95 M96 67 L96 95.4 M110 67 L110.2 95 M120 67 L120.4 95",
+      "M100 70 L96.6 79 L101 79 L98.6 88",
+      "M146 100 L146 67 C146 63.6 148 62 151 62 L158 62 C161 62 162.4 64 162.4 67 L162.6 100",
+      "M149.4 67.4 L159 67.2 L159.2 75.4 L149.6 75.6 L149.4 67",
+      "M162.6 80 C172 82 172 92 179 92.6",
+      "M178 100 L183 66 L188 100 M180 82 L186 82 M179 92 L187.4 91.6 M183 66 L183 60",
+      "M84 12 C94 11.4 106 11.6 116 12.2 L116.2 32 C106 32.6 94 32.4 84.2 32 L84 11.6",
+    ],
+    dashed: [
+      "M90 32.4 C78 40 58 48 42 64",
+      "M100 32.6 C100.4 42 101 52 102 60",
+      "M110 32.4 C124 40 142 50 153 61",
+      "M114 30 C140 36 168 46 182 60",
+    ],
+    labels: [{ x: 100, y: 27, text: "EMS" }],
+  },
+  // EV charging siting: a folded map, roads, and candidate sites
+  map: {
+    ink: [
+      "M20 22 L70 13.6 L130 24 L180 15.4 L180.4 98 L130 106.4 L70 96 L20.4 104.4 L20 21.4",
+      "M70 14 L70.4 96 M130 24 L130.2 106",
+      "M24 72 C50 61 80 77 110 59 C134 45 160 61 178 49",
+      "M58 28 C68 48 76 70 72 98",
+      "M120 98 C126 84 140 82 150 90 C158 96 168 92 176 84",
+      pin(52, 58),
+      pin(150, 74),
+    ],
+    accent: [pin(110, 48), "M111.4 27 L107.6 34 L111 34 L108.8 40"],
+  },
+  // Multi-objective decisions: a Pareto front with one chosen trade-off
+  pareto: {
+    ink: [
+      "M30 102 L30.4 16 M26.4 20 L30.4 15 L34 20.4",
+      "M30 102 L182 101.4 M177 97.6 L182.4 101.4 L177.4 105",
+      "M44 28 C58 66 104 86 170 92",
+      circle(50, 43, 2.2),
+      circle(62, 61, 2.2),
+      circle(100, 80, 2.2),
+      circle(132, 87.6, 2.2),
+      circle(160, 91, 2.2),
+      circle(118, 52, 2.2),
+      circle(146, 62, 2.2),
+      circle(88, 40, 2.2),
+    ],
+    accent: [circle(80, 72, 3), "M80 61 C70 61.4 66 66 69 72 C72 79 86 81 91 74 C95 68 90 61 79 61.6"],
+  },
+  // Club rides: a bike, the route, and the flag at the café stop
+  ride: {
+    ink: [
+      circle(66, 84, 17),
+      circle(132, 84, 17),
+      "M66 84 L84 56 L118 57 L132 84",
+      "M84 56 L100 84.4 L118 57",
+      "M79 50 C82 49.4 86 49.4 89 49.8",
+      "M118 57 L114 46 C118 44 122 44.4 125 46.6",
+      "M10 108 C40 106 58 110 90 107 C120 104 150 108 190 104",
+      "M160 26 L160.4 58",
+    ],
+    accent: ["M160 26 L178 31 L160.2 36.6"],
+    dashed: ["M14 40 C40 30 70 44 96 30 C118 18 140 28 158 30"],
+  },
+  // This website: a browser window with the name seal
+  browser: {
+    ink: [
+      "M28 20 C80 19.4 130 19.6 172 20.4 L172.4 100 C130 100.6 80 100.4 28.4 100 L28 19.6",
+      "M28.4 34 L172 33.6",
+      circle(38, 27, 2.2),
+      circle(46, 27, 2.2),
+      circle(54, 27, 2.2),
+      "M42 48 L112 47.4",
+      "M42 60 L124 59.6 M42 70 L118 70.4 M42 80 L102 79.6",
+    ],
+    accent: ["M140 46 L156.4 45.6 L156.6 67.6 L140.2 68 L140 45.4"],
+  },
+};
+
+const drawing = DRAWINGS[name];
+---
+
+<svg class="project-sketch" viewBox="0 0 200 120" aria-hidden="true">
+  <g class="sketch-ink">
+    {drawing.ink.map((d) => <path d={d} />)}
+    {drawing.dashed?.map((d) => <path class="dashed" d={d} />)}
+  </g>
+  {drawing.accent && (
+    <g class="sketch-accent">
+      {drawing.accent.map((d) => <path d={d} />)}
+    </g>
+  )}
+  {drawing.labels?.map((l) => (
+    <text class="sketch-label" x={l.x} y={l.y} text-anchor="middle">{l.text}</text>
+  ))}
+</svg>
+
+<style>
+  .project-sketch {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    filter: url(#hand-wobble);
+  }
+
+  .sketch-ink,
+  .sketch-accent {
+    fill: none;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .sketch-ink {
+    stroke: var(--fg);
+  }
+
+  .sketch-accent {
+    stroke: var(--accent);
+    stroke-width: 1.9;
+  }
+
+  .dashed {
+    stroke-dasharray: 3 4;
+    opacity: 0.7;
+  }
+
+  .sketch-label {
+    font-family: var(--font-hand);
+    font-size: 13px;
+    font-weight: 700;
+    fill: var(--accent);
+  }
+</style>
