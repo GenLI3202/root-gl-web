@@ -1,0 +1,480 @@
+---
+import type { Locale } from "@/i18n";
+import { BOOKS, CATEGORY_LABELS, CATEGORY_ORDER, type BookCategory } from "@/data/books";
+import { CHARACTERS } from "@/data/characters";
+
+interface Props {
+  locale: Locale;
+}
+
+interface ShelfCopy {
+  heading: string;
+  lately: string;
+  all: string;
+  recent: string;
+  people: string;
+  notes: string;
+  filterLabel: string;
+}
+
+const { locale } = Astro.props;
+
+const COPY: Record<Locale, ShelfCopy> = {
+  en: {
+    heading: "On my shelf",
+    lately: "lately: how politics and economies work in real life",
+    all: "All",
+    recent: "Recently read",
+    people: "People in it",
+    notes: "Reading notes",
+    filterLabel: "Filter books by category",
+  },
+  zh: {
+    heading: "书架",
+    lately: "最近在读：现实里的政治和经济",
+    all: "全部",
+    recent: "最近读的",
+    people: "书里的人",
+    notes: "读后感",
+    filterLabel: "按类别筛选书籍",
+  },
+  de: {
+    heading: "Im Regal",
+    lately: "gerade: wie Politik und Wirtschaft wirklich funktionieren",
+    all: "Alle",
+    recent: "Kürzlich gelesen",
+    people: "Figuren",
+    notes: "Lesenotizen",
+    filterLabel: "Bücher nach Kategorie filtern",
+  },
+};
+
+// Spine heights cycle so the shelf looks hand-stacked, not uniform
+const SPINE_HEIGHTS = [150, 134, 158, 140, 128, 152, 138];
+
+const copy = COPY[locale];
+const counts = Object.fromEntries(
+  CATEGORY_ORDER.map((c) => [c, BOOKS.filter((b) => b.category === c).length])
+) as Record<BookCategory, number>;
+const firstId = (BOOKS.find((b) => b.recent) ?? BOOKS[0]).id;
+
+const CJK = /[\u3400-\u9fff]/;
+
+function characterName(id: string): string {
+  const character = CHARACTERS.find((c) => c.id === id);
+  if (!character) return id;
+  return locale === "zh" ? character.name : character.nameEn;
+}
+---
+
+<section class="bookshelf" data-bookshelf aria-labelledby="bookshelf-heading">
+  <header class="shelf-header">
+    <h3 class="shelf-heading" id="bookshelf-heading">{copy.heading}</h3>
+    <span class="shelf-lately hand">{copy.lately}</span>
+  </header>
+
+  <div class="shelf-filters" role="group" aria-label={copy.filterLabel}>
+    <button type="button" class="filter-chip" data-filter="all" aria-pressed="true">
+      {copy.all} <span class="filter-count">{BOOKS.length}</span>
+    </button>
+    {CATEGORY_ORDER.map((category) => (
+      <button
+        type="button"
+        class="filter-chip"
+        data-filter={category}
+        aria-pressed="false"
+        style={`--spine: var(--shelf-${category});`}
+      >
+        {CATEGORY_LABELS[category][locale]}
+        <span class="filter-count">{counts[category]}</span>
+      </button>
+    ))}
+  </div>
+
+  <div class="shelf">
+    <ul class="spines" role="list">
+      {BOOKS.map((book, i) => (
+        <li class="spine-item" data-category={book.category}>
+          <button
+            type="button"
+            class="spine"
+            data-book={book.id}
+            aria-pressed={book.id === firstId ? "true" : "false"}
+            aria-controls={`book-${book.id}`}
+            style={`--spine: var(--shelf-${book.category}); --spine-h: ${SPINE_HEIGHTS[i % SPINE_HEIGHTS.length]}px;`}
+          >
+            {book.recent && <span class="spine-ribbon" aria-hidden="true"></span>}
+            <span class="spine-title" lang={CJK.test(book.title) ? "zh" : undefined}>
+              {book.title}
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <div class="book-details" aria-live="polite">
+    {BOOKS.map((book) => (
+      <article
+        class="book-detail"
+        id={`book-${book.id}`}
+        data-book-panel={book.id}
+        hidden={book.id !== firstId}
+      >
+        <div class="detail-meta">
+          <span class="detail-category" style={`--spine: var(--shelf-${book.category});`}>
+            {CATEGORY_LABELS[book.category][locale]}
+          </span>
+          {book.recent && <span class="detail-recent">{copy.recent}</span>}
+        </div>
+        <h4 class="detail-title">
+          {book.title}
+          {book.titleEn !== book.title && <span class="detail-title-en">{book.titleEn}</span>}
+        </h4>
+        <p class="detail-author">{book.author}</p>
+        <p class="detail-about">{book.about[locale]}</p>
+
+        {book.characters && (
+          <div class="detail-people">
+            <span class="detail-label">{copy.people}</span>
+            {book.characters.map((id) => (
+              <button type="button" class="person-chip" data-goto-character={id}>
+                {characterName(id)}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {book.notes?.[locale] && (
+          <div class="detail-notes">
+            <span class="detail-label">{copy.notes}</span>
+            {book.notes[locale]!.map((paragraph) => <p>{paragraph}</p>)}
+          </div>
+        )}
+      </article>
+    ))}
+  </div>
+</section>
+
+<script>
+  function initBookshelf(): void {
+    const root = document.querySelector<HTMLElement>("[data-bookshelf]");
+    if (!root) return;
+
+    const spines = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-book]"));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>("[data-book-panel]"));
+    const chips = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-filter]"));
+
+    function select(id: string): void {
+      spines.forEach((s) => s.setAttribute("aria-pressed", String(s.dataset.book === id)));
+      panels.forEach((p) => (p.hidden = p.dataset.bookPanel !== id));
+    }
+
+    function filter(category: string): void {
+      chips.forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.filter === category)));
+      spines.forEach((s) => {
+        const item = s.parentElement as HTMLElement;
+        item.hidden = category !== "all" && item.dataset.category !== category;
+      });
+      const active = spines.find((s) => s.getAttribute("aria-pressed") === "true");
+      if (!active || (active.parentElement as HTMLElement).hidden) {
+        const firstVisible = spines.find((s) => !(s.parentElement as HTMLElement).hidden);
+        if (firstVisible?.dataset.book) select(firstVisible.dataset.book);
+      }
+    }
+
+    spines.forEach((s) => s.addEventListener("click", () => s.dataset.book && select(s.dataset.book)));
+    chips.forEach((c) => c.addEventListener("click", () => filter(c.dataset.filter ?? "all")));
+
+    root.querySelectorAll<HTMLButtonElement>("[data-goto-character]").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const carousel = document.querySelector<HTMLElement>("[data-carousel]");
+        if (!carousel) return;
+        carousel.dispatchEvent(
+          new CustomEvent("carousel:goto", { detail: chip.dataset.gotoCharacter })
+        );
+        carousel.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+  }
+
+  document.addEventListener("astro:page-load", initBookshelf);
+</script>
+
+<style>
+  .bookshelf {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .shelf-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 1rem;
+  }
+
+  .shelf-heading {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-weight: 600;
+  }
+
+  .shelf-lately {
+    font-size: 1.15rem;
+    transform: rotate(-1.5deg);
+  }
+
+  /* ── Filters ── */
+  .shelf-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font: inherit;
+    font-size: var(--text-xs);
+    font-weight: 500;
+    padding: 0.25rem 0.7rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border-dark);
+    background: var(--spine, var(--surface));
+    color: var(--fg-muted);
+    cursor: pointer;
+    transition: border-color var(--transition), color var(--transition);
+  }
+
+  .filter-chip:hover {
+    border-color: var(--fg-muted);
+    color: var(--fg);
+  }
+
+  .filter-chip[aria-pressed="true"] {
+    border-color: var(--fg);
+    color: var(--fg);
+    box-shadow: inset 0 0 0 1px var(--fg);
+  }
+
+  .filter-count {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+  }
+
+  /* ── Shelf and spines ── */
+  .shelf {
+    overflow-x: auto;
+    padding-top: 1.25rem;
+    scrollbar-width: thin;
+  }
+
+  .spines {
+    list-style: none;
+    display: flex;
+    align-items: flex-end;
+    gap: 0.3rem;
+    min-height: 175px;
+    padding-inline: 0.5rem;
+    border-bottom: 3px solid var(--fg);
+    border-radius: 0 0 2px 2px;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .spine-item[hidden] {
+    display: none;
+  }
+
+  .spine {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    width: 2.6rem;
+    height: var(--spine-h);
+    padding: 0.8rem 0 0.6rem;
+    background: var(--spine);
+    border: 1.5px solid var(--fg);
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    color: var(--fg);
+    cursor: pointer;
+    transition: transform 300ms var(--ease-out), box-shadow 300ms var(--ease-out);
+  }
+
+  /* Two thin bands near the top and bottom, like printed spine decoration */
+  .spine::before,
+  .spine::after {
+    content: "";
+    position: absolute;
+    left: 0.35rem;
+    right: 0.35rem;
+    height: 0;
+    border-top: 1px solid var(--fg);
+    opacity: 0.35;
+  }
+
+  .spine::before {
+    top: 0.4rem;
+  }
+
+  .spine::after {
+    bottom: 0.4rem;
+  }
+
+  .spine:hover {
+    transform: translateY(-4px);
+  }
+
+  .spine[aria-pressed="true"] {
+    transform: translateY(-14px) rotate(-2deg);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .spine-title {
+    writing-mode: vertical-rl;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+
+  .spine-title:lang(zh) {
+    font-family: var(--font-cjk);
+    letter-spacing: 0.2em;
+  }
+
+  .spine-ribbon {
+    position: absolute;
+    top: -0.9rem;
+    right: 0.45rem;
+    width: 0.45rem;
+    height: 1.6rem;
+    background: var(--accent);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+  }
+
+  /* ── Detail card ── */
+  .book-detail {
+    padding: 1.1rem 1.25rem 1.25rem;
+    background: var(--bg);
+    border: 1.5px solid var(--border-dark);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .book-detail[hidden] {
+    display: none;
+  }
+
+  .detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .detail-category,
+  .detail-recent {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--radius-pill);
+  }
+
+  .detail-category {
+    background: var(--spine);
+    color: var(--fg);
+  }
+
+  .detail-recent {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .detail-title {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    line-height: 1.25;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.6rem;
+  }
+
+  .detail-title-en {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--fg-muted);
+  }
+
+  .detail-author {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+  }
+
+  .detail-about {
+    font-size: var(--text-base);
+    line-height: 1.65;
+  }
+
+  .detail-label {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+
+  .detail-people {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--border-dark);
+  }
+
+  .detail-people .detail-label {
+    margin-right: 0.25rem;
+  }
+
+  .person-chip {
+    font: inherit;
+    font-size: var(--text-sm);
+    padding: 0.15rem 0.65rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border-dark);
+    background: var(--surface);
+    color: var(--fg);
+    cursor: pointer;
+    transition: border-color var(--transition), color var(--transition);
+  }
+
+  .person-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .detail-notes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--border-dark);
+  }
+
+  .detail-notes p {
+    font-size: var(--text-base);
+    line-height: 1.75;
+  }
+</style>

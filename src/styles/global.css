@@ -37,6 +37,12 @@
   /* Paper grain overlay */
   --grain-opacity: 0.35;
 
+  /* Bookshelf spines, one muted tint per category */
+  --shelf-polecon:    #EAD2CC;
+  --shelf-wuxia:      #E8D8C3;
+  --shelf-scifi:      #D3DCE2;
+  --shelf-literature: #D9E2D0;
+
   /* Typography */
   --font-heading: "Playfair Display", Georgia, serif;
   --font-body:    "Inter", system-ui, -apple-system, sans-serif;
@@ -97,6 +103,11 @@
   --border-dark:  #403A30;
 
   --grain-opacity: 0.18;
+
+  --shelf-polecon:    #3B2B28;
+  --shelf-wuxia:      #3A3127;
+  --shelf-scifi:      #2B3238;
+  --shelf-literature: #2E3529;
 
   --shadow-sm:    0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
