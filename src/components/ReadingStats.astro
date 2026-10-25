@@ -6,7 +6,8 @@ import { seeded, sketchCurve, sketchRect, sketchSegment, type Point } from "@/ut
 /**
  * Reading numbers from WeChat Reading: headline counts, hours per year as a pen-drawn
  * curve, and reading time by hour of day as pen-drawn columns. Each chart has a hover and
- * focus tooltip per year or hour, and a table with the same numbers.
+ * focus tooltip per year or hour, and a table with the same numbers. A chart is one tab stop;
+ * arrow keys, Home and End move between its years or hours.
  */
 interface Props {
   locale: Locale;
@@ -253,7 +254,7 @@ const hourRange = (hour: number): string => `${pad2(hour)}:00–${pad2((hour + 1
           {years.map((y, i) => (
             <g
               class="hit"
-              tabindex="0"
+              tabindex={i === 0 ? "0" : "-1"}
               role="img"
               aria-label={`${y.year}: ${y.hours} h`}
               data-tip={`${y.year} · ${y.hours} h${partial && i === lastIndex ? ` ${copy.soFar}` : ""}`}
@@ -302,10 +303,10 @@ const hourRange = (hour: number): string => `${pad2(hour)}:00–${pad2((hour + 1
               <text class="axis-label" x={b.x + b.w / 2} y={HH - 10} text-anchor="middle">{b.hour}:00</text>
             ) : null
           )}
-          {hourBars.map((b) => (
+          {hourBars.map((b, i) => (
             <g
               class="hit"
-              tabindex="0"
+              tabindex={i === 0 ? "0" : "-1"}
               role="img"
               aria-label={`${hourRange(b.hour)}: ${b.hours} h`}
               data-tip={`${hourRange(b.hour)} · ${b.hours} h`}
@@ -350,11 +351,30 @@ const hourRange = (hour: number): string => `${pad2(hour)}:00–${pad2((hour + 1
         tip.hidden = true;
       };
 
-      figure.querySelectorAll<SVGGElement>("[data-tip]").forEach((target) => {
+      const targets = Array.from(figure.querySelectorAll<SVGGElement>("[data-tip]"));
+      const KEY_STEPS: Record<string, (i: number) => number> = {
+        ArrowRight: (i) => Math.min(targets.length - 1, i + 1),
+        ArrowDown: (i) => Math.min(targets.length - 1, i + 1),
+        ArrowLeft: (i) => Math.max(0, i - 1),
+        ArrowUp: (i) => Math.max(0, i - 1),
+        Home: () => 0,
+        End: () => targets.length - 1,
+      };
+
+      targets.forEach((target, index) => {
         target.addEventListener("pointerenter", () => show(target));
         target.addEventListener("focus", () => show(target));
         target.addEventListener("pointerleave", hide);
         target.addEventListener("blur", hide);
+        // Roving focus: the point last visited is the chart's one tab stop
+        target.addEventListener("keydown", (event) => {
+          const step = KEY_STEPS[event.key];
+          if (!step) return;
+          event.preventDefault();
+          const next = targets[step(index)];
+          targets.forEach((t) => t.setAttribute("tabindex", t === next ? "0" : "-1"));
+          next.focus();
+        });
       });
     });
   }
@@ -393,6 +413,13 @@ const hourRange = (hour: number): string => `${pad2(hour)}:00–${pad2((hour + 1
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
     gap: 1rem;
+  }
+
+  /* Where the tiles wrap two by two, total hours takes the whole first row */
+  @media (max-width: 40rem) {
+    .tile:first-child {
+      grid-column: 1 / -1;
+    }
   }
 
   .tile {
@@ -463,6 +490,18 @@ const hourRange = (hour: number): string => `${pad2(hour)}:00–${pad2((hour + 1
 
   .chart-svg .axis-label {
     fill: var(--fg-muted);
+  }
+
+  /* On a phone the charts shrink to about three quarters, so labels are drawn larger */
+  @media (max-width: 30rem) {
+    .grid text,
+    .axis-label {
+      font-size: 21px;
+    }
+
+    .chart-svg .note {
+      font-size: 23px;
+    }
   }
 
   .hatch-line {
