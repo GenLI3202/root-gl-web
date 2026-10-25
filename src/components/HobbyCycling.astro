@@ -31,6 +31,8 @@ interface CyclingCopy {
   mapLabel: string;
   mapLoading: string;
   mapError: string;
+  mapStyleLabel: string;
+  mapStyles: Record<"paper" | "clean" | "cycling" | "terrain" | "satellite", string>;
   mapHint: string;
   bigTitle: string;
   days: (n: number) => string;
@@ -63,12 +65,14 @@ const COPY: Record<Locale, CyclingCopy> = {
     noTargets: "No targets, no streaks. Just rides.",
     mapTitle: "Where the wheels have been",
     mapCaption: (year) =>
-      `Every outdoor ride with a GPS track since ${year}, on OpenStreetMap. Hover a line for its date. The first and last 500 m of every ride are left out.`,
+      `Every outdoor ride with a GPS track since ${year}, on OpenStreetMap-based maps. Hover a line for its date. The first and last 500 m of every ride are left out.`,
     mapAll: "All years",
     mapFilter: "Show rides from",
     mapLabel: "Map of my rides",
     mapLoading: "Unfolding the map…",
     mapError: "The map could not be loaded.",
+    mapStyleLabel: "Map style",
+    mapStyles: { paper: "Paper", clean: "Clean", cycling: "Cycling", terrain: "Terrain", satellite: "Satellite" },
     mapHint: "On a phone, move the map with two fingers.",
     bigTitle: "Days worth remembering",
     days: (n) => (n === 1 ? "1 day" : `${n} days`),
@@ -97,12 +101,14 @@ const COPY: Record<Locale, CyclingCopy> = {
     noTargets: "没有目标，没有连续打卡，只有骑行。",
     mapTitle: "车轮到过的地方",
     mapCaption: (year) =>
-      `${year} 年以来每一次带 GPS 轨迹的户外骑行，画在 OpenStreetMap 上。悬停在线上可以看日期。每次骑行的起点和终点各 500 米已省略。`,
+      `${year} 年以来每一次带 GPS 轨迹的户外骑行，画在基于 OpenStreetMap 的地图上。悬停在线上可以看日期。每次骑行的起点和终点各 500 米已省略。`,
     mapAll: "全部年份",
     mapFilter: "按年份显示",
     mapLabel: "骑行路线地图",
     mapLoading: "地图展开中…",
     mapError: "地图加载失败。",
+    mapStyleLabel: "地图风格",
+    mapStyles: { paper: "纸本", clean: "简洁", cycling: "骑行", terrain: "地形", satellite: "卫星" },
     mapHint: "手机上请用两根手指移动地图。",
     bigTitle: "值得记住的日子",
     days: (n) => `${n} 天`,
@@ -131,12 +137,14 @@ const COPY: Record<Locale, CyclingCopy> = {
     noTargets: "Keine Ziele, keine Serien. Nur Fahrten.",
     mapTitle: "Wo die Räder waren",
     mapCaption: (year) =>
-      `Jede Außenfahrt mit GPS-Spur seit ${year}, auf OpenStreetMap. Linie anfahren für das Datum. Die ersten und letzten 500 m jeder Fahrt fehlen.`,
+      `Jede Außenfahrt mit GPS-Spur seit ${year}, auf OpenStreetMap-Karten. Linie anfahren für das Datum. Die ersten und letzten 500 m jeder Fahrt fehlen.`,
     mapAll: "Alle Jahre",
     mapFilter: "Fahrten anzeigen aus",
     mapLabel: "Karte meiner Fahrten",
     mapLoading: "Karte wird aufgefaltet …",
     mapError: "Die Karte konnte nicht geladen werden.",
+    mapStyleLabel: "Kartenstil",
+    mapStyles: { paper: "Papier", clean: "Klar", cycling: "Rad", terrain: "Gelände", satellite: "Satellit" },
     mapHint: "Am Handy die Karte mit zwei Fingern bewegen.",
     bigTitle: "Tage, die bleiben",
     days: (n) => (n === 1 ? "1 Tag" : `${n} Tage`),
@@ -215,6 +223,8 @@ const tableRows = data
           label: copy.mapLabel,
           loading: copy.mapLoading,
           error: copy.mapError,
+          styleLabel: copy.mapStyleLabel,
+          styles: copy.mapStyles,
         }}
       />
       <p class="touch-hint">{copy.mapHint}</p>

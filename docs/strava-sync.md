@@ -81,10 +81,21 @@ rides from the front door) are drawn as the postcard sketch and as thicker lines
 the map. Postcards show without a sketch until the first sync has written routes, and the map
 section appears once `cycling-routes.json` has routes.
 
-The map loads Leaflet and the routes when it scrolls into view. Tiles come from
-`tile.openstreetmap.org`, which asks for attribution (shown) and light use; for a personal page
-that is fine. If traffic grows, switch `TILE_URL` in `CyclingMap.astro` to a hosted provider. Tile
-requests send the visitor's IP address to the tile server.
+The map loads Leaflet and the routes when it scrolls into view. The reader can switch between five
+styles and the choice is remembered in the browser:
+
+| Style | Tiles |
+|-------|-------|
+| Paper (default) | OpenStreetMap standard tiles, muted and warmed with a CSS filter; inverted in the dark theme |
+| Clean | Esri light or dark gray canvas with labels |
+| Cycling | CyclOSM |
+| Terrain | OpenTopoMap |
+| Satellite | Esri World Imagery |
+
+The sources are listed in `TILE_STYLES` in `CyclingMap.astro`; every style shows its attribution on the
+map. All of them are free without a key and meant for light use, which a personal page is. CARTO's
+basemaps now need an API key and are not used. If traffic grows, move to a hosted provider with its
+own key. Tile requests send the visitor's IP address to the tile server.
 
 "Today" on the page is the date of the latest ride in the data. Ride-length buckets
 (< 30, 30–60, 60–100, 100+ km) are defined in `LENGTH_BUCKET_MAX` and `BUCKET_LABELS` in
