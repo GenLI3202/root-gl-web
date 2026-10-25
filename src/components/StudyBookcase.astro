@@ -1,0 +1,356 @@
+---
+import Box3d from "@/components/Box3d.astro";
+import type { BookCategory } from "@/data/books";
+import type { ShelfBook } from "@/data/library";
+import { seeded, seedOf, sketchRect, sketchSegment } from "@/utils/sketch";
+
+/**
+ * One rosewood bookcase in the study, drawn as a 3D box. The front face is an ink drawing:
+ * a cornice, open shelves whose spines grow thicker with reading hours (red tag = read in the
+ * last 30 days), and cabinet doors that carry the category name and book count. Shelves left
+ * over hold a vase or a scholar's stone; a low cabinet can carry an orchid on top.
+ */
+export interface CaseShape {
+  /** Width, height and depth in room units */
+  w: number;
+  h: number;
+  d: number;
+}
+
+interface Props {
+  category: BookCategory;
+  books: ShelfBook[];
+  /** Longest reading time on the whole shelf, for scaling spine thickness */
+  maxSeconds: number;
+  shape: CaseShape;
+  label: string;
+  count: string;
+  orchid?: boolean;
+}
+
+interface Compartment {
+  x: number;
+  top: number;
+  bottom: number;
+  width: number;
+}
+
+interface Spine {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  recent: boolean;
+}
+
+const { category, books, maxSeconds, shape, label, count, orchid = false } = Astro.props;
+const rand = seeded(seedOf(`study-${category}`));
+
+/** SVG units per room unit */
+const S = 10;
+const W = shape.w * S;
+const H = shape.h * S;
+const LOW = shape.h < 24;
+const CORNICE = LOW ? 16 : 22;
+const BASE = LOW ? 76 : 112;
+const STILE = 13;
+const BOARD = 7;
+const GAP = 1.4;
+const ROW_TARGET = 74;
+
+const shelfTop = CORNICE;
+const shelfBottom = H - BASE;
+const rows = Math.max(1, Math.round((shelfBottom - shelfTop) / ROW_TARGET));
+const rowHeight = (shelfBottom - shelfTop) / rows;
+
+const compartments: Compartment[] = Array.from({ length: rows }, (_, r) => ({
+  x: STILE,
+  top: shelfTop + r * rowHeight + (r === 0 ? 0 : BOARD),
+  bottom: shelfTop + (r + 1) * rowHeight,
+  width: W - 2 * STILE,
+}));
+
+function thickness(book: ShelfBook): number {
+  if (!book.reading || maxSeconds === 0) return 8;
+  return 5.5 + 8.5 * Math.sqrt(book.reading.seconds / maxSeconds);
+}
+
+const spines: Spine[] = [];
+let row = 0;
+let x = STILE + 3;
+for (const book of books) {
+  const w = thickness(book);
+  if (x + w > W - STILE - 3) {
+    row += 1;
+    x = STILE + 3;
+  }
+  if (row >= compartments.length) break;
+  const { top, bottom } = compartments[row];
+  const room = bottom - top;
+  const h = Math.min(room - 7, room * (0.66 + rand() * 0.24));
+  spines.push({ x, y: bottom - h, w, h, recent: book.recent });
+  x += w + GAP;
+}
+
+const usedRows = spines.length ? row + 1 : 0;
+const spare = compartments.slice(usedRows);
+const vaseShelf = spare[0];
+const stoneShelf = spare[1];
+
+const r1 = (n: number): number => Math.round(n * 10) / 10;
+const seg = (x1: number, y1: number, x2: number, y2: number, wobble = 0.6): string =>
+  sketchSegment([x1, y1], [x2, y2], rand, wobble);
+
+const doorTop = H - BASE + BOARD;
+const doorGap = 4;
+const doorW = (W - 2 * STILE - doorGap) / 2;
+const doors = [STILE, STILE + doorW + doorGap];
+
+const ink: string[] = [
+  sketchRect(0, 0, W, H, rand, 0.8),
+  seg(0, CORNICE * 0.42, W, CORNICE * 0.42, 0.5),
+  ...compartments.map((c) => sketchRect(c.x, c.top, c.width, c.bottom - c.top, rand, 0.5)),
+  ...spines.map((s) => sketchRect(s.x, s.y, s.w, s.h, rand, 0.35)),
+  ...doors.map((dx) => sketchRect(dx, doorTop, doorW, BASE - BOARD - 10, rand, 0.5)),
+];
+
+/** Meiping vase: narrow foot, full shoulder, small mouth */
+function vasePath(c: Compartment): string {
+  const cx = c.x + c.width * 0.5;
+  const b = c.bottom;
+  const hgt = Math.min(48, (c.bottom - c.top) * 0.72);
+  const s = hgt / 48;
+  return [
+    `M${r1(cx - 6 * s)} ${r1(b)}`,
+    `C${r1(cx - 4 * s)} ${r1(b - 16 * s)} ${r1(cx - 16 * s)} ${r1(b - 30 * s)}`,
+    `${r1(cx - 9 * s)} ${r1(b - 40 * s)}`,
+    `L${r1(cx - 4 * s)} ${r1(b - 44 * s)} L${r1(cx - 4 * s)} ${r1(b - 48 * s)}`,
+    `L${r1(cx + 4 * s)} ${r1(b - 48 * s)} L${r1(cx + 4 * s)} ${r1(b - 44 * s)}`,
+    `L${r1(cx + 9 * s)} ${r1(b - 40 * s)}`,
+    `C${r1(cx + 16 * s)} ${r1(b - 30 * s)} ${r1(cx + 4 * s)} ${r1(b - 16 * s)}`,
+    `${r1(cx + 6 * s)} ${r1(b)} Z`,
+  ].join(" ");
+}
+
+/** Scholar's stone on a low stand */
+function stonePath(c: Compartment): string {
+  const cx = c.x + c.width * 0.42;
+  const b = c.bottom - 5;
+  return [
+    `M${r1(cx - 10)} ${r1(b)}`,
+    `C${r1(cx - 14)} ${r1(b - 12)} ${r1(cx - 4)} ${r1(b - 14)} ${r1(cx - 6)} ${r1(b - 24)}`,
+    `C${r1(cx - 2)} ${r1(b - 30)} ${r1(cx + 8)} ${r1(b - 22)} ${r1(cx + 5)} ${r1(b - 14)}`,
+    `C${r1(cx + 12)} ${r1(b - 10)} ${r1(cx + 12)} ${r1(b - 3)} ${r1(cx + 9)} ${r1(b)} Z`,
+  ].join(" ");
+}
+
+const shadeId = `case-shade-${category}`;
+/** Door pulls sit beside the centre gap */
+const pulls = [doors[0] + doorW - 6, doors[1] + 6];
+const ribbons = spines
+  .filter((s) => s.recent)
+  .map((s) => `M${r1(s.x + s.w * 0.68)} ${r1(s.y - 3)} L${r1(s.x + s.w * 0.68)} ${r1(s.y + 9)}`);
+---
+
+<Box3d w={shape.w} h={shape.h} d={shape.d} class="study-case">
+  <svg
+    class="case-art"
+    viewBox={`0 0 ${W} ${H}`}
+    preserveAspectRatio="none"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <defs>
+      <linearGradient id={shadeId} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" class="shade-dark" />
+        <stop offset="0.45" class="shade-clear" />
+      </linearGradient>
+    </defs>
+    <rect class="art-cornice" x="0" y="0" width={W} height={r1(CORNICE * 0.42)} />
+    {compartments.map((c) => (
+      <g>
+        <rect
+          class="art-recess"
+          x={c.x}
+          y={r1(c.top)}
+          width={c.width}
+          height={r1(c.bottom - c.top)}
+        />
+        <rect
+          x={c.x}
+          y={r1(c.top)}
+          width={c.width}
+          height={r1(c.bottom - c.top)}
+          fill={`url(#${shadeId})`}
+        />
+      </g>
+    ))}
+    {spines.map((s) => (
+      <rect class="art-spine" x={r1(s.x)} y={r1(s.y)} width={r1(s.w)} height={r1(s.h)} />
+    ))}
+    {vaseShelf && <path class="art-vase" d={vasePath(vaseShelf)} />}
+    {stoneShelf && <path class="art-stone" d={stonePath(stoneShelf)} />}
+    {pulls.map((cx) => <circle class="art-pull" cx={r1(cx)} cy={doorTop + 14} r="2.4" />)}
+    <g class="art-ink" filter="url(#hand-wobble)">
+      {ink.map((d) => <path d={d} />)}
+    </g>
+    <g class="art-ribbon">
+      {ribbons.map((d) => <path d={d} />)}
+    </g>
+  </svg>
+  <span class="case-plate" style={`--plate-top: ${r1(((H - BASE + BOARD) / H) * 100)}%;`}>
+    <span class="plate-name">{label}</span>
+    <span class="plate-count">{count}</span>
+  </span>
+  {orchid && (
+    <svg
+      slot="extra"
+      class="case-orchid"
+      viewBox="0 0 60 60"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <g class="orchid-ink" filter="url(#hand-wobble)">
+        <path d="M30 46 C26 30 14 20 4 18" />
+        <path d="M30 46 C30 28 26 14 18 4" />
+        <path d="M31 46 C36 30 48 24 58 26" />
+        <path d="M31 46 C34 34 40 22 46 12" />
+      </g>
+      <circle class="orchid-bloom" cx="45" cy="13" r="2.4" />
+      <circle class="orchid-bloom" cx="19" cy="6" r="2" />
+      <path class="orchid-pot" d="M20 46 L40 46 L37 58 L23 58 Z" />
+    </svg>
+  )}
+</Box3d>
+
+<style>
+  .case-art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .art-cornice {
+    fill: var(--wood-top);
+  }
+
+  .art-recess {
+    fill: var(--wood-recess);
+  }
+
+  .shade-dark {
+    stop-color: var(--wood-line);
+    stop-opacity: 0.7;
+  }
+
+  .shade-clear {
+    stop-color: var(--wood-line);
+    stop-opacity: 0;
+  }
+
+  .art-spine {
+    fill: var(--spine);
+  }
+
+  .art-vase {
+    fill: var(--scroll-paper);
+    stroke: var(--wood-line);
+    stroke-width: 1.2;
+  }
+
+  .art-stone {
+    fill: var(--fg-muted);
+    stroke: var(--wood-line);
+    stroke-width: 1.2;
+  }
+
+  .art-pull {
+    fill: var(--wood-top);
+  }
+
+  .art-ink path {
+    fill: none;
+    stroke: var(--wood-line);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .art-ribbon path {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+
+  /* Name and count written on the cabinet doors, held at a steady on-screen size */
+  .case-plate {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--plate-top);
+    bottom: 8%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1em;
+    padding-inline: 4%;
+    font-size: calc(var(--plate-px) * var(--depth-k, 1));
+    line-height: 1.15;
+    text-align: center;
+    color: var(--wood-label);
+  }
+
+  .plate-name {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .plate-count {
+    font-family: var(--font-hand);
+    font-size: 1.15em;
+    line-height: 1;
+    opacity: 0.85;
+  }
+
+  /* The orchid stands upright in the middle of the cabinet top */
+  .case-orchid {
+    position: absolute;
+    left: calc(var(--u) * -3.5);
+    top: calc((var(--h) + 6.6) * var(--u) * -1);
+    width: calc(var(--u) * 7);
+    height: calc(var(--u) * 7);
+    transform: translateZ(calc(var(--d) * var(--u) * -0.5));
+    transition: opacity 260ms ease;
+    overflow: visible;
+  }
+
+  /* On a phone the front cabinets stand close to the back row, so the orchid stays out */
+  @container room (max-width: 560px) {
+    .case-orchid {
+      display: none;
+    }
+  }
+
+  .orchid-ink path {
+    fill: none;
+    stroke: var(--leaf);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+  }
+
+  .orchid-bloom {
+    fill: var(--scroll-paper);
+    stroke: var(--leaf);
+  }
+
+  .orchid-pot {
+    fill: var(--scroll-paper);
+    stroke: var(--wood-line);
+    stroke-width: 1.2;
+  }
+</style>
