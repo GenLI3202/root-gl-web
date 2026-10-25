@@ -44,6 +44,24 @@
   --shelf-wuxia:      #E8D8C3;
   --shelf-scifi:      #D3DCE2;
 
+  /* Reading-room study: plaster wall, elm floor, rosewood furniture, window light */
+  --room-wall:        #EEE7D8;
+  --room-wall-side:   #E3D9C6;
+  --room-floor:       #CDB596;
+  --room-floor-seam:  rgba(92, 62, 38, 0.2);
+  --room-light:       rgba(255, 250, 232, 0.92);
+  --room-light-soft:  rgba(255, 247, 222, 0.55);
+  --room-shadow:      rgba(48, 30, 18, 0.3);
+  --wood:             #5E3D2A;
+  --wood-side:        #462C1E;
+  --wood-top:         #7A5440;
+  --wood-recess:      #2F1F16;
+  --wood-line:        #21150E;
+  --wood-label:       #F2E7D3;
+  --scroll-paper:     #F6F0E2;
+  --leaf:             #6E8758;
+  --clay:             #8C4A34;
+
   /* Dimmed page behind a modal dialog */
   --scrim: rgba(31, 29, 26, 0.38);
 
@@ -121,6 +139,23 @@
   --shelf-polecon:    #3B2B28;
   --shelf-wuxia:      #3A3127;
   --shelf-scifi:      #2B3238;
+
+  --room-wall:        #29251F;
+  --room-wall-side:   #221E19;
+  --room-floor:       #30271E;
+  --room-floor-seam:  rgba(0, 0, 0, 0.32);
+  --room-light:       rgba(200, 214, 232, 0.4);
+  --room-light-soft:  rgba(190, 206, 228, 0.12);
+  --room-shadow:      rgba(0, 0, 0, 0.55);
+  --wood:             #4D3426;
+  --wood-side:        #3A271C;
+  --wood-top:         #634434;
+  --wood-recess:      #1A120D;
+  --wood-line:        #0E0906;
+  --wood-label:       #EADCC4;
+  --scroll-paper:     #3B362D;
+  --leaf:             #7F9B6B;
+  --clay:             #7D4634;
 
   --scrim: rgba(0, 0, 0, 0.55);
 
