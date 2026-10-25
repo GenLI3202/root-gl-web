@@ -30,7 +30,6 @@ interface CyclingCopy {
   mapLabel: string;
   mapLoading: string;
   mapError: string;
-  mapNoRoutes: string;
   mapStyleLabel: string;
   mapStyles: Record<"paper" | "clean" | "cycling" | "terrain" | "satellite", string>;
   mapHint: string;
@@ -69,7 +68,6 @@ const COPY: Record<Locale, CyclingCopy> = {
     mapLabel: "Map of my rides",
     mapLoading: "Unfolding the map…",
     mapError: "The map could not be loaded.",
-    mapNoRoutes: "My routes appear here after the first Strava sync.",
     mapStyleLabel: "Map style",
     mapStyles: { paper: "Paper", clean: "Clean", cycling: "Cycling", terrain: "Terrain", satellite: "Satellite" },
     mapHint: "On a phone, move the map with two fingers.",
@@ -104,7 +102,6 @@ const COPY: Record<Locale, CyclingCopy> = {
     mapLabel: "骑行路线地图",
     mapLoading: "地图展开中…",
     mapError: "地图加载失败。",
-    mapNoRoutes: "首次同步 Strava 之后，我的路线会出现在这里。",
     mapStyleLabel: "地图风格",
     mapStyles: { paper: "纸本", clean: "简洁", cycling: "骑行", terrain: "地形", satellite: "卫星" },
     mapHint: "手机上请用两根手指移动地图。",
@@ -139,7 +136,6 @@ const COPY: Record<Locale, CyclingCopy> = {
     mapLabel: "Karte meiner Fahrten",
     mapLoading: "Karte wird aufgefaltet …",
     mapError: "Die Karte konnte nicht geladen werden.",
-    mapNoRoutes: "Meine Strecken erscheinen hier nach dem ersten Strava-Sync.",
     mapStyleLabel: "Kartenstil",
     mapStyles: { paper: "Papier", clean: "Klar", cycling: "Rad", terrain: "Gelände", satellite: "Satellit" },
     mapHint: "Am Handy die Karte mit zwei Fingern bewegen.",
@@ -207,7 +203,7 @@ const tableRows = data
     )}
   </section>
 
-  {data && (
+  {routeYears.length > 0 && (
     <section class="hobby-section">
       <h2 class="section-title">{copy.mapTitle}</h2>
       <CyclingMap
@@ -219,7 +215,6 @@ const tableRows = data
           label: copy.mapLabel,
           loading: copy.mapLoading,
           error: copy.mapError,
-          noRoutes: copy.mapNoRoutes,
           styleLabel: copy.mapStyleLabel,
           styles: copy.mapStyles,
         }}
