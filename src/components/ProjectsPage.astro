@@ -1,6 +1,7 @@
 ---
 import ProjectSketch from "@/components/ProjectSketch.astro";
 import HandIcon from "@/components/HandIcon.astro";
+import AgentSkills from "@/components/AgentSkills.astro";
 import { t, type Locale } from "@/i18n";
 import { PROJECTS, STAGES, type Project } from "@/data/projects";
 
@@ -155,6 +156,9 @@ const isExternal = (href: string): boolean => !href.startsWith("/");
       })}
     </ul>
   </section>
+
+  <!-- ── Agent skills ── -->
+  <AgentSkills locale={locale} />
 
   <!-- ── Other builds ── -->
   <section class="group" aria-labelledby="other-title">
