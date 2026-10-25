@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 120" role="img" aria-label="Luo Ji, sketched with a sword over his shoulder">
+  <!-- Pen sketch avatar for the character carousel -->
+  <defs>
+    <filter id="wobble" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="5"/>
+      <feDisplacementMap in="SourceGraphic" scale="1.8" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+  <rect width="96" height="120" fill="#F3EFE6"/>
+  <g fill="none" stroke="#2A2724" stroke-linecap="round" stroke-linejoin="round" filter="url(#wobble)">
+    <g stroke-width="1.5">
+      <path d="M47 26 C56 25.5 61.5 32 61.5 41 C61.5 50 57 57.5 50 59 C47 59.6 44 58.6 41.6 56.4 C37 52 35 46 35.2 40 C35.5 31.5 40 26.4 47.6 26.2"/>
+      <path d="M61.2 40 C63.6 39.6 64.4 43 62 45.4"/>
+      <path d="M49.5 41.5 C49 45 48.4 47 50.6 47.6"/>
+      <path d="M43 57.5 C43.4 62 43 66 42 69 M55.5 55 C55.6 60 56 64 57 67.5"/>
+      <path d="M6 120 C9 104 17 93 32 86.5 C37 84.4 40.6 80 42 69"/>
+      <path d="M57 67.5 C58.6 77 63 82.6 70 85.6 C80 90 87 100 90 120"/>
+      <path d="M35.6 39 C34 29.5 40.5 22.5 49 22.8 C56.6 23 62.6 28 62 37.5"/>
+      <path d="M39 29 C42 26.6 45 28.4 48 25.6 C50.5 28.6 54.5 27 58.5 30.4"/>
+      <path d="M36.4 34.4 C39.5 31.4 42.6 32.4 45 29.6"/>
+      <path d="M42 69 C44.6 74 47 77 49 78.4 C51.5 76.4 54.6 72 57 67.5"/>
+      <path d="M60 96 L83.4 21"/>
+      <path d="M61.6 88.6 C65.4 90.2 69 91.6 72.4 92.6"/>
+      <path d="M65.8 91.6 L62.2 103"/>
+      <path d="M60.4 104.6 C61 102.8 63.4 103 63.8 104.8 C63.4 106.6 61 106.6 60.4 104.6"/>
+    </g>
+    <g stroke-width="0.8" opacity="0.4" transform="rotate(1.4 48 60) translate(0.5 -0.4)">
+      <path d="M47 26 C56 25.5 61.5 32 61.5 41 C61.5 50 57 57.5 50 59 C47 59.6 44 58.6 41.6 56.4 C37 52 35 46 35.2 40 C35.5 31.5 40 26.4 47.6 26.2"/>
+      <path d="M61.2 40 C63.6 39.6 64.4 43 62 45.4"/>
+      <path d="M49.5 41.5 C49 45 48.4 47 50.6 47.6"/>
+      <path d="M43 57.5 C43.4 62 43 66 42 69 M55.5 55 C55.6 60 56 64 57 67.5"/>
+      <path d="M6 120 C9 104 17 93 32 86.5 C37 84.4 40.6 80 42 69"/>
+      <path d="M57 67.5 C58.6 77 63 82.6 70 85.6 C80 90 87 100 90 120"/>
+      <path d="M35.6 39 C34 29.5 40.5 22.5 49 22.8 C56.6 23 62.6 28 62 37.5"/>
+      <path d="M39 29 C42 26.6 45 28.4 48 25.6 C50.5 28.6 54.5 27 58.5 30.4"/>
+      <path d="M36.4 34.4 C39.5 31.4 42.6 32.4 45 29.6"/>
+      <path d="M42 69 C44.6 74 47 77 49 78.4 C51.5 76.4 54.6 72 57 67.5"/>
+      <path d="M60 96 L83.4 21"/>
+      <path d="M61.6 88.6 C65.4 90.2 69 91.6 72.4 92.6"/>
+      <path d="M65.8 91.6 L62.2 103"/>
+      <path d="M60.4 104.6 C61 102.8 63.4 103 63.8 104.8 C63.4 106.6 61 106.6 60.4 104.6"/>
+    </g>
+  </g>
+</svg>
