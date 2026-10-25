@@ -1,6 +1,6 @@
 ---
 title: "Munich by Bike: Why the City Changes at 30 km/h"
-description: "Three years leading group rides with Accross Cycling Club taught me that the best way to know a city is from the saddle."
+description: "Three years leading group rides with Across Cycling Club taught me that the best way to know a city is from the saddle."
 pubDate: 2026-02-28
 tags: ["cycling", "munich", "life"]
 ---
@@ -11,7 +11,7 @@ I've ridden that stretch maybe two hundred times. It still gets me every time.
 
 ## Starting the Club
 
-I joined [Accross Cycling Club](https://accross-cc.de) almost by accident. A friend dragged me to a Wednesday evening ride, I showed up on a flat-bar commuter bike, and kept up with people on carbon. By the following week I'd booked a weekend ride. Two months later I was helping plan routes.
+I joined [Across Cycling Club](https://www.across-cc.de/) almost by accident. A friend dragged me to a Wednesday evening ride, I showed up on a flat-bar commuter bike, and kept up with people on carbon. By the following week I'd booked a weekend ride. Two months later I was helping plan routes.
 
 Managing a club teaches you things no PhD program covers. You learn that "Saturday 8am, Marienplatz" sounds simple until forty people show up with incompatible expectations about pace. You learn that the person who complains the loudest about the route is also the first to offer to carry the spare inner tubes. You learn that group dynamics on a bike are weirdly honest — you can't hide effort at 30 km/h uphill.
 
@@ -31,4 +31,4 @@ The key is layering, fenders, and adjusting your expectations. You're not going 
 
 ---
 
-*Accross Cycling Club runs group rides year-round in Munich. Routes, calendar, and registration at [accross-cc.de](https://accross-cc.de).*
+*Across Cycling Club runs group rides year-round in Munich. Routes, calendar, and registration at [across-cc.de](https://www.across-cc.de/).*

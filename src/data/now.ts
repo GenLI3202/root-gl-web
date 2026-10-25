@@ -26,7 +26,7 @@ export const NOW_ITEMS: Record<Locale, NowItem[]> = {
     {
       icon: "bike",
       label: "Riding",
-      text: "Leading group rides with Accross Cycling Club Munich, and building the club's ClubHub site.",
+      text: "Leading group rides with Across Cycling Club Munich, and building the club's ClubHub site.",
       href: "https://www.across-cc.de/",
     },
     {
@@ -52,7 +52,7 @@ export const NOW_ITEMS: Record<Locale, NowItem[]> = {
     {
       icon: "bike",
       label: "在骑车",
-      text: "带 Accross 骑行俱乐部的团骑，顺便给俱乐部写 ClubHub 网站。",
+      text: "带 Across 骑行俱乐部的团骑，顺便给俱乐部写 ClubHub 网站。",
       href: "https://www.across-cc.de/",
     },
     {
@@ -78,7 +78,7 @@ export const NOW_ITEMS: Record<Locale, NowItem[]> = {
     {
       icon: "bike",
       label: "Radfahren",
-      text: "Ich leite Gruppenausfahrten beim Accross Cycling Club München und baue die ClubHub-Seite.",
+      text: "Ich leite Gruppenausfahrten beim Across Cycling Club München und baue die ClubHub-Seite.",
       href: "https://www.across-cc.de/",
     },
     {
