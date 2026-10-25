@@ -1,0 +1,517 @@
+---
+/**
+ * Freehand ink-wash objects that stand on the shelves of a bookcase close-up: brush outlines
+ * through the shared `hand-wobble` filter, pale washes for shading, and a few soft fills.
+ * Purely decorative, so every drawing is hidden from assistive technology.
+ */
+type DecorName =
+  | "bust"
+  | "bonsai"
+  | "censer"
+  | "stack"
+  | "plum-vase"
+  | "globe"
+  | "scrolls"
+  | "map"
+  | "orchid"
+  | "painting"
+  | "sword"
+  | "rock"
+  | "armillary"
+  | "starchart"
+  | "robot";
+
+interface Props {
+  name: DecorName;
+}
+
+interface Drawing {
+  /** viewBox width and height */
+  box: [number, number];
+  /** Drawn height on the shelf in px */
+  height: number;
+}
+
+const DRAWINGS: Record<DecorName, Drawing> = {
+  bust: { box: [80, 130], height: 122 },
+  bonsai: { box: [90, 130], height: 122 },
+  censer: { box: [80, 110], height: 100 },
+  stack: { box: [90, 44], height: 40 },
+  "plum-vase": { box: [110, 190], height: 172 },
+  globe: { box: [100, 140], height: 128 },
+  scrolls: { box: [120, 60], height: 50 },
+  map: { box: [130, 120], height: 112 },
+  orchid: { box: [70, 130], height: 128 },
+  painting: { box: [160, 120], height: 104 },
+  sword: { box: [230, 90], height: 92 },
+  rock: { box: [80, 120], height: 108 },
+  armillary: { box: [110, 150], height: 146 },
+  starchart: { box: [130, 160], height: 150 },
+  robot: { box: [56, 90], height: 72 },
+};
+
+const { name } = Astro.props;
+const { box, height } = DRAWINGS[name];
+const width = Math.round((height * box[0]) / box[1]);
+---
+
+<svg
+  class={`decor decor-art-${name}`}
+  viewBox={`0 0 ${box[0]} ${box[1]}`}
+  width={width}
+  height={height}
+  aria-hidden="true"
+  focusable="false"
+>
+  <g class="brush">
+    {name === "bust" && (
+      <>
+        <path class="f-porcelain ln" d="M20 126h40v4H20z" />
+        <path class="f-porcelain ln" d="M24 115h32v11H24z" />
+        <path class="f-porcelain ln" d="M8 116c0-16 10-26 22-30h20c12 4 22 14 22 30z" />
+        <path class="wash" d="M50 88c10 4 18 14 20 28H52c2-10 0-20-2-28z" />
+        <path class="ln-thin" d="M22 96c6 6 8 14 8 20M56 92c-4 8-6 16-4 24M40 100c-2 6-2 12 0 16" />
+        <path class="f-porcelain ln" d="M33 88l1-15h12l1 15" />
+        <path
+          class="f-porcelain ln"
+          d="M25 48c0-14 7-22 15-22s15 8 15 22c0 12-6 22-15 24-9-2-15-12-15-24z"
+        />
+        <path class="wash" d="M48 34c6 6 8 16 6 26-2 6-6 10-10 12 4-10 6-24 4-38z" />
+        <path
+          class="f-hair"
+          d="M24 46c-2-14 6-24 16-24s19 8 17 24c-3-6-6-10-9-11-4 3-10 4-16 2-3 2-6 5-8 9z"
+        />
+        <path class="ln-thin" d="M28 32q2-4 5-2M36 26q3-3 6 0M46 28q3-1 4 3M27 40q1-3 4-3" />
+        <path class="ln-thin" d="M40 45v9l-2 2" />
+      </>
+    )}
+
+    {name === "bonsai" && (
+      <>
+        <ellipse class="f-leaf" cx="18" cy="50" rx="15" ry="8" />
+        <ellipse class="f-leaf" cx="50" cy="28" rx="19" ry="10" />
+        <ellipse class="f-leaf" cx="74" cy="30" rx="13" ry="7" />
+        <ellipse class="f-leaf" cx="32" cy="40" rx="10" ry="6" />
+        <ellipse class="wash" cx="46" cy="32" rx="12" ry="5" />
+        <ellipse class="wash" cx="16" cy="53" rx="9" ry="4" />
+        <path class="ln-bold" d="M45 108c-4-12 6-20 2-32-4-12-16-14-12-26 3-8 12-10 16-16" />
+        <path class="ln" d="M38 58c-8-4-16-2-22-6M49 38c10-4 18-2 24-8M42 46c-4-4-8-4-10-6" />
+        <path class="f-ink" d="M18 107h54v5H18z" />
+        <path class="f-ink" d="M22 112h46l-4 14H26z" />
+      </>
+    )}
+
+    {name === "censer" && (
+      <>
+        <path class="smoke" d="M40 56c-6-10 6-16 0-26s4-16 0-26" />
+        <path class="smoke" d="M46 54c6-10-2-16 4-26" />
+        <path class="ln" d="M20 62c-2-8 4-10 6-4M60 62c2-8-4-10-6-4" />
+        <path class="f-bronze ln" d="M18 62c0 20 10 28 22 28s22-8 22-28z" />
+        <ellipse class="f-bronze ln" cx="40" cy="62" rx="22" ry="5" />
+        <ellipse class="wash" cx="44" cy="76" rx="14" ry="6" />
+        <path class="ln-bold" d="M26 86l-4 18M40 90v16M54 86l4 18" />
+      </>
+    )}
+
+    {name === "stack" && (
+      <>
+        <path class="f-paper ln" d="M8 30h76v12H8z" />
+        <path class="f-paper ln" d="M14 18h66v12H14z" />
+        <path class="f-paper ln" d="M4 6h70v12H4z" />
+        <path class="wash" d="M8 36h76v6H8zM14 24h66v6H14zM4 12h70v6H4z" />
+        <path class="ln-thin" d="M14 6v12M24 30v12M70 18v12" />
+      </>
+    )}
+
+    {name === "plum-vase" && (
+      <>
+        <path class="ln-bold" d="M52 94c-2-22-12-34-26-46-8-6-12-16-16-24" />
+        <path class="ln-bold" d="M55 94c5-22 17-32 25-52 4-10 12-16 20-20" />
+        <path class="ln" d="M34 54c6-8 4-16 10-24M76 48c-6-6-10-14-6-22" />
+        <path class="ln" d="M86 32l10 4M60 70c4-4 6-6 4-12" />
+        <g class="f-blossom">
+          <circle cx="10" cy="24" r="5" />
+          <circle cx="20" cy="38" r="4.5" />
+          <circle cx="27" cy="48" r="4" />
+          <circle cx="44" cy="30" r="5" />
+          <circle cx="40" cy="42" r="3.5" />
+          <circle cx="80" cy="42" r="5" />
+          <circle cx="70" cy="26" r="4.5" />
+          <circle cx="100" cy="21" r="5" />
+          <circle cx="92" cy="30" r="3.5" />
+          <circle cx="64" cy="58" r="4.5" />
+          <circle cx="35" cy="57" r="3" />
+        </g>
+        <g class="f-ink">
+          <circle cx="10" cy="24" r="1.1" />
+          <circle cx="44" cy="30" r="1.1" />
+          <circle cx="80" cy="42" r="1.1" />
+          <circle cx="100" cy="21" r="1.1" />
+          <circle cx="64" cy="58" r="1.1" />
+          <circle cx="56" cy="16" r="1.6" />
+          <circle cx="16" cy="12" r="1.4" />
+        </g>
+        <path
+          class="f-celadon ln"
+          d="M48 92h14l-1 8c0 8 19 22 19 46 0 20-10 30-25 30s-25-10-25-30c0-24 19-38 19-46z"
+        />
+        <path class="f-celadon ln" d="M42 176h26l-2 7H44z" />
+        <path class="wash" d="M66 118c8 8 12 18 12 30 0 14-6 24-16 27 6-10 10-34 4-57z" />
+        <path class="highlight" d="M38 142c0-10 6-18 12-24" />
+      </>
+    )}
+
+    {name === "globe" && (
+      <>
+        <path class="f-bronze ln" d="M30 134h40l-6-9H36z" />
+        <path class="ln-bold" d="M50 125v-20" />
+        <g transform="rotate(-18 48 62)">
+          <circle class="f-paper ln" cx="48" cy="62" r="34" />
+          <g class="f-continent">
+            <path d="M30 46c6-8 18-6 20 2 2 8-8 10-10 18-2 6-10 4-12-4-2-6-2-12 2-16z" />
+            <path d="M56 70c6-4 16 0 14 10-2 8-12 10-14 4-2-6-4-10 0-14z" />
+            <path d="M58 36c6-2 12 2 10 8-4 2-10 0-10-8z" />
+          </g>
+          <ellipse class="ln-thin" cx="48" cy="62" rx="34" ry="10" />
+          <ellipse class="ln-thin" cx="48" cy="62" rx="14" ry="34" />
+          <path class="wash" d="M62 34c12 8 18 24 12 40-4 12-14 20-26 22 14-10 22-38 14-62z" />
+          <path class="ring-brass" d="M48 22a40 40 0 0 1 0 80" />
+        </g>
+      </>
+    )}
+
+    {name === "scrolls" && (
+      <>
+        <rect class="f-paper ln" x="10" y="38" width="96" height="18" rx="9" />
+        <ellipse class="f-paper ln" cx="106" cy="47" rx="4.5" ry="9" />
+        <rect class="f-paper ln" x="22" y="21" width="84" height="17" rx="8.5" />
+        <ellipse class="f-paper ln" cx="106" cy="29.5" rx="4" ry="8.5" />
+        <path class="wash" d="M14 50h92v6H14zM26 32h80v6H26z" />
+        <path class="tie" d="M58 38v18M66 21v17" />
+      </>
+    )}
+
+    {name === "map" && (
+      <g transform="rotate(-3 65 60)">
+        <path class="f-bronze ln" d="M6 6h118v108H6z" />
+        <path class="f-paper" d="M13 13h104v94H13z" />
+        <path
+          class="wash"
+          d="M13 60c16-8 26 6 42-2 14-8 18-22 36-18 12 2 18-6 26-10v77H13z"
+        />
+        <path class="ln-thin" d="M13 60c16-8 26 6 42-2 14-8 18-22 36-18 12 2 18-6 26-10" />
+        <path class="ln-thin" d="M30 44l6-10 6 10M42 46l5-8 5 8M70 32l5-8 5 8" />
+        <path class="ln-thin" d="M22 92c16-12 26-2 42-14 12-8 24-2 38-14" />
+        <path class="f-seal" d="M96 88h11v11H96z" />
+      </g>
+    )}
+
+    {name === "orchid" && (
+      <>
+        <g class="f-leaf">
+          <path d="M33 106C29 80 18 62 3 54c17 5 30 22 34 52z" />
+          <path d="M35 106c1-28 10-52 28-68-14 18-22 40-24 68z" />
+          <path d="M34 106c-2-22-5-44-1-70 3 24 5 46 4 70z" />
+          <path d="M36 106c7-16 17-25 31-27-12 4-22 13-27 27z" />
+          <path d="M33 106c-6-14-17-21-29-21 12 2 22 9 32 21z" />
+        </g>
+        <path class="ln-thin" d="M33 106C29 80 18 62 3 54M35 106c1-28 10-52 28-68" />
+        <path class="f-porcelain" d="M28 40c-3-5 1-8 4-5 2-5 7-3 5 2 5 1 4 6-1 6-1 4-6 4-8-3z" />
+        <path class="f-porcelain" d="M46 54c-2-4 1-6 3-4 2-4 6-2 4 2 4 1 3 5-1 5-1 3-5 3-6-3z" />
+        <path class="f-porcelain ln" d="M18 106h34l-4 20H22z" />
+        <path class="ln-thin" d="M20 113h30" />
+      </>
+    )}
+
+    {name === "painting" && (
+      <>
+        <path class="ln-thin" d="M80 0v4" />
+        <path class="f-porcelain ln" d="M4 4h152v112H4z" />
+        <path class="ln-thin" d="M12 12h136v96H12z" />
+        <path
+          class="wash"
+          d="M12 82c18-20 28-30 40-22 10-18 22-28 34-12 10-10 22-6 32 6 8-6 20-2 30 8v46H12z"
+        />
+        <path class="wash" d="M12 96c14-16 24-20 34-10 12-16 24-14 34 2v20H12z" />
+        <path class="wash" d="M96 108c6-10 14-14 22-8 8-6 18-4 30 2v6z" />
+        <path class="ln-thin" d="M52 60c10-18 22-28 34-12M118 54c8-6 20-2 30 8" />
+        <path class="f-ink" d="M98 98h14l-3 3h-8z" />
+        <path class="ln-thin" d="M140 22v24M134 22v14" />
+        <path class="f-seal" d="M131 50h8v9h-8z" />
+      </>
+    )}
+
+    {name === "sword" && (
+      <>
+        <path class="f-bronze ln" d="M40 88h150l-6-9H46z" />
+        <path class="post" d="M70 79V48M160 79V48" />
+        <path class="ln" d="M62 46q8 8 16 0M152 46q8 8 16 0" />
+        <path class="f-ink" d="M26 42l170-9 1 7-170 9z" />
+        <path class="ring-brass" d="M40 41l1 7M110 37l1 7M186 34l1 7" />
+        <path class="ring-brass-bold" d="M198 28l1 18" />
+        <path class="ln-bold" d="M201 36l22-1" />
+        <path class="tie" d="M224 35c3 7 0 14 2 22" />
+        <path class="f-seal" d="M222 57h6l2 24h-10z" />
+      </>
+    )}
+
+    {name === "rock" && (
+      <>
+        <path class="f-bronze" d="M12 112h56l-4 6H16z" />
+        <path
+          class="f-stone ln"
+          d="M22 112c-8-10-4-22 2-28-8-8-10-22-2-30-4-10 0-24 10-28 2-10 14-16 24-10
+            10-2 18 8 14 18 8 8 8 20 0 26 6 10 4 22-4 28 6 8 4 18-4 24z"
+        />
+        <path
+          class="wash"
+          d="M58 30c8 6 10 16 4 24 8 10 6 20-2 26 6 10 4 22-4 32h-6c6-24 10-56 8-82z"
+        />
+        <g class="hole">
+          <ellipse cx="34" cy="40" rx="6" ry="8" />
+          <ellipse cx="52" cy="24" rx="4" ry="5" />
+          <ellipse cx="47" cy="62" rx="7" ry="6" />
+          <ellipse cx="30" cy="76" rx="4" ry="6" />
+          <ellipse cx="50" cy="94" rx="5" ry="4" />
+        </g>
+        <path class="ln-thin" d="M26 56c6-3 10 0 14-3M56 46c5-3 8 0 11-2" />
+        <path class="ln-thin" d="M24 96c6-2 10 0 14-2M38 18c4-2 8 0 10-2" />
+      </>
+    )}
+
+    {name === "armillary" && (
+      <>
+        <path class="f-bronze ln" d="M30 146h50l-6-10H36z" />
+        <path class="ring-brass-bold" d="M55 136c-5-10 5-16 0-28" />
+        <circle class="ring-shadow" cx="55" cy="64" r="40" />
+        <circle class="ring-brass-bold" cx="55" cy="64" r="40" />
+        <ellipse class="ring-brass" cx="55" cy="64" rx="40" ry="12" transform="rotate(-20 55 64)" />
+        <ellipse class="ring-brass" cx="55" cy="64" rx="14" ry="40" transform="rotate(25 55 64)" />
+        <ellipse class="ring-brass" cx="55" cy="64" rx="40" ry="16" transform="rotate(32 55 64)" />
+        <path class="ln-thin" d="M41 20l28 88" />
+        <circle class="f-brass ln-thin" cx="55" cy="64" r="6" />
+      </>
+    )}
+
+    {name === "starchart" && (
+      <>
+        <path class="f-ink" d="M4 4h122v152H4z" />
+        <path class="f-night" d="M10 10h110v140H10z" />
+        <path class="f-planet" d="M40 150c4-38 36-66 80-66v66z" />
+        <path class="wash-light" d="M58 150c6-26 30-46 62-48v10c-28 4-48 20-54 38z" />
+        <circle class="f-brass" cx="46" cy="52" r="9" />
+        <ellipse
+          class="ring-light"
+          cx="46"
+          cy="52"
+          rx="17"
+          ry="4.5"
+          transform="rotate(-20 46 52)"
+        />
+        <path class="star-line" d="M24 26l18-6 22 10 20-4M84 26l14 18 8 20" />
+        <g class="f-star">
+          <circle cx="24" cy="26" r="1.6" />
+          <circle cx="42" cy="20" r="1.3" />
+          <circle cx="64" cy="30" r="1.8" />
+          <circle cx="84" cy="26" r="1.3" />
+          <circle cx="98" cy="44" r="1.6" />
+          <circle cx="106" cy="64" r="1.2" />
+          <circle cx="22" cy="88" r="1.1" />
+          <circle cx="34" cy="112" r="1.4" />
+          <circle cx="76" cy="70" r="1" />
+          <circle cx="18" cy="60" r="1" />
+        </g>
+        <circle class="f-seal" cx="96" cy="16" r="2.4" />
+      </>
+    )}
+
+    {name === "robot" && (
+      <>
+        <path class="ln" d="M28 6v8" />
+        <circle class="f-seal" cx="28" cy="5" r="2.6" />
+        <rect class="f-stone ln" x="14" y="14" width="28" height="20" rx="5" />
+        <circle class="f-night" cx="23" cy="24" r="3" />
+        <circle class="f-night" cx="33" cy="24" r="3" />
+        <rect class="f-stone ln" x="10" y="38" width="36" height="28" rx="4" />
+        <rect class="wash" x="18" y="44" width="20" height="12" rx="2" />
+        <path class="ln-bold" d="M10 44c-8 4-8 14-4 18M46 44c8 4 8 14 4 18" />
+        <rect class="f-stone ln" x="16" y="66" width="8" height="16" />
+        <rect class="f-stone ln" x="32" y="66" width="8" height="16" />
+        <path class="f-ink" d="M13 82h13v5H13zM30 82h13v5H30z" />
+      </>
+    )}
+  </g>
+</svg>
+
+<style>
+  .decor {
+    display: block;
+    flex: none;
+    overflow: visible;
+  }
+
+  /* Every stroke and wash goes through the shared wobble filter so lines read as brushwork */
+  .brush {
+    filter: url(#hand-wobble);
+  }
+
+  .ln,
+  .ln-thin,
+  .ln-bold,
+  .smoke,
+  .tie,
+  .highlight,
+  .ring-brass,
+  .ring-brass-bold,
+  .ring-shadow,
+  .ring-light,
+  .star-line {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .post {
+    fill: none;
+    stroke: var(--closeup-bronze);
+    stroke-width: 5;
+    stroke-linecap: round;
+  }
+
+  .ln {
+    stroke: var(--closeup-ink);
+    stroke-width: 1.8;
+  }
+
+  .ln-thin {
+    stroke: var(--closeup-ink);
+    stroke-width: 1.1;
+    opacity: 0.8;
+  }
+
+  .ln-bold {
+    stroke: var(--closeup-ink);
+    stroke-width: 4.5;
+  }
+
+  .smoke {
+    stroke: var(--closeup-paper);
+    stroke-width: 1.2;
+    opacity: 0.55;
+  }
+
+  .tie {
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+
+  .highlight {
+    stroke: var(--closeup-paper);
+    stroke-width: 2.4;
+    opacity: 0.6;
+  }
+
+  .ring-brass {
+    stroke: var(--closeup-brass);
+    stroke-width: 2;
+  }
+
+  .ring-brass-bold {
+    stroke: var(--closeup-brass);
+    stroke-width: 3.4;
+  }
+
+  .ring-shadow {
+    stroke: var(--closeup-ink);
+    stroke-width: 6;
+    opacity: 0.6;
+  }
+
+  .ring-light {
+    stroke: var(--closeup-porcelain);
+    stroke-width: 1.4;
+  }
+
+  .star-line {
+    stroke: var(--closeup-porcelain);
+    stroke-width: 0.7;
+    opacity: 0.45;
+  }
+
+  .wash {
+    fill: var(--closeup-ink-wash);
+  }
+
+  .wash-light {
+    fill: var(--closeup-night);
+    opacity: 0.35;
+  }
+
+  .hole {
+    fill: var(--closeup-ink);
+    opacity: 0.55;
+  }
+
+  .f-hair {
+    fill: var(--closeup-ink-wash);
+  }
+
+  .f-ink {
+    fill: var(--closeup-ink);
+  }
+
+  .f-paper {
+    fill: var(--closeup-paper);
+  }
+
+  .f-porcelain {
+    fill: var(--closeup-porcelain);
+  }
+
+  .f-celadon {
+    fill: var(--closeup-celadon);
+  }
+
+  .f-brass {
+    fill: var(--closeup-brass);
+  }
+
+  .f-bronze {
+    fill: var(--closeup-bronze);
+  }
+
+  .f-stone {
+    fill: var(--closeup-stone);
+  }
+
+  .f-leaf {
+    fill: var(--closeup-leaf);
+    opacity: 0.82;
+  }
+
+  .f-blossom {
+    fill: var(--closeup-blossom);
+  }
+
+  .f-continent {
+    fill: var(--closeup-bronze);
+    opacity: 0.45;
+  }
+
+  .f-night {
+    fill: var(--closeup-night);
+  }
+
+  .f-planet {
+    fill: var(--closeup-porcelain);
+    opacity: 0.85;
+  }
+
+  .f-star {
+    fill: var(--closeup-porcelain);
+  }
+
+  .f-seal {
+    fill: var(--accent);
+  }
+</style>
