@@ -1,6 +1,7 @@
 ---
 import HobbyShell from "@/components/HobbyShell.astro";
-import Bookshelf from "@/components/Bookshelf.astro";
+import ReadingRoom from "@/components/ReadingRoom.astro";
+import ReadingStats from "@/components/ReadingStats.astro";
 import { t, type Locale } from "@/i18n";
 
 interface Props {
@@ -34,7 +35,8 @@ const APP_LINK: Record<Locale, string> = {
     <a href="https://weread.qq.com/" target="_blank" rel="noopener noreferrer">{APP_LINK[locale]}</a>
   </p>
 
-  <Bookshelf locale={locale} />
+  <ReadingRoom locale={locale} />
+  <ReadingStats locale={locale} />
 </HobbyShell>
 
 <style>

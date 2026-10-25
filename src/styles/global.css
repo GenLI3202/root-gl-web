@@ -37,7 +37,7 @@
   /* Paper grain overlay */
   --grain-opacity: 0.35;
 
-  /* Bookshelf spines, one muted tint per category */
+  /* Reading-room bookcases and spines, one muted tint per category */
   --shelf-literature: #D9E2D0;
   --shelf-ideas:      #E2DCE9;
   --shelf-polecon:    #EAD2CC;
