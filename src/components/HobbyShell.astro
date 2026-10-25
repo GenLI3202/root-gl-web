@@ -6,13 +6,14 @@ import { HOBBIES, type HobbyId } from "@/data/hobbies";
 /**
  * Frame for one hobby sub-page: back link, switcher between hobbies, header with
  * illustration, the page's own sections (default slot), and a link to the next hobby.
+ * Without a `lead` the header is left out and the page's own sections bring their heading.
  */
 interface Props {
   locale: Locale;
   hobby: HobbyId;
-  kicker: string;
-  lead: string;
-  illustration: string;
+  kicker?: string;
+  lead?: string;
+  illustration?: string;
 }
 
 const BACK: Record<Locale, string> = {
@@ -52,15 +53,17 @@ const hobbyUrl = (id: HobbyId): string => localizeUrl(`/hobbies/${id}/`, locale)
     </ul>
   </nav>
 
-  <header class="hobby-header container-wide">
-    <div class="hobby-header-text">
-      <p class="hobby-kicker hand">{kicker}</p>
-      <h1 class="hobby-title">{t(locale, `hobbies.${hobby}.label`)}</h1>
-      <p class="hobby-lead" set:html={lead} />
-      <slot name="header-extra" />
-    </div>
-    <img class="hobby-illustration" src={illustration} alt="" aria-hidden="true" />
-  </header>
+  {lead && (
+    <header class="hobby-header container-wide">
+      <div class="hobby-header-text">
+        <p class="hobby-kicker hand">{kicker}</p>
+        <h1 class="hobby-title">{t(locale, `hobbies.${hobby}.label`)}</h1>
+        <p class="hobby-lead" set:html={lead} />
+        <slot name="header-extra" />
+      </div>
+      {illustration && <img class="hobby-illustration" src={illustration} alt="" aria-hidden="true" />}
+    </header>
+  )}
 
   <div class="hobby-body container-wide">
     <slot />
