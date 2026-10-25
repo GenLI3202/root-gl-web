@@ -26,6 +26,7 @@
   --accent:       #E63946;
   --accent-soft:  rgba(230, 57, 70, 0.08);
   --accent-hover: #C1121F;
+  --on-accent:    #FFFFFF;
 
   /* Highlighter stroke behind key words */
   --marker:       rgba(230, 57, 70, 0.16);

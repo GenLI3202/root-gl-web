@@ -1,0 +1,134 @@
+---
+import type { Locale } from "@/i18n";
+
+interface Props {
+  locale: Locale;
+}
+
+interface HelloCopy {
+  note: string;
+  title: string;
+  body: string;
+  cta: string;
+}
+
+const { locale } = Astro.props;
+
+const EMAIL = "hiligen723@gmail.com";
+
+const COPY: Record<Locale, HelloCopy> = {
+  en: {
+    note: "say hi!",
+    title: "Write me a note",
+    body:
+      "About energy markets, a good route south of Munich, or a book I should read. " +
+      "Email is the best way to reach me.",
+    cta: "Send an email",
+  },
+  zh: {
+    note: "打个招呼！",
+    title: "给我写封信吧",
+    body: "聊能源市场、慕尼黑以南的好路线，或者一本我该读的书都可以。邮件是找到我最好的方式。",
+    cta: "发邮件",
+  },
+  de: {
+    note: "sag hallo!",
+    title: "Schreib mir",
+    body:
+      "Über Energiemärkte, eine schöne Route südlich von München oder ein Buch, das ich " +
+      "lesen sollte. Am besten erreichst du mich per E-Mail.",
+    cta: "E-Mail schreiben",
+  },
+};
+
+const copy = COPY[locale];
+---
+
+<section class="say-hello">
+  <div class="container">
+    <div class="hello-card">
+      <span class="hello-note hand" aria-hidden="true">{copy.note}</span>
+      <h2 class="hello-title">{copy.title}</h2>
+      <p class="hello-body">{copy.body}</p>
+      <div class="hello-actions">
+        <a class="hello-btn" href={`mailto:${EMAIL}`}>
+          <span aria-hidden="true">✉</span> {copy.cta}
+        </a>
+        <span class="hello-email">{EMAIL}</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .say-hello {
+    padding-block: 2rem 1rem;
+  }
+
+  .hello-card {
+    position: relative;
+    padding: 2rem 1.75rem 1.75rem;
+    border: 1.5px dashed var(--border-dark);
+    border-radius: var(--radius-lg);
+  }
+
+  .hello-note {
+    position: absolute;
+    top: -1.1rem;
+    left: 1.25rem;
+    padding-inline: 0.5rem;
+    background: var(--bg);
+    font-size: 1.6rem;
+    transform: rotate(-3deg);
+  }
+
+  .hello-title {
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .hello-body {
+    color: var(--fg-muted);
+    max-width: 34rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .hello-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+  }
+
+  .hello-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: var(--radius-pill);
+    background: var(--fg);
+    color: var(--bg);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background var(--transition), transform 250ms var(--ease-out);
+  }
+
+  .hello-btn:hover {
+    background: var(--accent);
+    color: var(--on-accent);
+    transform: translateY(-2px) rotate(-1deg);
+  }
+
+  .hello-btn:active {
+    transform: translateY(0);
+  }
+
+  .hello-email {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    user-select: all;
+  }
+</style>
