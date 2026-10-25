@@ -2,9 +2,9 @@
 import { getCollection } from "astro:content";
 import Seal from "@/components/Seal.astro";
 import SayHello from "@/components/SayHello.astro";
-import { t, localizeUrl, type Locale } from "@/i18n";
+import { t, localizeUrl, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import { NOW_ITEMS, NOW_UPDATED } from "@/data/now";
-import { formatPostDate, getPostUrl, getPostsForLocale } from "@/utils/posts";
+import { formatPostDate, getPostLabels, getPostUrl, getPostsForLocale } from "@/utils/posts";
 
 interface Props {
   locale: Locale;
@@ -31,7 +31,11 @@ interface ClockStatuses {
 const { locale } = Astro.props;
 
 const allPosts = await getCollection("posts", ({ data }) => !data.draft);
-const recentPosts = getPostsForLocale(allPosts, locale).slice(0, 4);
+const localePosts = getPostsForLocale(allPosts, locale);
+// Locales without their own posts show the English ones instead of an empty list
+const recentPosts = (
+  localePosts.length > 0 ? localePosts : getPostsForLocale(allPosts, DEFAULT_LOCALE)
+).slice(0, 4);
 
 const COPY: Record<Locale, HomeCopy> = {
   en: {
@@ -301,7 +305,7 @@ function isExternal(href: string): boolean {
     </div>
 
     {recentPosts.length === 0 ? (
-      <p class="empty-state">Posts coming soon.</p>
+      <p class="empty-state">{getPostLabels(locale).empty}</p>
     ) : (
       <ul class="post-list" role="list">
         {recentPosts.map((post) => (
