@@ -1,6 +1,7 @@
 ---
+import type { Locale } from "@/i18n";
 import type { BookCategory } from "@/data/books";
-import { toHours, type ShelfBook } from "@/data/library";
+import { titleFor, toHours, type ShelfBook } from "@/data/library";
 import type { ComponentProps } from "astro/types";
 import ShelfDecor from "@/components/ShelfDecor.astro";
 
@@ -12,6 +13,7 @@ import ShelfDecor from "@/components/ShelfDecor.astro";
  * each spine opens its book's dialog (wired up by ReadingRoom's script).
  */
 interface Props {
+  locale: Locale;
   category: BookCategory;
   books: ShelfBook[];
   label: string;
@@ -39,7 +41,7 @@ interface ShelfRow {
   offset: number;
 }
 
-const { category, books, label, count, back, legend, share, maxSeconds } = Astro.props;
+const { locale, category, books, label, count, back, legend, share, maxSeconds } = Astro.props;
 
 /** Compartments from top to bottom, as the case stands on wide stages */
 const SHELF_PLAN: Record<BookCategory, Compartment[]> = {
@@ -91,10 +93,16 @@ function spineWidth(book: ShelfBook): number {
   return Math.round(34 + 26 * Math.sqrt(book.reading.seconds / maxSeconds));
 }
 
-/** Height the vertical title and the hours label need at the regular title size */
+/** Room above and below the title: top band, padding and, when there is one, the hours label */
+function chrome(book: ShelfBook): number {
+  return book.reading ? 52 : 32;
+}
+
+/** Height the vertical title needs on one line at the regular title size */
 function neededHeight(book: ShelfBook): number {
-  const perChar = CJK.test(book.title) ? 14.6 : 8.4;
-  return book.title.length * perChar + (book.reading ? 52 : 32);
+  const title = titleFor(book, locale);
+  const perChar = CJK.test(title) ? 14.6 : 8.4;
+  return title.length * perChar + chrome(book);
 }
 
 /** Cycled height, raised so the vertical title and the hours label both fit */
@@ -151,6 +159,7 @@ const rows = planRows(SHELF_PLAN[category], books);
           {r > 0 && <li class="case-break" aria-hidden="true" />}
           {row.books.map((book, j) => {
             const i = row.offset + j;
+            const title = titleFor(book, locale);
             const isLong = neededHeight(book) > MAX_SPINE_HEIGHT;
             return (
               <li class="case-slot">
@@ -160,12 +169,12 @@ const rows = planRows(SHELF_PLAN[category], books);
                   data-open-book={book.id}
                   aria-haspopup="dialog"
                   aria-controls={`book-${book.id}`}
-                  style={`--spine-w: ${spineWidth(book)}px; --spine-h: ${spineHeight(book, i)}px;`}
+                  style={`--spine-w: ${spineWidth(book)}px; --spine-h: ${spineHeight(book, i)}px; --spine-chrome: ${chrome(book)}px;`}
                 >
                   {book.recent && <span class="spine-ribbon" aria-hidden="true" />}
                   <span class="spine-band" aria-hidden="true" />
-                  <span class="spine-title" lang={CJK.test(book.title) ? "zh" : undefined}>
-                    {book.title}
+                  <span class="spine-title" lang={CJK.test(title) ? "zh" : undefined}>
+                    {title}
                   </span>
                   {book.reading && (
                     <span class="spine-hours hand">{toHours(book.reading.seconds)}h</span>
@@ -574,6 +583,14 @@ const rows = planRows(SHELF_PLAN[category], books);
   .spine.is-long .spine-title {
     font-size: 0.72rem;
     letter-spacing: 0.04em;
+  }
+
+  /* Long Latin titles wrap into a second or third column instead of running off the spine */
+  .spine.is-long .spine-title:not(:lang(zh)) {
+    max-height: calc(var(--spine-h) - var(--spine-chrome));
+    white-space: normal;
+    line-height: 1.15;
+    text-align: center;
   }
 
   .spine-hours {
