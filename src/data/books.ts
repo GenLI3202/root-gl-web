@@ -126,17 +126,4 @@ export const BOOKS: Book[] = [
       },
     },
   },
-  {
-    id: "demian",
-    title: "Demian",
-    titleEn: "Demian",
-    author: "Hermann Hesse",
-    category: "literature",
-    about: {
-      en: "Hesse's 1919 novel about young Emil Sinclair searching for himself.",
-      zh: "黑塞 1919 年的小说，少年辛克莱寻找自我的故事。",
-      de: "Hesses Roman von 1919 über den jungen Emil Sinclair auf der Suche nach sich selbst.",
-    },
-    characters: ["sinclair"],
-  },
 ];
