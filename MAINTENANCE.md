@@ -123,6 +123,14 @@ WeRead only offers the hour-of-day distribution as an all-time aggregate in Beij
 
 This is an approximation: reading done while travelling or around clock changes is not separated out. The hours-per-year chart still uses Beijing calendar days.
 
+### English titles
+
+EN and DE pages show each book's English title on the spines and the book card (the Chinese original stays as a smaller line on the card; the card's cover art keeps the Chinese title). Chinese pages show the Chinese title.
+
+- **New books:** when a book first enters `reading.json`, the script asks Claude (`claude-opus-5-5`, one request per run, server-side refusal fallback on) for the published English title, or a short faithful translation if there is none, and stores it as `titleEn` in the JSON. Later runs reuse it.
+- **Needs** the repository secret `ANTHROPIC_API_KEY` (same place as `WEREAD_API_KEY`). Without it, or if the request fails, the sync still runs and the book shows its Chinese title until a later run succeeds.
+- **To correct a title,** set `titleEn` in `WEREAD_OVERRIDES` (below); hand-written titles always win.
+
 ### Hide, rename or re-categorise a synced book
 
 Edit `WEREAD_OVERRIDES` in `src/data/library.ts`, keyed by the WeRead `bookId` (the `id` of the book in `reading.json`):
@@ -136,7 +144,7 @@ Edit `WEREAD_OVERRIDES` in `src/data/library.ts`, keyed by the WeRead `bookId` (
 | Field | Effect |
 |-------|--------|
 | `title` | Replaces the shortened WeRead title (series and edition suffixes are already trimmed by `shortTitle()`) |
-| `titleEn` | English title shown on EN pages |
+| `titleEn` | English title shown on EN and DE pages; wins over the one the script wrote |
 | `category` | One of `literature`, `ideas`, `polecon`, `wuxia`, `scifi` |
 | `hidden` | `true` removes the book from the shelf |
 

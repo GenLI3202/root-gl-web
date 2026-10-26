@@ -9,6 +9,9 @@
 //
 // Required env:
 //   WEREAD_API_KEY — WeRead agent API key (wrk-…), repository secret in CI
+// Optional env:
+//   ANTHROPIC_API_KEY — lets Claude write an English title for each newly listed book;
+//                       without it those books keep their Chinese title only
 
 import fs from "node:fs";
 import path from "node:path";
@@ -25,6 +28,23 @@ const PREFER_TIME_START_HOUR = 6;
 const HOURS_TIME_ZONE = "Europe/Berlin";
 // Year used to measure how much of the year Europe/Berlin spends on summer time
 const DST_REFERENCE_YEAR = 2025;
+const TITLE_MODEL = "claude-opus-5-5";
+const TITLE_SCHEMA = {
+  type: "object",
+  properties: {
+    titles: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: { id: { type: "string" }, titleEn: { type: "string" } },
+        required: ["id", "titleEn"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["titles"],
+  additionalProperties: false,
+};
 
 const API_KEY = process.env.WEREAD_API_KEY;
 if (!API_KEY) {
@@ -83,6 +103,53 @@ function summerTimeShare() {
     day.setUTCDate(day.getUTCDate() + 1);
   }
   return summerDays / days;
+}
+
+/**
+ * Fills `titleEn` on books that have none yet, with one Claude request: the title the work is
+ * published under in English, or a short faithful translation. Titles are cached in
+ * reading.json, so each book is asked about once. Any failure leaves the Chinese title.
+ */
+async function addEnglishTitles(list) {
+  const missing = list.filter((b) => !b.titleEn);
+  if (missing.length === 0) return;
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.log(`ANTHROPIC_API_KEY is not set; ${missing.length} books have no English title.`);
+    return;
+  }
+  const shelf = missing.map(({ id, title, author }) => ({ id, title, author }));
+  const prompt =
+    "These books are on a Chinese e-reader shelf. For each one, give the English title a " +
+    "reader would know it by: the published English title if the work has one (for works " +
+    "translated into Chinese, the English title of the original), otherwise a short, " +
+    "faithful English translation. Leave out edition notes such as 套装, 珍藏版 or " +
+    "纯文字版, and drop subtitles unless the title needs them. Return one entry per id.\n\n" +
+    JSON.stringify(shelf, null, 2);
+  try {
+    const { default: Anthropic } = await import("@anthropic-ai/sdk");
+    const client = new Anthropic();
+    const response = await client.beta.messages.create({
+      model: TITLE_MODEL,
+      max_tokens: 4000,
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
+      output_config: { effort: "low", format: { type: "json_schema", schema: TITLE_SCHEMA } },
+      messages: [{ role: "user", content: prompt }],
+    });
+    if (response.stop_reason !== "end_turn") {
+      throw new Error(`stopped with ${response.stop_reason}`);
+    }
+    const text = response.content.find((block) => block.type === "text")?.text ?? "{}";
+    const byId = new Map(missing.map((b) => [b.id, b]));
+    for (const { id, titleEn } of JSON.parse(text).titles ?? []) {
+      const book = byId.get(String(id));
+      if (book && titleEn?.trim()) book.titleEn = titleEn.trim();
+    }
+    console.log(`English titles: ${missing.filter((b) => b.titleEn).length}/${missing.length}.`);
+  } catch (error) {
+    const status = error?.status ? ` (HTTP ${error.status})` : "";
+    console.warn(`English titles skipped${status}: ${error?.message ?? error}`);
+  }
 }
 
 /** "162本" → 162 */
@@ -196,9 +263,11 @@ for (const b of publicBooks) {
     highlights: note?.noteCount ?? 0,
     thoughts: note?.reviewCount ?? 0,
     link: b.deepLink ?? null,
+    titleEn: prior?.title === b.title ? prior.titleEn : undefined,
   });
 }
 books.sort((a, b) => b.lastReadAt - a.lastReadAt || a.id.localeCompare(b.id));
+await addEnglishTitles(books);
 
 const output = { syncedThrough, stats, books };
 const json = `${JSON.stringify(output, null, 2)}\n`;

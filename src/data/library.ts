@@ -22,6 +22,8 @@ export interface WereadBook {
   highlights: number;
   thoughts: number;
   link: string | null;
+  /** English title written by the sync script (official title or a translation) */
+  titleEn?: string;
 }
 
 export interface ReadingStats {
@@ -46,7 +48,10 @@ export interface ShelfBook extends Omit<Book, "titleEn" | "about" | "recent"> {
   recent: boolean;
 }
 
-/** Hand fixes for synced books: a shorter title, an English title, another category, or hide */
+/**
+ * Hand fixes for synced books: a shorter title, an English title, another category, or hide.
+ * A `titleEn` here wins over the one the sync script writes into reading.json.
+ */
 interface WereadOverride {
   title?: string;
   titleEn?: string;
@@ -85,6 +90,12 @@ export const WEREAD_OVERRIDES: Record<string, WereadOverride> = {
   "22946457": { titleEn: "Fortress Besieged" },
   "932433": { titleEn: "Sword Stained with Royal Blood" },
   "932425": { titleEn: "The Deer and the Cauldron" },
+  "3300071815": { titleEn: "Time Migration" },
+  "3300019669": { titleEn: "Liang Yong'an on Love" },
+  "3300091348": { titleEn: "Twisted Loves" },
+  "32282840": { titleEn: "Alienation and Acceleration" },
+  "3300018590": { titleEn: "What Do You Say After You Say Hello?" },
+  "25631121": { titleEn: "Interstellar Wars" },
 };
 
 /** A book counts as recently read when opened within this many days */
@@ -138,7 +149,7 @@ const fromWeread: ShelfBook[] = SYNCED.filter(
   return {
     id: `weread-${b.id}`,
     title,
-    titleEn: override.titleEn,
+    titleEn: override.titleEn ?? b.titleEn,
     fullTitle: title !== b.title ? b.title : undefined,
     author: b.author,
     category: override.category ?? categoryOf(b.category),
@@ -146,6 +157,18 @@ const fromWeread: ShelfBook[] = SYNCED.filter(
     recent: isRecent(b),
   };
 });
+
+/** Title to show in a locale: the original on Chinese pages, the English one elsewhere */
+export function titleFor(book: ShelfBook, locale: Locale): string {
+  return locale === "zh" ? book.title : book.titleEn ?? book.title;
+}
+
+/** The other title, shown smaller beside the main one, or undefined when there is none */
+export function altTitleFor(book: ShelfBook, locale: Locale): string | undefined {
+  const main = titleFor(book, locale);
+  const other = main === book.title ? book.titleEn : book.title;
+  return other && other !== main ? other : undefined;
+}
 
 /** Seconds → hours, with one decimal under ten hours: 14 040 → 3.9, 117 194 → 33 */
 export function toHours(seconds: number): number {

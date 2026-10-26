@@ -144,6 +144,7 @@ function caseStyle(category: BookCategory): string {
 
     {bookcases.map(({ category, books }) => (
       <ShelfCloseup
+        locale={locale}
         category={category}
         books={books}
         label={CATEGORY_LABELS[category][locale]}

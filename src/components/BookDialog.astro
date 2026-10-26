@@ -2,7 +2,7 @@
 import type { Locale } from "@/i18n";
 import { CATEGORY_LABELS, type BookCategory } from "@/data/books";
 import { CHARACTERS, type Character } from "@/data/characters";
-import { toHours, type ShelfBook } from "@/data/library";
+import { altTitleFor, titleFor, toHours, type ShelfBook } from "@/data/library";
 
 /**
  * Detail card for one book, opened as a modal dialog from its spine in the reading room.
@@ -105,6 +105,9 @@ const progress = reading ? Math.min(100, Math.max(0, reading.progress)) : 0;
 
 const CJK = /[㐀-鿿]/;
 const titleId = `book-${book.id}-title`;
+const mainTitle = titleFor(book, locale);
+// Outside Chinese pages the full WeRead title, when there is one, already shows the original
+const altTitle = locale !== "zh" && book.fullTitle ? undefined : altTitleFor(book, locale);
 const motif = COVER_MOTIFS[book.category];
 
 /** Cover title size: short titles stand large in one column, long ones wrap into two */
@@ -201,9 +204,11 @@ function charactersOf(ids: string[] = []): Character[] {
           {book.recent && <span class="detail-recent">{copy.recent}</span>}
         </div>
         <h3 class="detail-title" id={titleId}>
-          <span lang={CJK.test(book.title) ? "zh" : undefined}>{book.title}</span>
-          {book.titleEn && book.titleEn !== book.title && (
-            <span class="detail-title-en">{book.titleEn}</span>
+          <span lang={CJK.test(mainTitle) ? "zh" : undefined}>{mainTitle}</span>
+          {altTitle && (
+            <span class="detail-title-en" lang={CJK.test(altTitle) ? "zh" : undefined}>
+              {altTitle}
+            </span>
           )}
         </h3>
         {book.fullTitle && <p class="detail-full-title" lang="zh">{book.fullTitle}</p>}
