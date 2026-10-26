@@ -1,8 +1,8 @@
 {
-  "syncedThrough": 1792925796,
+  "syncedThrough": 1793002087,
   "stats": {
-    "totalSeconds": 2318411,
-    "readDays": 1109,
+    "totalSeconds": 2318493,
+    "readDays": 1110,
     "booksRead": 162,
     "booksFinished": 47,
     "notes": 2716,
@@ -37,7 +37,7 @@
       },
       {
         "year": 2026,
-        "seconds": 266460
+        "seconds": 266542
       }
     ],
     "hours": [
@@ -52,8 +52,8 @@
       57165,
       74592,
       76258,
-      82995,
-      102262,
+      83002,
+      102271,
       119985,
       105894,
       85855,
@@ -80,7 +80,8 @@
       "lastReadAt": 1792925796,
       "highlights": 20,
       "thoughts": 2,
-      "link": "https://weread.qq.com/book-detail?type=1&v=2a332d10726332f72a34943"
+      "link": "https://weread.qq.com/book-detail?type=1&v=2a332d10726332f72a34943",
+      "titleEn": "Embeded Power: Chinese Government and Economic Development"
     },
     {
       "id": "674048",
@@ -93,7 +94,8 @@
       "lastReadAt": 1792925406,
       "highlights": 50,
       "thoughts": 6,
-      "link": "https://weread.qq.com/book-detail?type=1&v=00f325d05a490000f72bda9"
+      "link": "https://weread.qq.com/book-detail?type=1&v=00f325d05a490000f72bda9",
+      "titleEn": "Deng Xiaoping and the Transformation of China"
     },
     {
       "id": "3300071815",
@@ -106,7 +108,8 @@
       "lastReadAt": 1792778596,
       "highlights": 4,
       "thoughts": 4,
-      "link": "https://weread.qq.com/book-detail?type=1&v=8b432820813ab828dg015ec1"
+      "link": "https://weread.qq.com/book-detail?type=1&v=8b432820813ab828dg015ec1",
+      "titleEn": null
     },
     {
       "id": "3300060404",
@@ -119,7 +122,8 @@
       "lastReadAt": 1790842017,
       "highlights": 352,
       "thoughts": 54,
-      "link": "https://weread.qq.com/book-detail?type=1&v=2db32710813ab7e18g014d99"
+      "link": "https://weread.qq.com/book-detail?type=1&v=2db32710813ab7e18g014d99",
+      "titleEn": null
     },
     {
       "id": "3300108679",
@@ -132,7 +136,8 @@
       "lastReadAt": 1783463327,
       "highlights": 70,
       "thoughts": 11,
-      "link": "https://weread.qq.com/book-detail?type=1&v=16832420813ab90f3g019f92"
+      "link": "https://weread.qq.com/book-detail?type=1&v=16832420813ab90f3g019f92",
+      "titleEn": null
     },
     {
       "id": "3300041002",
@@ -145,7 +150,8 @@
       "lastReadAt": 1782416938,
       "highlights": 12,
       "thoughts": 4,
-      "link": "https://weread.qq.com/book-detail?type=1&v=7fe32070813ab7684g012bbf"
+      "link": "https://weread.qq.com/book-detail?type=1&v=7fe32070813ab7684g012bbf",
+      "titleEn": "The Painted Veil"
     },
     {
       "id": "3300027311",
@@ -158,7 +164,8 @@
       "lastReadAt": 1767887393,
       "highlights": 233,
       "thoughts": 40,
-      "link": "https://weread.qq.com/book-detail?type=1&v=d6132f70813ab712bg011603"
+      "link": "https://weread.qq.com/book-detail?type=1&v=d6132f70813ab712bg011603",
+      "titleEn": null
     },
     {
       "id": "857863",
@@ -171,7 +178,8 @@
       "lastReadAt": 1767278224,
       "highlights": 10,
       "thoughts": 5,
-      "link": "https://weread.qq.com/book-detail?type=1&v=03b326005d170703ba15f85"
+      "link": "https://weread.qq.com/book-detail?type=1&v=03b326005d170703ba15f85",
+      "titleEn": "Flowers for Algernon"
     },
     {
       "id": "31808219",
@@ -184,7 +192,8 @@
       "lastReadAt": 1767278181,
       "highlights": 26,
       "thoughts": 3,
-      "link": "https://weread.qq.com/book-detail?type=1&v=c653236071e55adbc6552fe"
+      "link": "https://weread.qq.com/book-detail?type=1&v=c653236071e55adbc6552fe",
+      "titleEn": "The Brothers Karamazov"
     },
     {
       "id": "3300019669",
@@ -197,7 +206,8 @@
       "lastReadAt": 1766444440,
       "highlights": 147,
       "thoughts": 21,
-      "link": "https://weread.qq.com/book-detail?type=1&v=c8f32760813ab6e2eg019618"
+      "link": "https://weread.qq.com/book-detail?type=1&v=c8f32760813ab6e2eg019618",
+      "titleEn": null
     },
     {
       "id": "3300117751",
@@ -210,7 +220,8 @@
       "lastReadAt": 1762637153,
       "highlights": 46,
       "thoughts": 40,
-      "link": "https://weread.qq.com/book-detail?type=1&v=93132e10813ab947fg011bc1"
+      "link": "https://weread.qq.com/book-detail?type=1&v=93132e10813ab947fg011bc1",
+      "titleEn": null
     },
     {
       "id": "33638851",
@@ -223,7 +234,8 @@
       "lastReadAt": 1751825904,
       "highlights": 25,
       "thoughts": 4,
-      "link": "https://weread.qq.com/book-detail?type=1&v=b9a32d50720149c3b9aa69a"
+      "link": "https://weread.qq.com/book-detail?type=1&v=b9a32d50720149c3b9aa69a",
+      "titleEn": null
     },
     {
       "id": "35459982",
@@ -236,7 +248,8 @@
       "lastReadAt": 1750435196,
       "highlights": 3,
       "thoughts": 1,
-      "link": "https://weread.qq.com/book-detail?type=1&v=255325d0721d138e255ad02"
+      "link": "https://weread.qq.com/book-detail?type=1&v=255325d0721d138e255ad02",
+      "titleEn": null
     },
     {
       "id": "833793",
@@ -249,7 +262,8 @@
       "lastReadAt": 1744302451,
       "highlights": 10,
       "thoughts": 1,
-      "link": "https://weread.qq.com/book-detail?type=1&v=ced32a605cb901ced50d3f5"
+      "link": "https://weread.qq.com/book-detail?type=1&v=ced32a605cb901ced50d3f5",
+      "titleEn": "Pride and Prejudice"
     },
     {
       "id": "3300091348",
@@ -262,7 +276,8 @@
       "lastReadAt": 1741199489,
       "highlights": 22,
       "thoughts": 8,
-      "link": "https://weread.qq.com/book-detail?type=1&v=e1432a90813ab8a2eg01816f"
+      "link": "https://weread.qq.com/book-detail?type=1&v=e1432a90813ab8a2eg01816f",
+      "titleEn": null
     },
     {
       "id": "26767625",
@@ -275,7 +290,8 @@
       "lastReadAt": 1740769877,
       "highlights": 95,
       "thoughts": 5,
-      "link": "https://weread.qq.com/book-detail?type=1&v=cce328f071987109cce4dc1"
+      "link": "https://weread.qq.com/book-detail?type=1&v=cce328f071987109cce4dc1",
+      "titleEn": null
     },
     {
       "id": "35008168",
@@ -288,7 +304,8 @@
       "lastReadAt": 1734169160,
       "highlights": 76,
       "thoughts": 8,
-      "link": "https://weread.qq.com/book-detail?type=1&v=ec8320b072162ea8ec8b401"
+      "link": "https://weread.qq.com/book-detail?type=1&v=ec8320b072162ea8ec8b401",
+      "titleEn": "Fan hua"
     },
     {
       "id": "32282840",
@@ -301,7 +318,8 @@
       "lastReadAt": 1734168938,
       "highlights": 124,
       "thoughts": 21,
-      "link": "https://weread.qq.com/book-detail?type=1&v=5223230071ec98d8522124d"
+      "link": "https://weread.qq.com/book-detail?type=1&v=5223230071ec98d8522124d",
+      "titleEn": null
     },
     {
       "id": "3300003116",
@@ -314,7 +332,8 @@
       "lastReadAt": 1732127108,
       "highlights": 1,
       "thoughts": 1,
-      "link": "https://weread.qq.com/book-detail?type=1&v=0fa321f0813ab67b7g016327"
+      "link": "https://weread.qq.com/book-detail?type=1&v=0fa321f0813ab67b7g016327",
+      "titleEn": "First Person Singular"
     },
     {
       "id": "934835",
@@ -327,7 +346,8 @@
       "lastReadAt": 1730468057,
       "highlights": 6,
       "thoughts": 1,
-      "link": "https://weread.qq.com/book-detail?type=1&v=e2832f705e43b3e28c3f39e"
+      "link": "https://weread.qq.com/book-detail?type=1&v=e2832f705e43b3e28c3f39e",
+      "titleEn": "One Sentence Is Ten Thousand Sentences"
     },
     {
       "id": "27689995",
@@ -340,7 +360,8 @@
       "lastReadAt": 1729301065,
       "highlights": 75,
       "thoughts": 19,
-      "link": "https://weread.qq.com/book-detail?type=1&v=d5632b5071a6840bd56401b"
+      "link": "https://weread.qq.com/book-detail?type=1&v=d5632b5071a6840bd56401b",
+      "titleEn": "Thus Spoke Zarathustra"
     },
     {
       "id": "855799",
@@ -353,7 +374,8 @@
       "lastReadAt": 1728201751,
       "highlights": 66,
       "thoughts": 7,
-      "link": "https://weread.qq.com/book-detail?type=1&v=a7f32c505d0ef7a7f4f3839"
+      "link": "https://weread.qq.com/book-detail?type=1&v=a7f32c505d0ef7a7f4f3839",
+      "titleEn": "When Nietzsche Wept"
     },
     {
       "id": "855327",
@@ -366,7 +388,8 @@
       "lastReadAt": 1727943188,
       "highlights": 81,
       "thoughts": 11,
-      "link": "https://weread.qq.com/book-detail?type=1&v=3a832f705d0d1f3a8ec72ff"
+      "link": "https://weread.qq.com/book-detail?type=1&v=3a832f705d0d1f3a8ec72ff",
+      "titleEn": "Siddhartha"
     },
     {
       "id": "23976240",
@@ -379,7 +402,8 @@
       "lastReadAt": 1715027262,
       "highlights": 265,
       "thoughts": 61,
-      "link": "https://weread.qq.com/book-detail?type=1&v=06832650716dd9300689c84"
+      "link": "https://weread.qq.com/book-detail?type=1&v=06832650716dd9300689c84",
+      "titleEn": "My Name Is Red"
     },
     {
       "id": "26070535",
@@ -392,7 +416,8 @@
       "lastReadAt": 1712269189,
       "highlights": 0,
       "thoughts": 0,
-      "link": "https://weread.qq.com/book-detail?type=1&v=d1032df0718dce07d101c2a"
+      "link": "https://weread.qq.com/book-detail?type=1&v=d1032df0718dce07d101c2a",
+      "titleEn": null
     },
     {
       "id": "35551088",
@@ -405,7 +430,8 @@
       "lastReadAt": 1709667240,
       "highlights": 72,
       "thoughts": 10,
-      "link": "https://weread.qq.com/book-detail?type=1&v=66832530721e777066806c9"
+      "link": "https://weread.qq.com/book-detail?type=1&v=66832530721e777066806c9",
+      "titleEn": null
     },
     {
       "id": "29348532",
@@ -418,7 +444,8 @@
       "lastReadAt": 1708268708,
       "highlights": 20,
       "thoughts": 3,
-      "link": "https://weread.qq.com/book-detail?type=1&v=7fd320f071bfd2b47fda87d"
+      "link": "https://weread.qq.com/book-detail?type=1&v=7fd320f071bfd2b47fda87d",
+      "titleEn": null
     },
     {
       "id": "40527660",
@@ -431,7 +458,8 @@
       "lastReadAt": 1689500046,
       "highlights": 16,
       "thoughts": 1,
-      "link": "https://weread.qq.com/book-detail?type=1&v=613325e0726a672c613c2fe"
+      "link": "https://weread.qq.com/book-detail?type=1&v=613325e0726a672c613c2fe",
+      "titleEn": "The Old Man and the Sea"
     },
     {
       "id": "907334",
@@ -444,7 +472,8 @@
       "lastReadAt": 1686606247,
       "highlights": 0,
       "thoughts": 0,
-      "link": "https://weread.qq.com/book-detail?type=1&v=efc326105dd846efcc90f7b"
+      "link": "https://weread.qq.com/book-detail?type=1&v=efc326105dd846efcc90f7b",
+      "titleEn": null
     },
     {
       "id": "3300042491",
@@ -457,7 +486,8 @@
       "lastReadAt": 1684094130,
       "highlights": 11,
       "thoughts": 1,
-      "link": "https://weread.qq.com/book-detail?type=1&v=ee532aa0813ab7719g011133"
+      "link": "https://weread.qq.com/book-detail?type=1&v=ee532aa0813ab7719g011133",
+      "titleEn": "Ruined City"
     },
     {
       "id": "3300025105",
@@ -470,7 +500,8 @@
       "lastReadAt": 1681158618,
       "highlights": 7,
       "thoughts": 0,
-      "link": "https://weread.qq.com/book-detail?type=1&v=a9832c70813ab704eg015e88"
+      "link": "https://weread.qq.com/book-detail?type=1&v=a9832c70813ab704eg015e88",
+      "titleEn": null
     },
     {
       "id": "27258789",
@@ -483,7 +514,8 @@
       "lastReadAt": 1667422095,
       "highlights": 1,
       "thoughts": 0,
-      "link": "https://weread.qq.com/book-detail?type=1&v=32f32c90719fefa532f66d3"
+      "link": "https://weread.qq.com/book-detail?type=1&v=32f32c90719fefa532f66d3",
+      "titleEn": null
     },
     {
       "id": "3300018590",
@@ -496,7 +528,8 @@
       "lastReadAt": 1664445993,
       "highlights": 10,
       "thoughts": 1,
-      "link": "https://weread.qq.com/book-detail?type=1&v=f4c32cb0813ab6dc3g010c73"
+      "link": "https://weread.qq.com/book-detail?type=1&v=f4c32cb0813ab6dc3g010c73",
+      "titleEn": null
     },
     {
       "id": "932426",
@@ -509,7 +542,8 @@
       "lastReadAt": 1656683705,
       "highlights": 0,
       "thoughts": 0,
-      "link": "https://weread.qq.com/book-detail?type=1&v=83932a505e3a4a8393bb430"
+      "link": "https://weread.qq.com/book-detail?type=1&v=83932a505e3a4a8393bb430",
+      "titleEn": "Ode to Gallantry"
     },
     {
       "id": "932429",
@@ -522,7 +556,8 @@
       "lastReadAt": 1656683666,
       "highlights": 0,
       "thoughts": 0,
-      "link": "https://weread.qq.com/book-detail?type=1&v=14932fc05e3a4d149e80ecc"
+      "link": "https://weread.qq.com/book-detail?type=1&v=14932fc05e3a4d149e80ecc",
+      "titleEn": "The Smiling, Proud Wanderer"
     },
     {
       "id": "22946457",
@@ -535,7 +570,8 @@
       "lastReadAt": 1655331854,
       "highlights": 0,
       "thoughts": 0,
-      "link": "https://weread.qq.com/book-detail?type=1&v=54c32520715e229954c8b8a"
+      "link": "https://weread.qq.com/book-detail?type=1&v=54c32520715e229954c8b8a",
+      "titleEn": "Fortress Besieged"
     },
     {
       "id": "25631121",
@@ -548,7 +584,8 @@
       "lastReadAt": 1654428962,
       "highlights": 0,
       "thoughts": 0,
-      "link": "https://weread.qq.com/book-detail?type=1&v=d5932dc071871991d59b2ce"
+      "link": "https://weread.qq.com/book-detail?type=1&v=d5932dc071871991d59b2ce",
+      "titleEn": null
     },
     {
       "id": "41452812",
@@ -561,7 +598,8 @@
       "lastReadAt": 1652570887,
       "highlights": 24,
       "thoughts": 1,
-      "link": "https://weread.qq.com/book-detail?type=1&v=8f532bd07278850c8f51770"
+      "link": "https://weread.qq.com/book-detail?type=1&v=8f532bd07278850c8f51770",
+      "titleEn": null
     },
     {
       "id": "932433",
@@ -574,7 +612,8 @@
       "lastReadAt": 1642548884,
       "highlights": 0,
       "thoughts": 0,
-      "link": "https://weread.qq.com/book-detail?type=1&v=fc0328705e3a51fc0ac5b9d"
+      "link": "https://weread.qq.com/book-detail?type=1&v=fc0328705e3a51fc0ac5b9d",
+      "titleEn": "Sword Stained with Royal Blood"
     },
     {
       "id": "932425",
@@ -587,7 +626,8 @@
       "lastReadAt": 1570275633,
       "highlights": 0,
       "thoughts": 0,
-      "link": "https://weread.qq.com/book-detail?type=1&v=971326f05e3a499719e8fd2"
+      "link": "https://weread.qq.com/book-detail?type=1&v=971326f05e3a499719e8fd2",
+      "titleEn": "The Deer and the Cauldron"
     }
   ]
 }
