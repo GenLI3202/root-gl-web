@@ -9,9 +9,10 @@
 //
 // Required env:
 //   WEREAD_API_KEY — WeRead agent API key (wrk-…), repository secret in CI
-// Optional env:
-//   ANTHROPIC_API_KEY — lets Claude write an English title for each newly listed book;
-//                       without it those books keep their Chinese title only
+//
+// English titles come from Wikidata (free, no key): a book gets one when Wikidata has a
+// written work with that Chinese title, a matching author and an English label. Books it
+// can't find keep their Chinese title; WEREAD_OVERRIDES in src/data/library.ts can add one.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -28,23 +29,14 @@ const PREFER_TIME_START_HOUR = 6;
 const HOURS_TIME_ZONE = "Europe/Berlin";
 // Year used to measure how much of the year Europe/Berlin spends on summer time
 const DST_REFERENCE_YEAR = 2025;
-const TITLE_MODEL = "claude-opus-5-5";
-const TITLE_SCHEMA = {
-  type: "object",
-  properties: {
-    titles: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: { id: { type: "string" }, titleEn: { type: "string" } },
-        required: ["id", "titleEn"],
-        additionalProperties: false,
-      },
-    },
-  },
-  required: ["titles"],
-  additionalProperties: false,
+const WIKIDATA_API = "https://www.wikidata.org/w/api.php";
+const WIKIDATA_HEADERS = {
+  "User-Agent": "gen-web-reading-sync/1.0 (https://github.com/GenLI3202/root-gl-web)",
 };
+// A candidate counts as the book only when its description names a written work…
+const WRITTEN_WORK = /\b(novel|novella|book|short story|stories|story collection|poem|poetry|essay|memoir|biography|non-?fiction|play|trilogy|literary work|written work)\b/i;
+// …and not an adaptation or another medium
+const OTHER_MEDIUM = /\b(film|television|tv series|series project|video game|game|song|album|opera|manga|anime|episode|scholarly article)\b/i;
 
 const API_KEY = process.env.WEREAD_API_KEY;
 if (!API_KEY) {
@@ -105,51 +97,99 @@ function summerTimeShare() {
   return summerDays / days;
 }
 
+/** Wikidata API call with the descriptive User-Agent its usage policy asks for */
+async function wikidata(params) {
+  const url = `${WIKIDATA_API}?${new URLSearchParams({ format: "json", ...params })}`;
+  const res = await fetch(url, { headers: WIKIDATA_HEADERS });
+  if (!res.ok) throw new Error(`Wikidata HTTP ${res.status}`);
+  return res.json();
+}
+
+/** "鹿鼎记（套装共5册）纯文字版" → "鹿鼎记", "置身事内：中国政府与经济发展" → "置身事内" */
+function searchTitle(title) {
+  const short = title
+    .replace(/[《》]/g, "")
+    .replace(/[（(].*$/, "")
+    .replace(/[-—]?(纯文字版|大字版)$/, "")
+    .split("：")[0]
+    .trim();
+  return short || title;
+}
+
+/** CJK characters of a name, without nationality tags like [英] or name dots */
+function nameChars(name) {
+  return new Set(name.replace(/[[［【(（].*?[\]］】)）]/g, "").match(/[\u3400-\u9fff]/g) ?? []);
+}
+
+/** True when two author names share at least two CJK characters, e.g. 毛姆 in both */
+function sameAuthor(ours, theirs) {
+  const a = nameChars(ours);
+  let shared = 0;
+  for (const ch of nameChars(theirs)) if (a.has(ch)) shared += 1;
+  return shared >= 2;
+}
+
+/** The English title Wikidata has for this book, or null when it has no confident match */
+async function wikidataTitle(book) {
+  const search = await wikidata({
+    action: "wbsearchentities",
+    search: searchTitle(book.title),
+    language: "zh",
+    uselang: "en",
+    type: "item",
+    limit: "7",
+  });
+  const candidates = (search.search ?? []).filter(
+    (c) => WRITTEN_WORK.test(c.description ?? "") && !OTHER_MEDIUM.test(c.description ?? "")
+  );
+  if (candidates.length === 0) return null;
+
+  const items = await wikidata({
+    action: "wbgetentities",
+    ids: candidates.map((c) => c.id).join("|"),
+    props: "labels|claims",
+    languages: "en",
+  });
+  for (const candidate of candidates) {
+    const item = items.entities?.[candidate.id];
+    const english = item?.labels?.en?.value;
+    if (!english) continue;
+    const authorIds = (item.claims?.P50 ?? [])
+      .map((claim) => claim.mainsnak?.datavalue?.value?.id)
+      .filter(Boolean);
+    if (authorIds.length === 0) return english;
+    const authors = await wikidata({
+      action: "wbgetentities",
+      ids: authorIds.join("|"),
+      props: "labels|aliases",
+      languages: "zh|zh-hans|zh-cn",
+    });
+    const names = Object.values(authors.entities ?? {}).flatMap((entity) => [
+      ...Object.values(entity.labels ?? {}).map((l) => l.value),
+      ...Object.values(entity.aliases ?? {}).flatMap((list) => list.map((a) => a.value)),
+    ]);
+    if (names.some((name) => sameAuthor(book.author, name))) return english;
+  }
+  return null;
+}
+
 /**
- * Fills `titleEn` on books that have none yet, with one Claude request: the title the work is
- * published under in English, or a short faithful translation. Titles are cached in
- * reading.json, so each book is asked about once. Any failure leaves the Chinese title.
+ * Looks up an English title for each book not looked up before. A found title is stored as
+ * `titleEn`; null records that Wikidata had none, so the book is only asked about again on a
+ * --full run. A failed lookup leaves the field unset and is retried on the next run.
  */
 async function addEnglishTitles(list) {
-  const missing = list.filter((b) => !b.titleEn);
-  if (missing.length === 0) return;
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.log(`ANTHROPIC_API_KEY is not set; ${missing.length} books have no English title.`);
-    return;
-  }
-  const shelf = missing.map(({ id, title, author }) => ({ id, title, author }));
-  const prompt =
-    "These books are on a Chinese e-reader shelf. For each one, give the English title a " +
-    "reader would know it by: the published English title if the work has one (for works " +
-    "translated into Chinese, the English title of the original), otherwise a short, " +
-    "faithful English translation. Leave out edition notes such as 套装, 珍藏版 or " +
-    "纯文字版, and drop subtitles unless the title needs them. Return one entry per id.\n\n" +
-    JSON.stringify(shelf, null, 2);
-  try {
-    const { default: Anthropic } = await import("@anthropic-ai/sdk");
-    const client = new Anthropic();
-    const response = await client.beta.messages.create({
-      model: TITLE_MODEL,
-      max_tokens: 4000,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: "low", format: { type: "json_schema", schema: TITLE_SCHEMA } },
-      messages: [{ role: "user", content: prompt }],
-    });
-    if (response.stop_reason !== "end_turn") {
-      throw new Error(`stopped with ${response.stop_reason}`);
+  const pending = list.filter((b) => b.titleEn === undefined || (fullScan && b.titleEn === null));
+  let found = 0;
+  for (const book of pending) {
+    try {
+      book.titleEn = await wikidataTitle(book);
+      if (book.titleEn) found += 1;
+    } catch (error) {
+      console.warn(`English title lookup failed for ${book.title}: ${error?.message ?? error}`);
     }
-    const text = response.content.find((block) => block.type === "text")?.text ?? "{}";
-    const byId = new Map(missing.map((b) => [b.id, b]));
-    for (const { id, titleEn } of JSON.parse(text).titles ?? []) {
-      const book = byId.get(String(id));
-      if (book && titleEn?.trim()) book.titleEn = titleEn.trim();
-    }
-    console.log(`English titles: ${missing.filter((b) => b.titleEn).length}/${missing.length}.`);
-  } catch (error) {
-    const status = error?.status ? ` (HTTP ${error.status})` : "";
-    console.warn(`English titles skipped${status}: ${error?.message ?? error}`);
   }
+  if (pending.length > 0) console.log(`English titles from Wikidata: ${found}/${pending.length}.`);
 }
 
 /** "162本" → 162 */
@@ -263,6 +303,7 @@ for (const b of publicBooks) {
     highlights: note?.noteCount ?? 0,
     thoughts: note?.reviewCount ?? 0,
     link: b.deepLink ?? null,
+    // Kept while the WeRead title is unchanged; undefined means not looked up yet
     titleEn: prior?.title === b.title ? prior.titleEn : undefined,
   });
 }

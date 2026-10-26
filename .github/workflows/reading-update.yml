@@ -4,9 +4,8 @@ name: Update reading data
 # src/data/reading.json, then commits the result so Vercel redeploys.
 #
 # Setup (one time):
-#   - Repo secret  WEREAD_API_KEY     — WeRead agent API key (wrk-…)
-#   - Repo secret  ANTHROPIC_API_KEY  — optional; Claude writes English titles for new books
-# Until WEREAD_API_KEY is set the job fails with a clear message and commits nothing.
+#   - Repo secret  WEREAD_API_KEY  — WeRead agent API key (wrk-…)
+# Until the secret is set the job fails with a clear message and commits nothing.
 
 on:
   schedule:
@@ -34,15 +33,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci --no-audit --no-fund
 
       - name: Pull WeRead data
         env:
           WEREAD_API_KEY: ${{ secrets.WEREAD_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node scripts/update-reading.mjs ${{ inputs.full && '--full' || '' }}
 
       - name: Commit and push if changed

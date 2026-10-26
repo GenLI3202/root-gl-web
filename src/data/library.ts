@@ -22,8 +22,8 @@ export interface WereadBook {
   highlights: number;
   thoughts: number;
   link: string | null;
-  /** English title written by the sync script (official title or a translation) */
-  titleEn?: string;
+  /** English title found on Wikidata by the sync script; null when it found none */
+  titleEn?: string | null;
 }
 
 export interface ReadingStats {
@@ -50,7 +50,7 @@ export interface ShelfBook extends Omit<Book, "titleEn" | "about" | "recent"> {
 
 /**
  * Hand fixes for synced books: a shorter title, an English title, another category, or hide.
- * A `titleEn` here wins over the one the sync script writes into reading.json.
+ * A `titleEn` here wins over the one the sync script finds on Wikidata.
  */
 interface WereadOverride {
   title?: string;
@@ -149,7 +149,7 @@ const fromWeread: ShelfBook[] = SYNCED.filter(
   return {
     id: `weread-${b.id}`,
     title,
-    titleEn: override.titleEn ?? b.titleEn,
+    titleEn: override.titleEn ?? b.titleEn ?? undefined,
     fullTitle: title !== b.title ? b.title : undefined,
     author: b.author,
     category: override.category ?? categoryOf(b.category),
