@@ -127,9 +127,9 @@ This is an approximation: reading done while travelling or around clock changes 
 
 EN and DE pages show each book's English title on the spines and the book card (the Chinese original stays as a smaller line on the card; the card's cover art keeps the Chinese title). Chinese pages show the Chinese title.
 
-- **New books:** when a book first enters `reading.json`, the script asks Claude (`claude-opus-5-5`, one request per run, server-side refusal fallback on) for the published English title, or a short faithful translation if there is none, and stores it as `titleEn` in the JSON. Later runs reuse it.
-- **Needs** the repository secret `ANTHROPIC_API_KEY` (same place as `WEREAD_API_KEY`). Without it, or if the request fails, the sync still runs and the book shows its Chinese title until a later run succeeds.
-- **To correct a title,** set `titleEn` in `WEREAD_OVERRIDES` (below); hand-written titles always win.
+- **New books:** the script looks the book up on Wikidata (free, no key). It takes the English label of an item whose description names a written work (novel, book, short story, …, not a film or game) and whose author matches, and stores it as `titleEn` in `reading.json`. A book with no confident match gets `titleEn: null` and shows its Chinese title; it is looked up again only on a `--full` run.
+- **Coverage:** well-known and translated works are usually found (about half of the current shelf); newer or niche books usually aren't.
+- **To add or correct a title,** set `titleEn` in `WEREAD_OVERRIDES` (below); hand-written titles always win.
 
 ### Hide, rename or re-categorise a synced book
 
@@ -144,7 +144,7 @@ Edit `WEREAD_OVERRIDES` in `src/data/library.ts`, keyed by the WeRead `bookId` (
 | Field | Effect |
 |-------|--------|
 | `title` | Replaces the shortened WeRead title (series and edition suffixes are already trimmed by `shortTitle()`) |
-| `titleEn` | English title shown on EN and DE pages; wins over the one the script wrote |
+| `titleEn` | English title shown on EN and DE pages; wins over the one found on Wikidata |
 | `category` | One of `literature`, `ideas`, `polecon`, `wuxia`, `scifi` |
 | `hidden` | `true` removes the book from the shelf |
 
