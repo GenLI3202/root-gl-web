@@ -1,0 +1,46 @@
+---
+import "@/styles/global.css";
+
+/**
+ * Document shell for the training room. It stands apart from the site: no nav, no footer,
+ * the lime training palette in both themes, and kept out of search results.
+ */
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Noto+Sans+SC:wght@500;700;900&display=swap"
+    />
+  </head>
+  <body class="training-room">
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  body.training-room {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--train-lime);
+    color: var(--train-ink);
+    font-family: "Bricolage Grotesque", "Noto Sans SC", -apple-system, "PingFang SC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body.training-room::before {
+    display: none;
+  }
+</style>
