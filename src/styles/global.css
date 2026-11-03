@@ -37,6 +37,15 @@
   /* Paper grain overlay */
   --grain-opacity: 0.35;
 
+  /* Training room behind the dumbbell on the cycling page: one bright look in both themes */
+  --train-lime:   #d4ff3f;
+  --train-ink:    #1b1330;
+  --train-cream:  #fff3e0;
+  --train-lav:    #b6a2ff;
+  --train-orange: #ff7a2d;
+  --train-pink:   #ff9ec7;
+  --train-muted:  #1b13308c;
+
   /* Reading-room bookcases and spines, one muted tint per category */
   --shelf-literature: #D9E2D0;
   --shelf-ideas:      #E2DCE9;
