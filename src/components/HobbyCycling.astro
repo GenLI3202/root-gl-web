@@ -7,6 +7,7 @@ import CyclingRideMix from "@/components/CyclingRideMix.astro";
 import CyclingKey from "@/components/CyclingKey.astro";
 import CyclingBigDays from "@/components/CyclingBigDays.astro";
 import CyclingMap from "@/components/CyclingMap.astro";
+import TrainingDoor from "@/components/TrainingDoor.astro";
 import { t, type Locale } from "@/i18n";
 import { formatDate, formatNumber, funFigures, loadCycling, loadRoutes } from "@/utils/cycling";
 
@@ -199,6 +200,7 @@ const tableRows = data
   lead={t(locale, "hobbies.cycling.lead")}
   illustration="/images/hobbies/cyclist-rider.svg"
 >
+  <TrainingDoor slot="corner" locale={locale} />
   <section class="intro">
     {data ? (
       <>
