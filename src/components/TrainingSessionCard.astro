@@ -1,0 +1,195 @@
+---
+import type { TrainingSession } from "@/data/training-sessions";
+
+/**
+ * One session theme in the training room. A session with a follow-along page is a link;
+ * the rest are drawn greyed out as not yet built.
+ */
+interface Props {
+  session: TrainingSession;
+  today?: boolean;
+}
+
+const { session, today = false } = Astro.props;
+const ready = Boolean(session.href);
+const Tag = ready ? "a" : "div";
+const LEVELS = ["", "轻松", "适中", "吃力", "硬核"];
+---
+
+<Tag
+  class:list={["session-card", { today, idle: !ready }]}
+  href={ready ? session.href : undefined}
+  aria-disabled={ready ? undefined : "true"}
+>
+  {today && <span class="sticker">今天</span>}
+  {!ready && <span class="sticker idle-sticker">待开发</span>}
+  <span class="plan">{session.plan}</span>
+  <h2 class="name">{session.name}</h2>
+  <ul class="tags" role="list">
+    <li class="tag time">{session.minutes} 分钟</li>
+    <li class="tag level" aria-label={`难度 ${LEVELS[session.level]}`}>
+      <span class="dots" aria-hidden="true">
+        {[1, 2, 3, 4].map((n) => <i class:list={{ on: n <= session.level }} />)}
+      </span>
+      {LEVELS[session.level]}
+    </li>
+    {session.focus.map((f) => <li class="tag focus">{f}</li>)}
+    <li class="tag gear">{session.gear}</li>
+  </ul>
+  {today && <p class="moves">{session.exercises.join(" · ")}</p>}
+  {ready && <span class="go" aria-hidden="true">开练 →</span>}
+</Tag>
+
+<style>
+  .session-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1.1rem 1.2rem 1.2rem;
+    border: 3px solid var(--train-ink);
+    border-radius: 22px;
+    background: var(--train-cream);
+    color: var(--train-ink);
+    text-decoration: none;
+    box-shadow: 0 6px 0 var(--train-ink);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  a.session-card:hover,
+  a.session-card:focus-visible {
+    transform: translateY(-3px) rotate(-0.6deg);
+    box-shadow: 0 9px 0 var(--train-ink);
+  }
+
+  a.session-card:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 var(--train-ink);
+  }
+
+  a.session-card:focus-visible {
+    outline: 3px dashed var(--train-ink);
+    outline-offset: 4px;
+  }
+
+  .session-card.idle {
+    background: transparent;
+    border-style: dashed;
+    box-shadow: none;
+    filter: grayscale(1);
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .session-card.today {
+    padding: 1.5rem 1.6rem 1.6rem;
+  }
+
+  .sticker {
+    position: absolute;
+    top: -14px;
+    right: 18px;
+    padding: 3px 14px;
+    border: 3px solid var(--train-ink);
+    border-radius: 99px;
+    background: var(--train-pink);
+    font-weight: 800;
+    font-size: 0.9rem;
+    transform: rotate(4deg);
+    box-shadow: 0 3px 0 var(--train-ink);
+  }
+
+  .idle-sticker {
+    background: var(--train-cream);
+    box-shadow: none;
+  }
+
+  .plan {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--train-muted);
+  }
+
+  .name {
+    margin: 0;
+    font-size: 1.7rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+  .today .name {
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border: 2px solid var(--train-ink);
+    border-radius: 99px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .tag.time {
+    background: var(--train-ink);
+    color: var(--train-lime);
+  }
+
+  .tag.focus {
+    background: var(--train-lav);
+  }
+
+  .dots {
+    display: inline-flex;
+    gap: 2px;
+  }
+
+  .dots i {
+    width: 7px;
+    height: 7px;
+    border: 1.5px solid var(--train-ink);
+    border-radius: 50%;
+  }
+
+  .dots i.on {
+    background: var(--train-orange);
+  }
+
+  .moves {
+    margin: 0.2rem 0 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  .go {
+    align-self: flex-start;
+    margin-top: 0.4rem;
+    padding: 0.55rem 1.3rem;
+    border-radius: 99px;
+    background: var(--train-ink);
+    color: var(--train-lime);
+    font-weight: 900;
+    font-size: 1.1rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .session-card {
+      transition: none;
+    }
+  }
+</style>

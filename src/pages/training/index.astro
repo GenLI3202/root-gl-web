@@ -1,0 +1,107 @@
+---
+import TrainingLayout from "@/layouts/TrainingLayout.astro";
+import TrainingSessionCard from "@/components/TrainingSessionCard.astro";
+import { TRAINING_SESSIONS, TODAY_SESSION } from "@/data/training-sessions";
+
+/** The training room: pick a session theme. Reached only through the dumbbell on the cycling page. */
+const today = TRAINING_SESSIONS.find((s) => s.id === TODAY_SESSION);
+const others = TRAINING_SESSIONS.filter((s) => s.id !== TODAY_SESSION);
+---
+
+<TrainingLayout title="训练室">
+  <main class="room">
+    <a class="back" href="/hobbies/cycling/" data-back>← 回到骑行</a>
+    <header class="room-head">
+      <h1>训练室</h1>
+      <p>选一个主题。今天这节已经备好了，其他的还在搭。</p>
+    </header>
+
+    {today && (
+      <section class="today-slot" aria-label="今天的训练">
+        <TrainingSessionCard session={today} today />
+      </section>
+    )}
+
+    <section aria-labelledby="all-h">
+      <h2 id="all-h" class="all-title">全部主题 · {TRAINING_SESSIONS.length} 种</h2>
+      <div class="grid">
+        {others.map((s) => <TrainingSessionCard session={s} />)}
+      </div>
+    </section>
+
+    <p class="foot">主题来自每周训练规划里的 9 种力量课模板，按 Friel 与 Doyle 的周期安排。</p>
+  </main>
+</TrainingLayout>
+
+<script>
+  /* return to the cycling page in the language the visitor came from */
+  const back = new URLSearchParams(window.location.search).get("back");
+  const link = document.querySelector<HTMLAnchorElement>("[data-back]");
+  if (link && back && back.startsWith("/") && !back.startsWith("//")) {
+    link.href = back;
+    sessionStorage.setItem("training-back", back);
+  }
+</script>
+
+<style>
+  .room {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding-block: 1.4rem 3rem;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+  }
+
+  .back {
+    align-self: flex-start;
+    color: var(--train-ink);
+    font-family: var(--font-hand);
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .back:hover {
+    text-decoration: underline wavy;
+  }
+
+  .room-head h1 {
+    margin: 0;
+    font-size: clamp(3.2rem, 10vw, 6rem);
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    line-height: 0.9;
+  }
+
+  .room-head p {
+    margin: 0.6rem 0 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .today-slot {
+    max-width: 760px;
+  }
+
+  .all-title {
+    margin: 0.6rem 0 1rem;
+    font-size: 1.1rem;
+    font-weight: 900;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+    gap: 1.4rem 1rem;
+  }
+
+  .foot {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--train-muted);
+  }
+</style>

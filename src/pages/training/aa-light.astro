@@ -1,0 +1,31 @@
+---
+import TrainingLayout from "@/layouts/TrainingLayout.astro";
+import app from "@/training/aa-light.html?raw";
+
+/**
+ * Follow-along page for the 地板唤醒 session. The app itself is a self-contained page built in the
+ * scientific-training repo (docs/app/follow/aa-light.html) and copied into src/training/ verbatim;
+ * edit it there and copy it over, so both stay in sync.
+ */
+---
+
+<TrainingLayout title="地板唤醒 · 训练室">
+  <a class="to-room" href="/training/">← 选主题</a>
+  <Fragment set:html={app} />
+</TrainingLayout>
+
+<style>
+  .to-room {
+    display: inline-block;
+    margin: 12px 0 0 max(16px, env(safe-area-inset-left, 0px));
+    color: var(--train-ink);
+    font-family: var(--font-hand);
+    font-size: 1.35rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .to-room:hover {
+    text-decoration: underline wavy;
+  }
+</style>

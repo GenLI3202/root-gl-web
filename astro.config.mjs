@@ -8,7 +8,8 @@ export default defineConfig({
   integrations: [
     tailwind({ applyBaseStyles: false }),
     mdx(),
-    sitemap(),
+    // The training room is reached only through the cycling page, so it stays out of the sitemap
+    sitemap({ filter: (page) => !page.includes("/training/") }),
   ],
   markdown: {
     shikiConfig: {

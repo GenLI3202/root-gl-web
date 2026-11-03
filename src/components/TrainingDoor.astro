@@ -1,0 +1,140 @@
+---
+import { localizeUrl, type Locale } from "@/i18n";
+
+/**
+ * The hidden way into the training room: a small pen-drawn dumbbell with no visible label.
+ * It only reveals itself on hover or focus. A click sweeps the screen from cycling red to the
+ * training lime, then loads the room; the return link points back to this locale's cycling page.
+ */
+interface Props {
+  locale: Locale;
+}
+
+const LABEL: Record<Locale, string> = {
+  en: "Off the bike: the training room",
+  zh: "下车以后：训练室",
+  de: "Abseits vom Rad: der Trainingsraum",
+};
+
+const { locale } = Astro.props;
+const back = localizeUrl("/hobbies/cycling/", locale);
+const href = `/training/?back=${encodeURIComponent(back)}`;
+---
+
+<a class="training-door" href={href} aria-label={LABEL[locale]} data-astro-reload>
+  <svg viewBox="0 0 48 32" aria-hidden="true">
+    <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2.4" y="8.6" width="7.4" height="14.8" rx="2.6" />
+      <rect x="9.8" y="11.8" width="5" height="8.4" rx="1.6" />
+      <path d="M14.8 16.2 C20 15.6 28 16.6 33.2 15.9" />
+      <rect x="33.2" y="11.8" width="5" height="8.4" rx="1.6" />
+      <rect x="38.2" y="8.6" width="7.4" height="14.8" rx="2.6" />
+    </g>
+    <g fill="none" stroke="currentColor" stroke-width="0.8" stroke-linecap="round" opacity="0.4">
+      <rect x="2.9" y="9.2" width="7.2" height="14.4" rx="2.6" />
+      <rect x="38.6" y="9" width="7.2" height="14.4" rx="2.6" />
+    </g>
+  </svg>
+</a>
+
+<style>
+  .training-door {
+    display: inline-grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 2.5rem;
+    border-radius: 0.6rem;
+    color: var(--fg-muted);
+    opacity: 0.55;
+    transition:
+      color 0.2s ease,
+      opacity 0.2s ease,
+      transform 0.25s ease;
+  }
+
+  .training-door svg {
+    width: 2.75rem;
+    height: 1.85rem;
+    overflow: visible;
+  }
+
+  .training-door:hover,
+  .training-door:focus-visible {
+    color: var(--accent);
+    opacity: 1;
+    transform: translateY(-3px) rotate(-10deg) scale(1.12);
+    cursor: pointer;
+  }
+
+  .training-door:hover svg {
+    animation: door-lift 0.7s ease-in-out;
+  }
+
+  .training-door:focus-visible {
+    outline: 2px dashed var(--accent);
+    outline-offset: 4px;
+  }
+
+  @keyframes door-lift {
+    0%, 100% { transform: rotate(0); }
+    30% { transform: rotate(-12deg) translateY(-2px); }
+    65% { transform: rotate(8deg); }
+  }
+
+  :global(.door-sweep) {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    pointer-events: none;
+    clip-path: circle(0 at var(--x) var(--y));
+    transition: clip-path 0.62s cubic-bezier(0.7, 0, 0.2, 1);
+  }
+
+  :global(.door-sweep.go) {
+    clip-path: circle(150vmax at var(--x) var(--y));
+  }
+
+  :global(.door-sweep.red) {
+    background: var(--accent);
+  }
+
+  :global(.door-sweep.lime) {
+    background: var(--train-lime);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .training-door,
+    .training-door:hover svg {
+      animation: none;
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  function openDoor(event: MouseEvent, door: HTMLAnchorElement): void {
+    const plainClick = !event.metaKey && !event.ctrlKey && !event.shiftKey && event.button === 0;
+    if (!plainClick || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    event.preventDefault();
+    const box = door.getBoundingClientRect();
+    ["red", "lime"].forEach((tone, i) => {
+      const sweep = document.createElement("div");
+      sweep.className = `door-sweep ${tone}`;
+      sweep.style.setProperty("--x", `${box.left + box.width / 2}px`);
+      sweep.style.setProperty("--y", `${box.top + box.height / 2}px`);
+      document.body.appendChild(sweep);
+      window.setTimeout(() => sweep.classList.add("go"), 20 + i * 240);
+    });
+    window.setTimeout(() => window.location.assign(door.href), 880);
+  }
+
+  function bindDoors(): void {
+    document.querySelectorAll<HTMLAnchorElement>(".training-door").forEach((door) => {
+      if (door.dataset.bound) return;
+      door.dataset.bound = "true";
+      door.addEventListener("click", (event) => openDoor(event, door));
+    });
+  }
+
+  document.addEventListener("astro:page-load", bindDoors);
+</script>

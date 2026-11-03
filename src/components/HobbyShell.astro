@@ -62,6 +62,7 @@ const hobbyUrl = (id: HobbyId): string => localizeUrl(`/hobbies/${id}/`, locale)
         <slot name="header-extra" />
       </div>
       {illustration && <img class="hobby-illustration" src={illustration} alt="" aria-hidden="true" />}
+      {Astro.slots.has("corner") && <div class="hobby-corner"><slot name="corner" /></div>}
     </header>
   )}
 
@@ -144,11 +145,19 @@ const hobbyUrl = (id: HobbyId): string => localizeUrl(`/hobbies/${id}/`, locale)
 
   /* ── Header ── */
   .hobby-header {
+    position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
     align-items: center;
     gap: 2rem;
     margin-bottom: 3rem;
+  }
+
+  .hobby-corner {
+    position: absolute;
+    top: -0.75rem;
+    right: var(--container-pad);
+    z-index: 2;
   }
 
   .hobby-kicker {
