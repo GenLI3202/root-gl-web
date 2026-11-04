@@ -1,0 +1,44 @@
+---
+import TrainingLayout from "@/layouts/TrainingLayout.astro";
+import { TRAINING_SESSIONS } from "@/data/training-sessions";
+
+/**
+ * One follow-along page per session theme. The apps are self-contained pages built in the
+ * scientific-training repo (`python3 docs/app/follow/build.py --site <gen-web>/src/training`)
+ * and copied into src/training/ verbatim; edit them there and rebuild, so both stay in sync.
+ */
+const APPS = import.meta.glob<string>("/src/training/*.html", { query: "?raw", import: "default", eager: true });
+
+export function getStaticPaths() {
+  return TRAINING_SESSIONS.filter((s) => s.href).map((s) => ({
+    params: { session: s.href!.split("/").filter(Boolean).pop() },
+    props: { session: s },
+  }));
+}
+
+const { session } = Astro.props;
+const slug = session.href!.split("/").filter(Boolean).pop();
+const app = APPS[`/src/training/${slug}.html`];
+if (!app) throw new Error(`missing src/training/${slug}.html for ${session.id}`);
+---
+
+<TrainingLayout title={`${session.name} · 训练室`}>
+  <a class="to-room" href="/training/">← 选主题</a>
+  <Fragment set:html={app} />
+</TrainingLayout>
+
+<style>
+  .to-room {
+    display: inline-block;
+    margin: 12px 0 0 max(16px, env(safe-area-inset-left, 0px));
+    color: var(--train-ink);
+    font-family: var(--font-hand);
+    font-size: 1.35rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .to-room:hover {
+    text-decoration: underline wavy;
+  }
+</style>
