@@ -1,4 +1,6 @@
-<title>解剖适应·轻量跟练</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>地板唤醒 · 解剖适应·轻量跟练</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Caveat:wght@700&family=Noto+Sans+SC:wght@500;700;900&display=swap">
 <style>
@@ -81,7 +83,7 @@
 
 <div class="wrap">
   <div class="top">
-    <h1>今晚 · 解剖适应·轻量</h1>
+    <h1>地板唤醒 · 解剖适应·轻量</h1>
     <span class="stick" id="prog">6 个动作 · 约 20 分钟</span>
   </div>
   <div class="tabs" id="tabs"><button data-v="main" aria-pressed="true">侧面</button><button data-v="alt" aria-pressed="false">另一面</button></div>
@@ -111,13 +113,14 @@
   <div class="notes">
     <p>每组留 1–2 次余力（RIR 1–2），不练到力竭；技术走样就停。每个动作的第 1 组可以做轻一点。</p>
     <p>练后 3 小时内补 10–25 g 优质蛋白：2 个鸡蛋，或 250 ml 牛奶，或一份酸奶。</p>
-    <p>节奏写法 3/2/1 = 离心 3 秒 / 停 2 秒 / 向心 1 秒（Doyle 第 11 章）。抬起类动作（鸟狗、臀桥）先做 1 秒的向心，再停 2 秒，再用 3 秒放回。键盘：空格 暂停，← 后退 5 秒，→ 下一段，R 重做，M 易错点。</p>
+    <p>课表里这节的组间休息是 60 秒；页面在组与组之间只留 10 秒过渡，需要喘口气就按暂停。</p>
+    <p>节奏写法 3/2/1 = 离心 3 秒 / 停 2 秒 / 向心 1 秒（Doyle 第 11 章）。先抬起的动作（鸟狗、臀桥、划船这类）先做向心，再停，再慢慢放回。键盘：空格 暂停，← 后退 5 秒，→ 下一段，R 重做，M 易错点。</p>
   </div>
   <section class="refs" aria-labelledby="refs-h">
     <h3 id="refs-h">参考文献</h3>
     <p class="refs-note">页面里的 [R11] 等标号对应下表。标"只读到摘要"的结论只依据论文摘要。肌电数据来自 20–30 人的实验室样本，说明哪块肌肉在工作，不是训练处方。</p>
     <ol>
-      <li><span class="rid">[Doyle]</span> Doyle K, Schmitz E. <i>Weight Training for Cyclists</i>. 2nd ed. Boulder, CO: VeloPress; 2008. ISBN 978-1-934030-29-5. Ch. 7–9, 11.</li>
+      <li><span class="rid">[Doyle]</span> Doyle K, Schmitz E. <i>Weight Training for Cyclists</i>. 2nd ed. Boulder, CO: VeloPress; 2008. ISBN 978-1-934030-29-5. Ch. 6–11.</li>
       <li><span class="rid">[R11]</span> Selkowitz DM, Beneck GJ, Powers CM. Which exercises target the gluteal muscles while minimizing activation of the tensor fascia lata? Electromyographic assessment using fine-wire electrodes. <i>J Orthop Sports Phys Ther</i>. 2013;43(2):54-64. doi:<a href="https://doi.org/10.2519/jospt.2013.4116" target="_blank" rel="noopener">10.2519/jospt.2013.4116</a></li>
       <li><span class="rid">[R12]</span> Ekstrom RA, Donatelli RA, Carp KC. Electromyographic analysis of core trunk, hip, and thigh muscles during 9 rehabilitation exercises. <i>J Orthop Sports Phys Ther</i>. 2007;37(12):754-762. doi:<a href="https://doi.org/10.2519/jospt.2007.2471" target="_blank" rel="noopener">10.2519/jospt.2007.2471</a></li>
       <li><span class="rid">[R13]</span> DiStefano LJ, Blackburn JT, Marshall SW, Padua DA. Gluteal muscle activation during common therapeutic exercises. <i>J Orthop Sports Phys Ther</i>. 2009;39(7):532-540. doi:<a href="https://doi.org/10.2519/jospt.2009.2796" target="_blank" rel="noopener">10.2519/jospt.2009.2796</a></li>
@@ -173,6 +176,7 @@
   }
   const mid = (a, b, t = 0.5) => lv(a, b, t);
 
+  /* Exercise poses and library for the follow-along pages. Inlined into src/shell.html by build.py. */
   /* ── poses: (e 0…1, side ±1, m 0 good … 1 the common mistake, t seconds for breathing) ── */
   function birdDog(e, s, m) {
     const r = m * e * 16 * deg, lat = V(0, -s * Math.sin(r), Math.cos(r));
@@ -230,6 +234,428 @@
       L: { ankle: ankL, toe: add(ankL, V(lerp(13, 5, e), lerp(-4, -10, e), 0)), kp: V(1, -0.3, 0), hand: lv(add(shL, V(3, -52, 0)), V(15, 3, 6), e), ep: V(-1, 0.3, 0) } });
     return s < 0 ? mirror(P) : P;
   }
+
+  /* ── props: boxes, sliders, dumbbells, floor marks (drawn per view; orthographic, so a box is its projected bounding rect) ── */
+  function boxSvg(vk, x0, x1, y0, y1, z0, z1, fill = LAV, op = 0.5) {
+    const pr = VIEWS[vk].p, xs = [], ys = [];
+    for (const x of [x0, x1]) for (const y of [y0, y1]) for (const z of [z0, z1]) { const q = pr(V(x, y, z)); xs.push(q[0]); ys.push(q[1]); }
+    const a = Math.min(...xs), b = Math.max(...xs), c = Math.min(...ys), d = Math.max(...ys);
+    return `<rect x="${f1(a)}" y="${f1(c)}" width="${f1(b - a)}" height="${f1(d - c)}" rx="3" fill="${fill}" fill-opacity="${op}" stroke="${INK}" stroke-width="2.2"/>`;
+  }
+  const boxPts = (x0, x1, y0, y1, z0, z1) => [V(x0, y0, z0), V(x1, y1, z1)];
+  /* a dumbbell: handle along `axis`, a plate at each end; seen end-on it collapses to a round plate */
+  function dumbbell(vk, c, axis, half = 7.5) {
+    const pr = VIEWS[vk].p, u = norm(axis), a = add(c, mul(u, -half)), b = add(c, mul(u, half));
+    const plate = (q, sg) => cap(pr(add(q, mul(u, -2.2 * sg))), pr(add(q, mul(u, 2.2 * sg))), 9, LEG);
+    return cap(pr(a), pr(b), 2.2, INK) + plate(a, 1) + plate(b, -1);
+  }
+  const mark = (vk, p) => { const q = VIEWS[vk].p(p); return `<line x1="${f1(q[0] - 7)}" y1="-1" x2="${f1(q[0] + 7)}" y2="-1" stroke="${ORG}" stroke-width="3.2" stroke-linecap="round"/>`; };
+  /* torso direction for a pitch `th` (deg) toward a horizontal heading `fwd` */
+  const spine = (th, fwd = V(1, 0, 0)) => add(mul(fwd, Math.sin(th * deg)), V(0, Math.cos(th * deg), 0));
+  const headAt = (sc, th, fwd = V(1, 0, 0)) => add(sc, mul(spine(th, fwd), 19));
+
+  /* ── standing lifts ── */
+  function squat(e, s, m, o = {}) {
+    const pel = V(lerp(0, -24, e), lerp(91, 52, e), 0), th = lerp(4, 34, e), lat = V(0, 0, 1);
+    const sc = add(pel, mul(spine(th), D.torso)), fw = V(Math.cos(th * deg), -Math.sin(th * deg), 0), up = spine(th);
+    const side = (sg) => {
+      const a = V(0, 8, sg * 13), knee = lerp(0.35, -0.9, m * Math.max(0.3, e));
+      const hand = o.armsFwd ? add(add(sc, mul(lat, sg * 15)), V(48, -6, 0)) : add(add(add(sc, mul(fw, 15)), mul(up, -13)), V(0, 0, sg * 4));
+      return { ankle: a, toe: add(a, V(16, -6.5, sg * 3)), kp: V(1, 0, sg * knee), hand, ep: o.armsFwd ? V(0, -1, sg * 0.3) : V(0, -1, sg * 0.7) };
+    };
+    return build({ pel, sc, lat, head: headAt(sc, th * 0.55), L: side(-1), R: side(1) });
+  }
+  const gobletDb = (vk, P) => dumbbell(vk, add(mid(P.L.hand, P.R.hand), V(0, 4, 0)), V(0, 1, 0), 7);
+
+  function rdl(e, s, m) {
+    const th = lerp(2, lerp(72, 38, m), e), pel = V(lerp(0, -20, e), lerp(91, 85, e) - 24 * m * e, 0), lat = V(0, 0, 1);
+    const sc = add(pel, mul(spine(th), D.torso));
+    const side = (sg) => { const sh = add(sc, mul(lat, sg * D.shW)), a = V(0, 8, sg * 10);
+      return { ankle: a, toe: add(a, V(16, -6.5, 0)), kp: V(1, 0, sg * 0.1), hand: add(sh, V(lerp(2, -10, e), -51.5, -sg * 2)), ep: V(-1, 0, 0) }; };
+    return build({ pel, sc, lat, head: headAt(sc, th - 16 * e), L: side(-1), R: side(1) });
+  }
+  const handDbs = (vk, P, axis = V(0, 0, 1)) => dumbbell(vk, P.L.hand, axis) + dumbbell(vk, P.R.hand, axis);
+
+  const STEP = { x0: 6, x1: 46, h: 35 };
+  function stepUp(e, s, m) {
+    const pel = V(lerp(2, 24, e), lerp(86, 126, e), 0), th = lerp(14, 3, e), lat = V(0, 0, 1);
+    const sc = add(pel, mul(spine(th), D.torso)), lead = V(26, STEP.h + 8, 9);
+    const tr = V(lerp(-16, 22, e), lerp(8, STEP.h + 12, e) + 14 * Math.sin(Math.PI * e), -9);
+    const P = build({ pel, sc, lat, head: headAt(sc, th),
+      R: { ankle: lead, toe: add(lead, V(16, -6.5, 0)), kp: V(1, 0, lerp(0.15, -0.9, m)), hand: add(add(sc, mul(lat, D.shW)), V(lerp(8, 2, e), -51, 3)), ep: V(-1, 0, 0.3) },
+      L: { ankle: tr, toe: add(tr, e > 0.04 && e < 0.96 ? V(13, -10, 0) : V(16, -6.5, 0)), kp: V(1, 0, -0.1), hand: add(add(sc, mul(lat, -D.shW)), V(lerp(-6, 2, e), -51, -3)), ep: V(-1, 0, -0.3) } });
+    return s < 0 ? mirror(P) : P;
+  }
+  const stepBox = (vk) => boxSvg(vk, STEP.x0, STEP.x1, 0, STEP.h, -24, 24);
+
+  const BENCH = { x0: -86, x1: -52, h: 40 };
+  function splitSquat(e, s, m) {
+    const pel = V(lerp(-4, -10, e), lerp(86, 54, e), 0), th = lerp(6, 14, e) + 32 * m * e, lat = V(0, 0, 1);
+    const sc = add(pel, mul(spine(th), D.torso));
+    const P = build({ pel, sc, lat, head: headAt(sc, th * 0.7),
+      R: { ankle: V(24, 8, 9), toe: V(40, 1.5, 9), kp: V(1, 0, 0.15), hand: add(add(sc, mul(lat, D.shW)), V(2, -51, 3)), ep: V(-1, 0, 0.3) },
+      L: { ankle: V(-62, BENCH.h + 8, -9), toe: V(-77, BENCH.h + 2, -9), kp: V(0.25, -1, 0), hand: add(add(sc, mul(lat, -D.shW)), V(2, -51, -3)), ep: V(-1, 0, -0.3) } });
+    return s < 0 ? mirror(P) : P;
+  }
+  const benchBox = (vk) => boxSvg(vk, BENCH.x0, BENCH.x1, 0, BENCH.h, -20, 20);
+
+  function calfRaise(e, s, m) {
+    const lift = e, pel = V(lerp(0, 4, lift) + 10 * m, lerp(91, 100, lift) - 13 * m, 0), lat = V(0, 0, 1), sc = add(pel, mul(spine(2), D.torso));
+    const side = (sg) => { const a = V(lerp(0, 5, lift), lerp(8, 17, lift), sg * 9);
+      return { ankle: a, toe: V(16, 1.5, sg * 9), kp: V(1, 0, sg * 0.1), hand: add(add(sc, mul(lat, sg * D.shW)), V(3, -52, sg * 3)), ep: V(-1, 0, 0.3 * sg) }; };
+    return build({ pel, sc, lat, L: side(-1), R: side(1) });
+  }
+
+  /* single-arm row: staggered stance, free hand on a chair seat, the rowing elbow drives up past the ribs */
+  const CHAIR = { x0: 38, x1: 72, h: 46 };
+  function dbRow(e, s, m) {
+    const r = m * e * 24 * deg, lat = V(0, Math.sin(r), Math.cos(r)), pel = V(-6, 80, 0), sc = add(pel, mul(spine(65), D.torso));
+    const shR = add(sc, mul(lat, D.shW));
+    const P = build({ pel, sc, lat, head: headAt(sc, 58),
+      L: { ankle: V(22, 8, -11), toe: V(38, 1.5, -11), kp: V(1, 0, -0.2), hand: V(54, CHAIR.h + 4, -16), ep: V(-1, 0, -0.5) },
+      R: { ankle: V(-26, 8, 11), toe: V(-10, 1.5, 11), kp: V(1, 0, 0.2), hand: lv(add(shR, V(2, -52, 0)), add(shR, V(-15, -14, 2)), e), ep: V(-0.5, 1, 0.15) } });
+    return s < 0 ? mirror(P) : P;
+  }
+  const chairBox = (vk, s) => boxSvg(vk, CHAIR.x0, CHAIR.x1, 0, CHAIR.h, s > 0 ? -34 : 2, s > 0 ? -2 : 34);
+
+  /* ── lying lifts: head toward +x, shoulders at x≈112 ── */
+  const supineLegs = (sg) => ({ ankle: V(31, 8, sg * 10), toe: V(17, 1.5, sg * 10), kp: V(0.2, 1, sg * 0.15) });
+  function floorPress(e, s, m) {
+    const sc = V(112, 9, 0), shR = V(112, 9, D.shW);
+    const lo = lv(V(94, 32, 36), V(111, 32, 45), m), hand = lv(V(112, 62, 16), lo, e);
+    const P = build({ pel: V(60, 9, 0), sc, lat: V(0, 0, 1), head: V(131, 10, 0),
+      L: { ...supineLegs(-1), hand: V(59, 2.5, -24), ep: V(0, -0.2, -1) },
+      R: { ...supineLegs(1), hand, ep: lv(V(-0.7, -1, 0.7), V(0, -1, 1), m) } });
+    return s < 0 ? mirror(P) : P;
+  }
+  /* side-lying external rotation: lying on the left side (lat points up), right forearm swings from the belly to the ceiling */
+  function extRot(e, s, m) {
+    const pel = V(0, 13, 0), sc = V(52, 20, 0), lat = V(0, 1, 0), shR = add(sc, mul(lat, D.shW));
+    const elbow = add(shR, mul(norm(V(-1, 0.55 * m * e, 0.12)), D.uarm)), a = lerp(-12, 78, e) * deg;
+    const P = build({ pel, sc, lat, head: V(72, 17, 1),
+      L: { ankle: V(-80, 6, 8), toe: V(-77, 4, 21), kp: V(0, 0, 1), hand: V(98, 5, 5), ep: V(0, 0.3, 1) },
+      R: { ankle: V(-79, 22, 5), toe: V(-76, 20, 18), kp: V(0, 0, 1), elbow, hand: add(elbow, V(0, 25 * Math.sin(a), 25 * Math.cos(a))) } });
+    return s < 0 ? mirror(P) : P;
+  }
+  /* slider hamstring curl: hips held up, heels slide away and back */
+  function hamCurl(e, s, m) {
+    const pel = V(lerp(64.9, 61.2, e), lerp(31, 21, e) - 13 * m * e, 0);
+    const side = (sg) => { const a = V(lerp(30, -22, e), 8, sg * 10); return { ankle: a, toe: add(a, V(-3, 13, 0)), kp: V(0.2, 1, sg * 0.1), hand: V(64, 2.5, sg * 26), ep: V(0, -0.2, sg) }; };
+    return build({ pel, sc: V(112, 9, 0), lat: V(0, 0, 1), head: V(131, 10, 0), L: side(-1), R: side(1) });
+  }
+  const sliders = (vk, P) => ["L", "R"].map((k) => { const a = P[k].ankle; return boxSvg(vk, a.x - 7, a.x + 6, 0, 2.6, a.z - 6, a.z + 6, ORG, 0.9); }).join("");
+
+  /* ── trunk rotation ── */
+  function woodChop(e, s, m) {
+    const yaw = lerp(32, -38, e) * (1 - 0.85 * m) * deg, fwd = V(Math.cos(yaw), 0, Math.sin(yaw)), lat = V(-Math.sin(yaw), 0, Math.cos(yaw));
+    const th = lerp(2, 45, e), pel = V(lerp(0, -8, e), lerp(90, 66, e), 0), sc = add(pel, mul(spine(th, fwd), D.torso));
+    const c = lv(V(14, 166, 30), V(30, 56, -30), e), ax = norm(V(0.2, 1, 0.3));
+    const side = (sg) => { const a = V(0, 8, sg * 16), py = yaw * (sg > 0 ? 0.7 : 0.25);
+      return { ankle: a, toe: add(a, V(16 * Math.cos(py), -6.5, sg * 2 + 16 * Math.sin(py))), kp: add(mul(fwd, 1), V(0, 0, sg * 0.3)),
+        hand: add(c, mul(ax, sg * 3)), ep: add(mul(lat, sg), V(0, -0.6, 0)) }; };
+    const P = build({ pel, sc, lat, head: headAt(sc, th * 0.6, fwd), L: side(-1), R: side(1) });
+    return s < 0 ? mirror(P) : P;
+  }
+  const chopDb = (vk, P) => dumbbell(vk, mid(P.L.hand, P.R.hand), V(0.2, 1, 0.3), 8);
+
+  /* ── jumps: one body for every hop. c = knee bend 0…1, h = flight height, arm 0 back … 1 up ── */
+  function hopBody(base, c, h, arm, m, o = {}) {
+    const lat = V(0, 0, 1), th = 6 + 30 * c, pel = add(base, V(-18 * c, 91 - 36 * c + h, 0)), sc = add(pel, mul(spine(th), D.torso));
+    const lift = Math.min(1, h / 8), side = (sg) => {
+      const a = add(base, V(0, 8 + h * 0.85, sg * 11)), sh = add(sc, mul(lat, sg * D.shW));
+      const hand = o.shoulders ? lv(add(sh, V(12, 2, -sg * 4)), add(sh, V(3, 52, sg * 2)), arm) : lv(add(sh, V(-26, -44, sg * 4)), add(sh, V(16, 48, sg * 2)), arm);
+      return { ankle: a, toe: add(a, lift > 0.3 ? V(13, -10, 0) : V(16, -6.5, sg * 2)), kp: V(1, 0, sg * lerp(0.25, -0.9, m * c)), hand, ep: o.shoulders ? V(0, -1, sg * 0.6) : V(-1, 0, sg * 0.4) };
+    };
+    return build({ pel, sc, lat, head: headAt(sc, th * 0.5), L: side(-1), R: side(1) });
+  }
+  /* dip 0….34, flight .34….66, land and stick .66…1 */
+  function hopCurve(e, depth, land) {
+    if (e < 0.34) { const k = ease(e / 0.34); return { c: depth * k, h: 0, arm: 0.5 - 0.5 * k, f: 0 }; }
+    if (e < 0.66) { const f = (e - 0.34) / 0.32; return { c: depth * Math.max(0, 1 - f * 3) + 0.15 * Math.sin(Math.PI * f), h: 1 * Math.sin(Math.PI * f), arm: Math.min(1, f * 2), f }; }
+    const g = (e - 0.66) / 0.34; return { c: land * Math.sin(Math.PI * Math.min(1, g * 1.4)) * (g < 0.72 ? 1 : 0), h: 0, arm: lerp(1, 0.5, ease(g)), f: 1 };
+  }
+  const HOPS = [[V(0, 0, 0), V(34, 0, 0)], [V(34, 0, 0), V(0, 0, 0)], [V(0, 0, 0), V(0, 0, 26)], [V(0, 0, 26), V(0, 0, 0)]];
+  function multiHop(e, s, m, t, rep = 0) {
+    const [a, b] = HOPS[rep % 4], k = hopCurve(e, 0.42, 0.5);
+    return hopBody(lv(a, b, ease(k.f)), k.c, 16 * k.h, k.arm, m);
+  }
+  const hopMarks = (vk, P, s, rep) => { const [a, b] = HOPS[(rep || 0) % 4]; return mark(vk, a) + mark(vk, b); };
+  function squatJump(e, s, m) {
+    const k = hopCurve(e, 0.95, 0.6);
+    return hopBody(V(0, 0, 0), k.c, 26 * k.h, k.arm, m, { shoulders: true });
+  }
+  /* split jump: lunge with the right foot ahead → jump → land with the left foot ahead; the next rep is the mirror */
+  function splitJump(e, s, m) {
+    let depth, h = 0, sw = 0;
+    if (e < 0.35) depth = lerp(0.3, 1, ease(e / 0.35));
+    else if (e < 0.65) { const f = (e - 0.35) / 0.3; depth = 0.1; h = 20 * Math.sin(Math.PI * f); sw = ease(f); }
+    else { const g = (e - 0.65) / 0.35; depth = 0.3 + 0.5 * Math.sin(Math.PI * g); sw = 1; }
+    const pel = V(-4, 82 - 26 * depth + h, 0), th = 4 + 26 * m, lat = V(0, 0, 1), sc = add(pel, mul(spine(th), D.torso));
+    const front = V(26, 8, 0), back = V(-34, 13, 0), fp = V(1, 0, 0), bp = V(0.3, -1, 0);
+    const leg = (w, sg) => { const a = add(lv(front, back, w), V(0, h * 0.8 + 10 * Math.sin(Math.PI * sw) * (sw > 0 && sw < 1 ? 1 : 0), sg * 9));
+      return { ankle: a, toe: add(a, lv(V(16, -6.5, 0), V(11, -11, 0), w)), kp: lv(fp, bp, w), hand: add(pel, V(2, 10, sg * 16)), ep: V(-0.3, 0, sg) }; };
+    const P = build({ pel, sc, lat, head: headAt(sc, th * 0.6), R: leg(sw, 1), L: leg(1 - sw, -1) });
+    return s < 0 ? mirror(P) : P;
+  }
+
+  /* ── floor core ── */
+  function climber(e, s, m) {
+    const b = plankBase(50, 0, 0), pel = add(b.pel, V(0, 20 * m + 12 * Math.sin(Math.PI * e), 0)), o = { pel, sc: b.sc, lat: b.lat };  /* hips rise a little so the knee can pass under them */
+    for (const [k, sg] of [["L", -1], ["R", 1]]) {
+      const drive = sg === s ? e : 0, f = feet(sg), a = add(lv(f.ankle, V(72, 14, sg * 9), drive), V(0, 24 * Math.sin(Math.PI * drive), 0));
+      o[k] = { ankle: a, toe: add(a, lv(V(7, -9.5, 0), V(-5, -9, 0), drive)), kp: sg === s ? V(1, -0.3, 0) : V(0, -1, 0), hand: V(122, 1.5, sg * 20), ep: V(-1, 0, sg * 0.4) };
+    }
+    return build(o);
+  }
+  function plankRow(e, s, m) {
+    const b = plankBase(52, 0, 0), r = m * e * 18 * deg, lat = V(0, s * Math.sin(r), Math.cos(r)), o = { pel: b.pel, sc: b.sc, lat };
+    for (const [k, sg] of [["L", -1], ["R", 1]]) {
+      const sh = add(b.sc, mul(lat, sg * D.shW)), rowing = sg === s;
+      o[k] = { ankle: V(-7, 10, sg * 20), toe: V(0, 0.5, sg * 20), kp: V(0, -1, 0), hand: rowing ? lv(V(122, 6, sg * 20), add(sh, V(-30, -9, sg * 2)), e) : V(122, 6, sg * 20), ep: rowing ? V(-0.4, 1, sg * 0.3) : V(-1, 0, sg * 0.4) };
+    }
+    return build(o);
+  }
+  function bicycle(e, s, m) {
+    const r = 22 * e * deg, lat = V(0, -s * Math.sin(r), Math.cos(r)), c = lerp(25, 32, e) * deg, pel = V(60, 9, 0);
+    const sc = add(add(pel, V(Math.cos(c) * D.torso, Math.sin(c) * D.torso, 0)), V(0, 0, s * 6 * e)), ha = c + lerp(20, 58, m) * deg;
+    const head = add(sc, V(Math.cos(ha) * 19, Math.sin(ha) * 19, 0)), o = { pel, sc, lat, head };
+    for (const [k, sg] of [["L", -1], ["R", 1]]) {
+      const tab = V(20, 52, sg * 10), drive = sg === s, a = lv(tab, drive ? V(54, 44, sg * 4) : V(-20, 24, sg * 10), e);
+      o[k] = { ankle: a, toe: add(a, V(-12, 6, 0)), kp: drive ? lv(V(0.4, 1, 0), V(1, 0.6, 0), e) : V(0.4, 1, 0), hand: add(add(head, mul(lat, sg * 9)), V(-3, -1, 0)), ep: add(mul(lat, sg), V(0.3, 0.4, 0)) };
+    }
+    return build(o);
+  }
+  function revCrunch(e, s, m) {
+    const a = lerp(0, 24, e * (1 - 0.85 * m)) * deg, pel = V(112 - 52 * Math.cos(a), 9 + 52 * Math.sin(a), 0), b = (lerp(0, 45, e) + 22 * m * e) * deg;
+    const td = V(Math.sin(b), Math.cos(b), 0), sd = V(-Math.cos(b), Math.sin(b), 0), o = { pel, sc: V(112, 9, 0), lat: V(0, 0, 1), head: V(131, 10, 0) };
+    for (const [k, sg] of [["L", -1], ["R", 1]]) {
+      const hip = add(pel, V(0, 0, sg * D.hipW)), ank = add(add(hip, mul(td, D.thigh)), mul(sd, D.shank));
+      o[k] = { ankle: ank, toe: add(ank, mul(norm(add(sd, mul(td, 0.9))), 13)), kp: td, hand: V(78, 2.5, sg * 24), ep: V(0, -0.2, sg) };
+    }
+    return build(o);
+  }
+
+  /* ── exercise library: everything about a movement except the dose. The dose (sets, reps, tempo) comes from strength/strength.toml via build.py.
+     order "con" = the rep starts with the lifting (concentric) phase, "ecc" = it starts by lowering. Cues follow knowledge/app/10-exercise-cues.md. ── */
+  const SIDE2 = ["侧面", "后面"], SIDEF = ["侧面", "正面"];
+  const LIB = {
+    bird_dog: { name: "鸟狗式", pose: birdDog, order: "con", labels: { con: "抬起", hold: "停", ecc: "放回" }, alt: true, altLab: ["右手左腿", "左手右腿"],
+      muscles: ["臀大肌", "腹斜肌", "竖脊肌", "肩部"],
+      cue: "脊柱中立、下巴微收，对侧手脚只抬到与身体齐平，停 2 秒，骨盆不转、腰不塌。",
+      src: "依据：Doyle 第 9 章 p.146–151；臀大肌肌电 [R11][R12]（只读到摘要）",
+      views: [["side", "侧面 SIDE"], ["behind", "后面 BEHIND"]], tabs: SIDE2,
+      hot: (P, s) => [{ on: s > 0 ? "L.leg" : "R.leg", dot: (s > 0 ? P.L : P.R).hip, r: 7 }, { on: "torso", seg: [P.pel, P.sc], w: 7, a: 0.55 }],
+      notes: (P, k, s) => {
+        const mv = s > 0 ? P.L : P.R;
+        if (k === "con") return [["side", mv.hip, [-30, -30], "臀部发力", ORG], ["behind", P.pel, [44, -40], "骨盆保持水平", LIME]];
+        if (k === "hold") return [["side", mid(mv.knee, mv.ankle), [10, -34], "只抬到与身体齐平", LIME], ["behind", P.pel, [44, -40], "骨盆不转", LIME]];
+        return [["side", mid(P.pel, P.sc), [8, -40], "腰不塌，慢慢放回", LIME], ["behind", P.pel, [44, -40], "骨盆保持水平", LIME]];
+      },
+      mistake: { view: "behind", at: (W, s) => (s > 0 ? W.L : W.R).hip, off: [-40, -46], text: "✕ 骨盆翻转" } },
+    plank: { name: "平板支撑", pose: plank, perch: true, muscles: ["腹直肌", "腹斜肌", "竖脊肌", "臀肌"],
+      cue: "手肘在肩正下方，绷紧核心（不是吸肚子）、夹紧臀部，下巴微收，头到脚跟一直线，能正常呼吸说话。",
+      src: "依据：Doyle 第 9 章 p.146–149；腹肌与竖脊肌肌电 [R16]",
+      views: [["side", "侧面 SIDE"]],
+      hot: (P) => [{ on: "torso", seg: [P.pel, P.sc], w: 7, a: 0.75 }, { on: "torso", dot: P.pel, r: 7 }],
+      cycle: (P) => [["side", P.R.elbow, [-34, -40], "肘在肩正下方", LIME], ["side", mid(P.pel, P.sc, 0.45), [-8, -42], "绷紧核心，不吸肚子", ORG],
+        ["side", P.pel, [-28, -40], "夹紧臀部", ORG], ["side", P.head, [6, -34], "下巴微收", LIME], ["side", P.R.knee, [-14, -44], "头到脚跟一直线", LIME]],
+      mistake: { view: "side", at: (W) => W.pel, off: [-30, -42], text: "✕ 塌腰" } },
+    side_plank: { name: "侧平板", pose: sidePlank, perSide: ["左手撑", "右手撑"], muscles: ["臀中肌", "腹外斜肌", "腰方肌"],
+      cue: "手肘在肩正下方，绷紧核心，髋部上下叠起、不前后翻，身体成直线不塌髋；觉得轻松可以抬起上侧腿。",
+      src: "依据：Doyle 第 9 章 p.149–150；臀中肌与腹外斜肌肌电 [R14][R12]",
+      views: [["side", "正面 FRONT"]],
+      hot: (P) => [{ on: "torso", seg: [mid(P.L.hip, P.pel, 0.3), mid(P.L.sh, P.sc, 0.3)], w: 6, a: 0.8 }, { on: "L.leg", dot: P.L.hip, r: 6.5 }],
+      cycle: (P) => [["side", P.L.elbow, [-30, -34], "肘在肩正下方", LIME], ["side", P.pel, [-20, -44], "髋别往下掉", LIME],
+        ["side", mid(P.L.hip, P.L.sh), [10, -52], "下侧腰腹发力", ORG], ["side", P.R.hip, [-46, -30], "两髋上下叠起", LIME]],
+      mistake: { view: "side", at: (W) => W.pel, off: [-26, -40], text: "✕ 塌髋" } },
+    supine_bridge: { name: "臀桥", pose: bridge, order: "con", labels: { con: "顶髋", hold: "停", ecc: "下放" }, muscles: ["臀大肌", "腘绳肌", "核心"],
+      cue: "双脚与肩同宽，先绷紧核心、夹臀再顶髋，顶到膝-髋-肩一直线，不过度挺腰；每次下放轻触地面。觉得轻松就改单腿。",
+      src: "依据：Doyle 第 9 章 p.150–151；臀肌选择 [R11][R12]（只读到摘要）",
+      views: [["side", "侧面 SIDE"]],
+      hot: (P) => [{ on: "R.leg", dot: P.R.hip, r: 7.5 }, { on: "R.leg", seg: [P.R.knee, P.R.hip], w: 5, a: 0.6 }],
+      notes: (P, k) => k === "con" ? [["side", P.R.hip, [-24, -40], "夹臀，顶髋", ORG]]
+        : k === "hold" ? [["side", mid(P.R.hip, P.sc), [22, -36], "膝-髋-肩一直线", LIME]] : [["side", P.R.hip, [-24, -40], "慢放，轻触地", LIME]],
+      mistake: { view: "side", at: (W) => W.pel, off: [-30, -38], text: "✕ 挺腰顶过头" } },
+    pushup: { name: "俯卧撑", pose: pushup, perch: true, order: "ecc", labels: { ecc: "下放", hold: "停", con: "推起" }, muscles: ["胸大肌", "肱三头肌", "三角肌前束", "前锯肌"],
+      cue: "手放在最低点时前臂竖直的位置，身体保持平板一线，下放到底再推起。做不满就把手撑在床沿或桌边。",
+      src: "依据：Doyle 第 8 章 p.131–132；胸大肌、三头、前锯肌肌电 [R18]",
+      views: [["side", "侧面 SIDE"]],
+      hot: (P) => [{ on: "R.arm", seg: [P.R.sh, P.R.elbow], w: 4.5, a: 0.8 }, { on: "torso", dot: mid(P.pel, P.sc, 0.86), r: 7 }],
+      notes: (P, k) => k === "ecc" ? [["side", mid(P.R.elbow, P.R.hand), [-34, -38], "前臂竖直", LIME]]
+        : k === "hold" ? [["side", P.pel, [-20, -40], "身体一条线", LIME]] : [["side", P.R.sh, [-30, -44], "胸和三头发力", ORG]],
+      mistake: { view: "side", at: (W) => W.pel, off: [-30, -40], text: "✕ 塌腰" } },
+    single_leg_touchdown: { name: "单腿蹲触地", pose: touchdown, perSide: ["右腿", "左腿"], unit: "条腿", order: "ecc", labels: { ecc: "下蹲伸手", hold: "停", con: "站起" },
+      muscles: ["臀大肌", "臀中肌", "腘绳肌", "股四头肌"],
+      cue: "单腿站，屈髋前倾，手伸向对侧脚的大脚趾，脊柱中立，支撑腿膝盖对准脚尖；悬空脚回到支撑脚旁。",
+      src: "依据：Doyle 第 7 章 p.114、p.120–121；单腿动作的臀大肌肌电 [R13]（只读到摘要）",
+      views: [["side", "侧面 SIDE"], ["front", "正面 FRONT"]], tabs: SIDEF,
+      hot: (P, s) => { const st = s > 0 ? P.R : P.L, key = s > 0 ? "R.leg" : "L.leg"; return [{ on: key, dot: st.hip, r: 7.5 }, { on: key, seg: [st.knee, st.hip], w: 5.5, a: 0.7 }]; },
+      notes: (P, k, s) => {
+        const st = s > 0 ? P.R : P.L, rh = s > 0 ? P.L.hand : P.R.hand;
+        const front = ["front", st.knee, [s > 0 ? -34 : 34, -30], "膝对脚尖", LIME];
+        if (k === "ecc") return [["side", rh, [-70, -62], "伸向对侧大脚趾", LIME], front];
+        if (k === "hold") return [["side", mid(P.pel, P.sc), [-10, -58], "脊柱中立", LIME], front];
+        return [["side", st.hip, [-34, -30], "臀腿发力站起", ORG], front];
+      },
+      mistake: { view: "front", at: (W, s) => (s > 0 ? W.R : W.L).knee, off: [-38, -26], text: "✕ 膝盖内扣" } },
+
+    /* ── legs ── */
+    goblet_squat: { name: "高脚杯深蹲", pose: squat, order: "ecc", labels: { ecc: "下蹲", hold: "停", con: "站起" }, db: true,
+      muscles: ["股四头肌", "臀大肌", "内收肌", "核心"],
+      cue: "哑铃竖着抱在胸前，下蹲到膝盖约 80°（大腿接近水平），膝盖对第二脚趾，背不弓、胸不塌，脚跟踩实。",
+      src: "依据：Doyle 第 7 章 p.113–115；屈膝角度与膝关节负荷 [R26]（只读到摘要）",
+      views: [["side", "侧面 SIDE"], ["front", "正面 FRONT"]], tabs: SIDEF, fore: gobletDb,
+      hot: (P) => [{ on: "R.leg", seg: [P.R.knee, P.R.hip], w: 6, a: 0.75 }, { on: "R.leg", dot: P.R.hip, r: 7 }, { on: "L.leg", seg: [P.L.knee, P.L.hip], w: 6, a: 0.75 }],
+      notes: (P, k) => k === "ecc" ? [["side", P.R.ankle, [-36, -26], "脚跟踩实", LIME], ["front", P.R.knee, [-34, -28], "膝对脚尖", LIME]]
+        : k === "hold" ? [["side", P.R.knee, [30, -40], "大腿接近水平", LIME], ["front", P.L.knee, [34, -28], "膝盖别内扣", LIME]]
+        : [["side", P.R.hip, [-36, -34], "臀腿发力站起", ORG], ["front", P.R.knee, [-34, -28], "膝对脚尖", LIME]],
+      mistake: { view: "front", at: (W) => W.R.knee, off: [-38, -26], text: "✕ 膝盖内扣" } },
+    rdl: { name: "罗马尼亚硬拉", pose: rdl, order: "ecc", labels: { ecc: "屈髋下放", hold: "停", con: "伸髋起身" }, db: true,
+      muscles: ["腘绳肌", "臀大肌", "竖脊肌"],
+      cue: "膝盖微屈，臀部向后推、上身折叠，背始终平直不弓，抬头，哑铃贴着腿走；起身时臀腿发力，站直但不后仰。",
+      src: "依据：Doyle 第 7 章 p.116–118；硬拉与 RDL 的肌电对比 [R07][R08]",
+      views: [["side", "侧面 SIDE"]], fore: (vk, P) => handDbs(vk, P),
+      hot: (P) => [{ on: "R.leg", seg: [P.R.knee, P.R.hip], w: 5.5, a: 0.85 }, { on: "R.leg", dot: P.R.hip, r: 7.5 }, { on: "torso", seg: [P.pel, mid(P.pel, P.sc, 0.6)], w: 6, a: 0.45 }],
+      notes: (P, k) => k === "ecc" ? [["side", P.pel, [-38, -30], "臀部向后推", LIME]]
+        : k === "hold" ? [["side", mid(P.pel, P.sc), [6, -42], "背平，别弓", LIME]] : [["side", mid(P.R.knee, P.R.hip), [-44, -10], "腘绳肌和臀发力", ORG]],
+      mistake: { view: "side", at: (W) => W.R.knee, off: [-40, -20], text: "✕ 蹲下去了" } },
+    step_up: { name: "登阶", pose: stepUp, perSide: ["右腿在上", "左腿在上"], unit: "条腿", order: "con", labels: { con: "踩上去", hold: "停", ecc: "慢慢下" },
+      muscles: ["股四头肌", "臀大肌", "腘绳肌"],
+      cue: "台阶高度让膝盖约成 90°；只用上面那只脚的脚跟发力站起，后脚不蹬地；上身直立，下来时慢慢放。膝盖疼就跳过这个动作。",
+      src: "依据：Doyle 第 7 章 p.121–122；侧向登阶的肌电 [R09][R12]",
+      views: [["side", "侧面 SIDE"], ["front", "正面 FRONT"]], tabs: SIDEF, props: (vk) => stepBox(vk), fitPts: () => boxPts(STEP.x0, STEP.x1, 0, STEP.h, -24, 24),
+      hot: (P, s) => { const st = s > 0 ? P.R : P.L, key = s > 0 ? "R.leg" : "L.leg"; return [{ on: key, seg: [st.knee, st.hip], w: 6, a: 0.8 }, { on: key, dot: st.hip, r: 7 }]; },
+      notes: (P, k, s) => { const st = s > 0 ? P.R : P.L, fr = ["front", st.knee, [s > 0 ? -36 : 36, -30], "膝对脚尖", LIME];
+        return k === "con" ? [["side", st.ankle, [-40, -46], "脚跟发力", ORG], fr] : k === "hold" ? [["side", P.sc, [-30, -30], "上身直立", LIME], fr] : [["side", (s > 0 ? P.L : P.R).ankle, [-30, -30], "慢慢放，别砸地", LIME], fr]; },
+      mistake: { view: "front", at: (W, s) => (s > 0 ? W.R : W.L).knee, off: [-38, -26], text: "✕ 膝盖内扣" } },
+    rear_foot_split_squat: { name: "后脚抬高分腿蹲", pose: splitSquat, perSide: ["右腿在前", "左腿在前"], unit: "条腿", order: "ecc", labels: { ecc: "下蹲", hold: "停", con: "站起" },
+      muscles: ["股四头肌", "臀大肌", "臀中肌", "腘绳肌"],
+      cue: "后脚脚背搭在凳上，上身直立、收紧腹部，前膝蹲到约 80°、不远超脚尖，前膝对脚尖；用前腿站起，别蹬后脚。",
+      src: "依据：Doyle 第 7 章 p.120；单腿动作肌电对比 [R10]（只读到摘要）[R09]",
+      views: [["side", "侧面 SIDE"], ["front", "正面 FRONT"]], tabs: SIDEF, props: (vk) => benchBox(vk), fitPts: () => boxPts(BENCH.x0, BENCH.x1, 0, BENCH.h, -20, 20),
+      hot: (P, s) => { const st = s > 0 ? P.R : P.L, key = s > 0 ? "R.leg" : "L.leg"; return [{ on: key, seg: [st.knee, st.hip], w: 6, a: 0.8 }, { on: key, dot: st.hip, r: 7 }]; },
+      notes: (P, k, s) => { const st = s > 0 ? P.R : P.L, fr = ["front", st.knee, [s > 0 ? -36 : 36, -30], "膝对脚尖", LIME];
+        return k === "ecc" ? [["side", P.sc, [24, -30], "上身直立", LIME], fr] : k === "hold" ? [["side", st.knee, [30, -36], "前膝约 80°", LIME], fr] : [["side", st.hip, [30, -40], "前腿发力站起", ORG], fr]; },
+      mistake: { view: "side", at: (W) => W.sc, off: [30, -24], text: "✕ 上身前趴" } },
+    calf_raise: { name: "提踵", pose: calfRaise, order: "con", labels: { con: "踮起", hold: "停", ecc: "慢放" }, muscles: ["腓肠肌", "比目鱼肌"],
+      cue: "最好站在台阶边缘，全幅度踮到最高、顶端停住，再慢慢放下；膝盖基本伸直，别弹。扶墙保持平衡没问题。",
+      src: "依据：Doyle 第 7 章 p.124–125；提踵肌电 [R23]",
+      views: [["side", "侧面 SIDE"]],
+      hot: (P) => [{ on: "R.leg", seg: [P.R.ankle, P.R.knee], w: 5, a: 0.9 }, { on: "L.leg", seg: [P.L.ankle, P.L.knee], w: 5, a: 0.9 }],
+      notes: (P, k) => k === "con" ? [["side", P.R.ankle, [-40, -30], "小腿发力踮到顶", ORG]] : k === "hold" ? [["side", P.R.ankle, [-40, -30], "顶端停住", LIME]] : [["side", P.R.knee, [-40, -30], "膝盖伸直，慢放", LIME]],
+      mistake: { view: "side", at: (W) => W.R.knee, off: [-40, -26], text: "✕ 屈膝借力" } },
+    hamstring_curl: { name: "滑盘腘绳肌屈腿", pose: hamCurl, order: "ecc", labels: { ecc: "脚跟滑出", hold: "停", con: "收回" },
+      muscles: ["腘绳肌", "臀大肌", "核心"],
+      cue: "仰卧，脚跟踩毛巾或滑盘，先夹臀把髋顶起；保持髋部不掉，脚跟慢慢滑出再收回，脚尖朝上。",
+      src: "依据：Doyle 第 7 章 p.123–124；腘绳肌募集 [R22]",
+      views: [["side", "侧面 SIDE"]], props: (vk, P) => sliders(vk, P),
+      hot: (P) => [{ on: "R.leg", seg: [P.R.knee, P.R.hip], w: 5.5, a: 0.85 }, { on: "R.leg", dot: P.R.hip, r: 6.5 }],
+      notes: (P, k) => k === "ecc" ? [["side", P.R.ankle, [10, -40], "慢慢滑出", LIME]] : k === "hold" ? [["side", P.pel, [-10, -44], "髋别往下掉", LIME]] : [["side", P.R.knee, [10, -40], "腘绳肌收回", ORG]],
+      mistake: { view: "side", at: (W) => W.pel, off: [-10, -40], text: "✕ 臀部掉下去" } },
+
+    /* ── upper body ── */
+    db_row: { name: "单臂哑铃划船", pose: dbRow, perSide: ["右手划", "左手划"], unit: "侧", order: "con", labels: { con: "拉起", hold: "停", ecc: "放下" }, db: true,
+      muscles: ["背阔肌", "菱形肌", "三角肌后束", "肱二头肌"],
+      cue: "一只手撑在椅子上、前后脚站，背平、核心收紧，手腕在肘下方；把肘拉到躯干旁边，肩胛往后下收，躯干不扭、不甩重量，再慢慢放下。",
+      src: "依据：Doyle 第 8 章 p.136–137",
+      views: [["side", "侧面 SIDE"], ["behind", "后面 BEHIND"]], tabs: SIDE2, props: (vk, P, s) => chairBox(vk, s), fitPts: () => boxPts(CHAIR.x0, CHAIR.x1, 0, CHAIR.h, -34, 34),
+      fore: (vk, P, s) => dumbbell(vk, (s > 0 ? P.R : P.L).hand, V(1, 0, 0)),
+      hot: (P, s) => { const a = s > 0 ? P.R : P.L, key = s > 0 ? "R.arm" : "L.arm"; return [{ on: key, seg: [a.sh, a.elbow], w: 4.5, a: 0.85 }, { on: "torso", dot: mid(a.sh, P.pel, 0.3), r: 7 }]; },
+      notes: (P, k, s) => { const a = s > 0 ? P.R : P.L;
+        return k === "con" ? [["side", a.elbow, [-20, -40], "肘拉向髋", ORG], ["behind", P.sc, [40, -40], "躯干不扭", LIME]]
+          : k === "hold" ? [["side", a.sh, [26, -40], "肩胛往后下收", LIME], ["behind", P.sc, [40, -40], "躯干不扭", LIME]] : [["side", mid(P.pel, P.sc), [-10, -44], "背平，慢慢放", LIME], ["behind", P.pel, [40, -40], "髋保持水平", LIME]]; },
+      mistake: { view: "behind", at: (W, s) => (s > 0 ? W.R : W.L).sh, off: [40, -30], text: "✕ 躯干扭转" } },
+    db_press: { name: "单臂地板卧推", pose: floorPress, perSide: ["右手推", "左手推"], unit: "侧", order: "ecc", labels: { ecc: "下放", hold: "停", con: "推起" }, db: true,
+      muscles: ["胸大肌", "肱三头肌", "三角肌前束", "核心"],
+      cue: "仰卧屈膝，手腕在肘正上方；下放到上臂轻碰地面（地板就是限位），肘约 45° 不外张，不在地上弹；推起时绷紧核心、夹臀，身体别往推的一侧转。",
+      src: "依据：Doyle 第 8 章 p.133–134（Doyle 写的是肘向外，45° 是课表的写法）",
+      views: [["side", "侧面 SIDE"]], fore: (vk, P, s) => dumbbell(vk, (s > 0 ? P.R : P.L).hand, V(0.5, 0, s)),
+      hot: (P, s) => { const a = s > 0 ? P.R : P.L, key = s > 0 ? "R.arm" : "L.arm"; return [{ on: key, seg: [a.sh, a.elbow], w: 4.5, a: 0.85 }, { on: "torso", dot: mid(P.pel, P.sc, 0.82), r: 7 }]; },
+      notes: (P, k, s) => { const a = s > 0 ? P.R : P.L;
+        return k === "ecc" ? [["side", a.elbow, [-30, -40], "肘约 45°", LIME]] : k === "hold" ? [["side", a.elbow, [-30, -40], "上臂轻碰地，别弹", LIME]] : [["side", a.hand, [-40, -24], "胸和三头推起", ORG]]; },
+      mistake: { view: "side", at: (W, s) => (s > 0 ? W.R : W.L).elbow, off: [-40, -36], text: "✕ 肘外张成 90°" } },
+    external_rotation: { name: "侧卧肩外旋", pose: extRot, perSide: ["右臂", "左臂"], unit: "侧", order: "con", labels: { con: "向外转", hold: "停", ecc: "慢放" }, db: true,
+      muscles: ["冈下肌", "小圆肌", "三角肌后束", "斜方肌中束"],
+      cue: "侧躺，上面那只手肘弯 90° 贴在身侧（腋下可夹条毛巾），前臂向上转开，身体不转；用很轻的哑铃，慢慢放回。",
+      src: "依据：Doyle 第 8 章 p.129–130、第 11 章 p.188；外旋动作肌电 [R19][R20]（R20 只读到摘要）",
+      views: [["side", "正面 FRONT"], ["behind", "脚端 FEET"]], tabs: ["正面", "脚端"], fore: (vk, P, s) => dumbbell(vk, (s > 0 ? P.R : P.L).hand, V(1, 0, 0), 6),
+      hot: (P, s) => { const a = s > 0 ? P.R : P.L, key = s > 0 ? "R.arm" : "L.arm"; return [{ on: key, dot: a.sh, r: 6.5 }]; },
+      notes: (P, k, s) => { const a = s > 0 ? P.R : P.L;
+        return k === "con" ? [["side", a.sh, [-10, -40], "肩袖发力", ORG], ["behind", a.elbow, [40, -26], "肘贴身侧", LIME]]
+          : k === "hold" ? [["side", a.elbow, [-34, -36], "肘不离开身体", LIME], ["behind", a.hand, [36, -20], "身体不转", LIME]] : [["side", a.hand, [30, -30], "慢慢放回", LIME], ["behind", a.elbow, [40, -26], "肘贴身侧", LIME]]; },
+      mistake: { view: "behind", at: (W, s) => (s > 0 ? W.R : W.L).elbow, off: [40, -30], text: "✕ 肘离开身体" } },
+
+    /* ── trunk ── */
+    wood_chop: { name: "斜向劈砍", pose: woodChop, perSide: ["右上→左下", "左上→右下"], unit: "侧", order: "con", labels: { con: "劈下", hold: "停", ecc: "回到高处" }, db: true,
+      muscles: ["腹斜肌", "腹直肌", "臀大肌", "肩部"],
+      cue: "双手握一只哑铃，从一侧肩上方斜向劈到对侧膝外，躯干带动旋转、髋膝跟着蹲，不是只甩手臂；回去时控制住，别借惯性。",
+      src: "依据：Doyle 第 6 章 p.104–105、第 9 章 p.146、第 11 章 p.188（由高到低和脚跟转是课表写法）",
+      views: [["front", "正面 FRONT"], ["side", "侧面 SIDE"]], tabs: ["正面", "侧面"], fore: (vk, P) => chopDb(vk, P),
+      hot: (P) => [{ on: "torso", seg: [P.pel, P.sc], w: 7, a: 0.7 }, { on: "torso", dot: mid(P.pel, P.sc, 0.35), r: 7 }],
+      notes: (P, k) => k === "con" ? [["front", mid(P.pel, P.sc), [44, -30], "躯干带动转", ORG]] : k === "hold" ? [["front", P.L.knee, [-40, -20], "膝对脚尖", LIME]] : [["front", mid(P.L.hand, P.R.hand), [40, -20], "控制着回去", LIME]],
+      mistake: { view: "front", at: (W) => mid(W.L.hand, W.R.hand), off: [40, -26], text: "✕ 只甩手臂" } },
+    bicycle_crunch: { name: "单车卷腹", pose: bicycle, order: "con", labels: { con: "转体", hold: "停", ecc: "回中" }, alt: true, altLab: ["左肘向右膝", "右肘向左膝"], tempo: "1/0/1",
+      muscles: ["腹斜肌", "腹直肌", "髂腰肌"],
+      cue: "仰卧，指尖轻贴耳朵，不用手拉脖子；躯干转向对侧膝盖，另一条腿伸出，核心一直收紧，下背不离地，别憋气。",
+      src: "依据：Doyle 第 9 章 p.152、p.154，第 11 章 p.190–192",
+      views: [["side", "侧面 SIDE"]],
+      hot: (P) => [{ on: "torso", seg: [P.pel, P.sc], w: 7, a: 0.75 }, { on: "torso", dot: mid(P.pel, P.sc, 0.4), r: 6.5 }],
+      notes: (P, k) => k === "con" ? [["side", mid(P.pel, P.sc, 0.5), [-10, -50], "腹斜肌转体", ORG]] : [["side", P.pel, [-30, -40], "下背贴地", LIME]],
+      mistake: { view: "side", at: (W) => W.head, off: [20, -34], text: "✕ 手拉脖子" } },
+    reverse_crunch: { name: "反向卷腹", pose: revCrunch, order: "con", labels: { con: "卷起骨盆", hold: "停", ecc: "慢放" }, tempo: "2/1/1",
+      muscles: ["腹直肌（下部）", "腹内斜肌", "髂腰肌"],
+      cue: "仰卧，膝盖弯 90°、大腿竖直；用下腹把骨盆向肋骨卷起，膝盖靠向胸口，顶端停一下，再匀速放回；不甩腿，正常呼吸。",
+      src: "依据：Doyle 第 9 章 p.154；斜板反向卷腹肌电 [R17]（只读到摘要）",
+      views: [["side", "侧面 SIDE"]],
+      hot: (P) => [{ on: "torso", dot: P.pel, r: 7.5 }, { on: "torso", seg: [P.pel, mid(P.pel, P.sc, 0.5)], w: 6.5, a: 0.75 }],
+      notes: (P, k) => k === "con" ? [["side", P.pel, [-30, -40], "下腹卷起骨盆", ORG]] : k === "hold" ? [["side", P.L.knee, [-30, -30], "膝盖靠向胸口", LIME]] : [["side", P.pel, [-30, -40], "匀速放回", LIME]],
+      mistake: { view: "side", at: (W) => W.L.ankle, off: [-36, -24], text: "✕ 甩腿，骨盆没卷" } },
+    mountain_climber: { name: "登山者", pose: climber, order: "con", labels: { con: "收膝", hold: "停", ecc: "蹬回" }, alt: true, altLab: ["右膝", "左膝"],
+      muscles: ["腹直肌", "腹斜肌", "髂腰肌", "肩部"],
+      cue: "俯卧撑顶端姿势，手在肩下、核心收紧；一侧膝盖向胸口收，再蹬回，左右交替；髋部保持水平，快但可控。",
+      src: "依据：Doyle 第 9 章 p.152、第 11 章 p.192",
+      views: [["side", "侧面 SIDE"]],
+      hot: (P, s) => [{ on: "torso", seg: [P.pel, P.sc], w: 7, a: 0.7 }, { on: s > 0 ? "R.leg" : "L.leg", dot: (s > 0 ? P.R : P.L).hip, r: 6.5 }],
+      notes: (P, k) => k === "con" ? [["side", mid(P.pel, P.sc, 0.4), [-10, -46], "核心收紧", ORG]] : [["side", P.pel, [-30, -40], "髋部保持水平", LIME]],
+      mistake: { view: "side", at: (W) => W.pel, off: [-30, -40], text: "✕ 屁股撅高" } },
+    plank_row: { name: "平板哑铃划船", pose: plankRow, order: "con", labels: { con: "划起", hold: "停", ecc: "放下" }, alt: true, repsMul: 2, altLab: ["右手划", "左手划"], db: true,
+      muscles: ["背阔肌", "菱形肌", "腹斜肌", "臀肌"],
+      cue: "双手撑在哑铃上成高位平板，两脚分开站宽；一只手把哑铃划到肋旁，髋不晃、躯干不扭，肩不耸，慢慢放回再换手。",
+      src: "依据：Doyle 第 8 章 p.136；平板肌电 [R16]",
+      views: [["side", "侧面 SIDE"], ["behind", "后面 BEHIND"]], tabs: SIDE2, fore: (vk, P) => dumbbell(vk, P.L.hand, V(1, 0, 0)) + dumbbell(vk, P.R.hand, V(1, 0, 0)),
+      hot: (P, s) => { const a = s > 0 ? P.R : P.L, key = s > 0 ? "R.arm" : "L.arm"; return [{ on: key, seg: [a.sh, a.elbow], w: 4.5, a: 0.85 }, { on: "torso", seg: [P.pel, P.sc], w: 7, a: 0.5 }]; },
+      notes: (P, k, s) => { const a = s > 0 ? P.R : P.L;
+        return k === "con" ? [["side", a.elbow, [-20, -40], "划到肋旁", ORG], ["behind", P.pel, [40, -40], "髋不晃", LIME]] : [["side", P.pel, [-30, -40], "身体一条线", LIME], ["behind", P.pel, [40, -40], "躯干不扭", LIME]]; },
+      mistake: { view: "behind", at: (W) => W.pel, off: [40, -36], text: "✕ 髋部翻转" } },
+
+    /* ── power: explosive phases are fixed, the toml only says "explosive" ── */
+    squat_jump: { name: "深蹲跳", pose: squatJump, phases: [["ecc", "下蹲", 0.9, 0, 0.34], ["con", "向上爆发", 0.45, 0.34, 0.66], ["hold", "轻落地", 1.15, 0.66, 1]],
+      muscles: ["股四头肌", "臀大肌", "小腿"],
+      cue: "双手放在肩前，下蹲到膝盖约 90°，向上爆发、手臂举过头；落地先脚掌再脚跟，踝膝髋一起弯曲缓冲，膝盖不左右晃。",
+      src: "依据：Doyle 第 10 章 p.171–173、p.177–179（先练够 8 周力量再做跳跃）",
+      views: [["side", "侧面 SIDE"], ["front", "正面 FRONT"]], tabs: SIDEF,
+      hot: (P) => [{ on: "R.leg", seg: [P.R.knee, P.R.hip], w: 6, a: 0.8 }, { on: "R.leg", dot: P.R.hip, r: 7 }, { on: "L.leg", seg: [P.L.knee, P.L.hip], w: 6, a: 0.8 }],
+      notes: (P, k) => k === "ecc" ? [["side", P.R.knee, [30, -36], "蹲到约 90°", LIME], ["front", P.R.knee, [-34, -28], "膝对脚尖", LIME]]
+        : k === "con" ? [["side", P.R.hip, [-36, -30], "臀腿爆发", ORG], ["front", P.R.knee, [-34, -28], "膝对脚尖", LIME]] : [["side", P.R.ankle, [-36, -26], "脚掌先落，屈膝缓冲", LIME], ["front", P.L.knee, [34, -28], "膝盖别内扣", LIME]],
+      mistake: { view: "front", at: (W) => W.R.knee, off: [-38, -26], text: "✕ 落地膝内扣" } },
+    split_jump: { name: "分腿跳", pose: splitJump, alt: true, altLab: ["右腿在前起跳", "左腿在前起跳"], phases: [["ecc", "下沉", 0.7, 0, 0.35], ["con", "跳起换腿", 0.5, 0.35, 0.65], ["hold", "轻落地", 1.0, 0.65, 1]],
+      muscles: ["股四头肌", "臀大肌", "髂腰肌"],
+      cue: "弓步站，前膝约 90°，双手叉腰；向上爆发、空中换腿，落地先脚掌中部再脚跟，回到弓步；前膝不内扣，后膝别砸地。",
+      src: "依据：Doyle 第 10 章 p.171、p.178（空中换腿是课表写法，Doyle 的版本落回原位）",
+      views: [["side", "侧面 SIDE"]],
+      hot: (P) => [{ on: "R.leg", seg: [P.R.knee, P.R.hip], w: 6, a: 0.75 }, { on: "L.leg", seg: [P.L.knee, P.L.hip], w: 6, a: 0.75 }],
+      notes: (P, k) => k === "ecc" ? [["side", P.sc, [30, -30], "上身直立", LIME]] : k === "con" ? [["side", P.pel, [-36, -36], "向上爆发换腿", ORG]] : [["side", P.pel, [-36, -36], "轻落地，后膝别砸", LIME]],
+      mistake: { view: "side", at: (W) => W.sc, off: [30, -24], text: "✕ 上身前趴" } },
+    multiplanar_hop: { name: "多方向跳", pose: multiHop, props: hopMarks, phases: [["ecc", "蓄力", 0.6, 0, 0.34], ["con", "跳！", 0.45, 0.34, 0.66], ["hold", "落地站稳", 1.4, 0.66, 1]],
+      muscles: ["股四头肌", "臀大肌", "臀中肌", "小腿"],
+      cue: "依次向前、向后、向右、向左跳一小步；落在脚掌中部，踝膝髋一起弯曲缓冲，侧跳时脚尖朝前，膝盖不左右晃，每次落地站稳停一下。",
+      src: "依据：Doyle 第 10 章 p.176–177、第 11 章 p.188",
+      views: [["side", "侧面 SIDE"], ["front", "正面 FRONT"]], tabs: SIDEF,
+      hot: (P) => [{ on: "R.leg", seg: [P.R.knee, P.R.hip], w: 6, a: 0.75 }, { on: "R.leg", dot: P.R.hip, r: 7 }, { on: "L.leg", dot: P.L.hip, r: 7 }],
+      notes: (P, k) => k === "hold" ? [["side", P.R.knee, [30, -36], "屈膝缓冲，站稳", LIME], ["front", P.R.knee, [-34, -28], "膝盖不晃", LIME]] : [["side", P.R.hip, [-36, -30], "臀腿发力", ORG], ["front", P.R.knee, [-34, -28], "膝对脚尖", LIME]],
+      mistake: { view: "front", at: (W) => W.R.knee, off: [-38, -26], text: "✕ 落地膝内扣" } },
+  };
+
 
   /* ── off-duty poses: standing figure helper, rest antics, finish celebrations ── */
   const mapP = (P, f) => ({ pel: f(P.pel), sc: f(P.sc), head: f(P.head), L: Object.fromEntries(Object.entries(P.L).map(([k, v]) => [k, f(v)])), R: Object.fromEntries(Object.entries(P.R).map(([k, v]) => [k, f(v)])) });
@@ -427,77 +853,33 @@
     return s;
   }
 
-  /* ── the session (strength/strength.toml, template AA_light, load week 1) ── */
+  /* ── the session: the dose (sets, reps, tempo) comes from strength/strength.toml, load week 1, filled in by build.py ── */
+  const SESSION = {"id": "AA_light", "key": "follow-aa-light-progress", "theme": "地板唤醒", "label": "解剖适应·轻量", "items": [{"ex": "bird_dog", "sets": 2, "reps": 12, "tempo": "3/2/1"}, {"ex": "plank", "sets": 2, "hold": 30}, {"ex": "side_plank", "sets": 2, "hold": 20}, {"ex": "supine_bridge", "sets": 2, "reps": 12, "tempo": "3/2/1"}, {"ex": "pushup", "sets": 2, "reps": 8, "tempo": "3/2/1"}, {"ex": "single_leg_touchdown", "sets": 2, "reps": 8, "tempo": "3/2/1"}]};
   const MOVE = (k, label, d, e0, e1) => ({ k, label, d, e0, e1 });
-  const EX = [
-    { id: "bird_dog", name: "鸟狗式", sets: 2, reps: 12, alt: true, rest: 10, pose: birdDog,
-      phases: [MOVE("con", "抬起", 1, 0, 1), MOVE("hold", "停", 2, 1, 1), MOVE("ecc", "放回", 3, 1, 0)],
-      cue: "脊柱中立、下巴微收，对侧手脚只抬到与身体齐平，停 2 秒，骨盆不转、腰不塌。左右交替，12 次合计。",
-      src: "依据：Doyle 第 9 章 p.146–151；臀大肌肌电 [R11][R12]（只读到摘要）",
-      views: [["side", "侧面 SIDE"], ["behind", "后面 BEHIND"]], tabs: ["侧面", "后面"],
-      hot: (P, s) => [{ on: s > 0 ? "L.leg" : "R.leg", dot: (s > 0 ? P.L : P.R).hip, r: 7 }, { on: "torso", seg: [P.pel, P.sc], w: 7, a: 0.55 }],
-      notes: (P, k, s) => {
-        const mv = s > 0 ? P.L : P.R;
-        if (k === "con") return [["side", mv.hip, [-30, -30], "臀部发力", ORG], ["behind", P.pel, [44, -40], "骨盆保持水平", LIME]];
-        if (k === "hold") return [["side", mid(mv.knee, mv.ankle), [10, -34], "只抬到与身体齐平", LIME], ["behind", P.pel, [44, -40], "骨盆不转", LIME]];
-        return [["side", mid(P.pel, P.sc), [8, -40], "腰不塌，慢慢放回", LIME], ["behind", P.pel, [44, -40], "骨盆保持水平", LIME]];
-      },
-      mistake: { view: "behind", at: (W, s) => (s > 0 ? W.L : W.R).hip, off: [-40, -46], text: "✕ 骨盆翻转" } },
-    { id: "plank", name: "平板支撑", sets: 2, hold: 30, rest: 10, pose: plank,
-      cue: "手肘在肩正下方，绷紧核心（不是吸肚子）、夹紧臀部，下巴微收，头到脚跟一直线，能正常呼吸说话。",
-      src: "依据：Doyle 第 9 章 p.146–149；腹肌与竖脊肌肌电 [R16]",
-      views: [["side", "侧面 SIDE"]],
-      hot: (P) => [{ on: "torso", seg: [P.pel, P.sc], w: 7, a: 0.75 }, { on: "torso", dot: P.pel, r: 7 }],
-      cycle: (P) => [["side", P.R.elbow, [-34, -40], "肘在肩正下方", LIME], ["side", mid(P.pel, P.sc, 0.45), [-8, -42], "绷紧核心，不吸肚子", ORG],
-        ["side", P.pel, [-28, -40], "夹紧臀部", ORG], ["side", P.head, [6, -34], "下巴微收", LIME], ["side", P.R.knee, [-14, -44], "头到脚跟一直线", LIME]],
-      mistake: { view: "side", at: (W) => W.pel, off: [-30, -42], text: "✕ 塌腰" } },
-    { id: "side_plank", name: "侧平板", sets: 2, hold: 20, perSide: ["左手撑", "右手撑"], rest: 10, pose: sidePlank,
-      cue: "手肘在肩正下方，绷紧核心，髋部上下叠起、不前后翻，身体成直线不塌髋；觉得轻松可以抬起上侧腿。每组左右各 20 秒。",
-      src: "依据：Doyle 第 9 章 p.149–150；臀中肌与腹外斜肌肌电 [R14][R12]",
-      views: [["side", "正面 FRONT"]],
-      hot: (P) => [{ on: "torso", seg: [mid(P.L.hip, P.pel, 0.3), mid(P.L.sh, P.sc, 0.3)], w: 6, a: 0.8 }, { on: "L.leg", dot: P.L.hip, r: 6.5 }],
-      cycle: (P) => [["side", P.L.elbow, [-30, -34], "肘在肩正下方", LIME], ["side", P.pel, [-20, -44], "髋别往下掉", LIME],
-        ["side", mid(P.L.hip, P.L.sh), [10, -52], "下侧腰腹发力", ORG], ["side", P.R.hip, [-46, -30], "两髋上下叠起", LIME]],
-      mistake: { view: "side", at: (W) => W.pel, off: [-26, -40], text: "✕ 塌髋" } },
-    { id: "supine_bridge", name: "臀桥", sets: 2, reps: 12, rest: 10, pose: bridge,
-      phases: [MOVE("con", "顶髋", 1, 0, 1), MOVE("hold", "停", 2, 1, 1), MOVE("ecc", "下放", 3, 1, 0)],
-      cue: "双脚与肩同宽，先绷紧核心、夹臀再顶髋，顶到膝-髋-肩一直线，不过度挺腰；每次下放轻触地面。觉得轻松就改单腿。",
-      src: "依据：Doyle 第 9 章 p.150–151；臀肌选择 [R11][R12]（只读到摘要）",
-      views: [["side", "侧面 SIDE"]],
-      hot: (P) => [{ on: "R.leg", dot: P.R.hip, r: 7.5 }, { on: "R.leg", seg: [P.R.knee, P.R.hip], w: 5, a: 0.6 }],
-      notes: (P, k) => k === "con" ? [["side", P.R.hip, [-24, -40], "夹臀，顶髋", ORG]]
-        : k === "hold" ? [["side", mid(P.R.hip, P.sc), [22, -36], "膝-髋-肩一直线", LIME]] : [["side", P.R.hip, [-24, -40], "慢放，轻触地", LIME]],
-      mistake: { view: "side", at: (W) => W.pel, off: [-30, -38], text: "✕ 挺腰顶过头" } },
-    { id: "pushup", name: "俯卧撑", sets: 2, reps: 8, rest: 10, pose: pushup,
-      phases: [MOVE("ecc", "下放", 3, 0, 1), MOVE("hold", "停", 2, 1, 1), MOVE("con", "推起", 1, 1, 0)],
-      cue: "手放在最低点时前臂竖直的位置，身体保持平板一线，下放到底再推起。做不满 8 次就把手撑在床沿或桌边。",
-      src: "依据：Doyle 第 8 章 p.131–132；胸大肌、三头、前锯肌肌电 [R18]",
-      views: [["side", "侧面 SIDE"]],
-      hot: (P) => [{ on: "R.arm", seg: [P.R.sh, P.R.elbow], w: 4.5, a: 0.8 }, { on: "torso", dot: mid(P.pel, P.sc, 0.86), r: 7 }],
-      notes: (P, k) => k === "ecc" ? [["side", mid(P.R.elbow, P.R.hand), [-34, -38], "前臂竖直", LIME]]
-        : k === "hold" ? [["side", P.pel, [-20, -40], "身体一条线", LIME]] : [["side", P.R.sh, [-30, -44], "胸和三头发力", ORG]],
-      mistake: { view: "side", at: (W) => W.pel, off: [-30, -40], text: "✕ 塌腰" } },
-    { id: "single_leg_touchdown", name: "单腿蹲触地", sets: 2, reps: 8, perSide: ["右腿", "左腿"], rest: 10, pose: touchdown,
-      phases: [MOVE("ecc", "下蹲伸手", 3, 0, 1), MOVE("hold", "停", 2, 1, 1), MOVE("con", "站起", 1, 1, 0)],
-      cue: "单腿站，屈髋前倾，手伸向对侧脚的大脚趾，脊柱中立，支撑腿膝盖对准脚尖；悬空脚回到支撑脚旁。每组每条腿 8 次。",
-      src: "依据：Doyle 第 7 章 p.114、p.120–121；单腿动作的臀大肌肌电 [R13]（只读到摘要）",
-      views: [["side", "侧面 SIDE"], ["front", "正面 FRONT"]], tabs: ["侧面", "正面"],
-      hot: (P, s) => { const st = s > 0 ? P.R : P.L, key = s > 0 ? "R.leg" : "L.leg"; return [{ on: key, dot: st.hip, r: 7.5 }, { on: key, seg: [st.knee, st.hip], w: 5.5, a: 0.7 }]; },
-      notes: (P, k, s) => {
-        const st = s > 0 ? P.R : P.L, rh = s > 0 ? P.L.hand : P.R.hand;
-        const front = ["front", st.knee, [s > 0 ? -34 : 34, -30], "膝对脚尖", LIME];
-        if (k === "ecc") return [["side", rh, [-70, -62], "伸向对侧大脚趾", LIME], front];
-        if (k === "hold") return [["side", mid(P.pel, P.sc), [-10, -58], "脊柱中立", LIME], front];
-        return [["side", st.hip, [-34, -30], "臀腿发力站起", ORG], front];
-      },
-      mistake: { view: "front", at: (W, s) => (s > 0 ? W.R : W.L).knee, off: [-38, -26], text: "✕ 膝盖内扣" } },
-  ];
-
-  /* target muscles per exercise (knowledge/app/10-exercise-cues.md); the first one is the main mover */
-  const MUSCLES = { bird_dog: ["臀大肌", "腹斜肌", "竖脊肌", "肩部"], plank: ["腹直肌", "腹斜肌", "竖脊肌", "臀肌"],
-    side_plank: ["臀中肌", "腹外斜肌", "腰方肌"], supine_bridge: ["臀大肌", "腘绳肌", "核心"],
-    pushup: ["胸大肌", "肱三头肌", "三角肌前束", "前锯肌"], single_leg_touchdown: ["臀大肌", "臀中肌", "腘绳肌", "股四头肌"] };
-  EX.forEach((ex) => (ex.muscles = MUSCLES[ex.id]));
+  const TEMPO = /^\d+(\.\d+)?\/\d+(\.\d+)?\/\d+(\.\d+)?$/;
+  /* tempo "e/i/c" = eccentric / isometric / concentric seconds (Doyle ch.11); the library says which comes first */
+  function phasesFor(L, tempo) {
+    if (L.phases) return L.phases.map((p) => MOVE(...p));
+    const t = tempo === "slow" ? "2/1/2" : TEMPO.test(tempo || "") ? tempo : L.tempo || "2/0/2";
+    const [ecc, hold, con] = t.split("/").map(Number), lb = L.labels;
+    const seq = L.order === "con" ? [MOVE("con", lb.con, con, 0, 1), MOVE("hold", lb.hold, hold, 1, 1), MOVE("ecc", lb.ecc, ecc, 1, 0)]
+      : [MOVE("ecc", lb.ecc, ecc, 0, 1), MOVE("hold", lb.hold, hold, 1, 1), MOVE("con", lb.con, con, 1, 0)];
+    return seq.filter((p) => p.d > 0);
+  }
+  const EX = SESSION.items.map((it) => {
+    const L = LIB[it.ex], ex = { ...L, id: it.ex, sets: it.sets, rest: 10 };
+    if (it.hold) {
+      ex.hold = it.hold; ex.phases = null; ex.amount = `${it.hold} 秒` + (L.perSide ? " · 每侧" : ""); ex.sayAmt = it.hold + "秒";
+      ex.cue = L.cue + (L.perSide ? `每组左右各 ${it.hold} 秒。` : "");
+    } else {
+      const n = it.reps; ex.phases = phasesFor(L, it.tempo); ex.reps = n * (L.repsMul || 1);
+      ex.amount = `${n} 次` + (L.perSide ? " · 每侧" : L.repsMul ? " · 每侧交替" : L.alt ? " · 交替" : "");
+      ex.sayAmt = (L.perSide || L.repsMul ? "每侧" : "") + n + "次";
+      ex.cue = L.cue + (L.perSide ? `每组每${L.unit || "侧"} ${n} 次。` : L.repsMul ? `左右交替，每组每侧 ${n} 次。` : L.alt ? `左右交替，每组 ${n} 次合计。` : "");
+    }
+    if (it.fallback) ex.cue += `没有哑铃就换成${it.fallback}。`;
+    return ex;
+  });
 
   /* ── projection and drawing ── */
   const VIEWS = { side: { p: (v) => [v.x, -v.y], d: (v) => v.z }, front: { p: (v) => [-v.z, -v.y], d: (v) => v.x }, behind: { p: (v) => [v.z, -v.y], d: (v) => -v.x } };
@@ -553,8 +935,10 @@
     ex.vb = ex.views.map(([vk]) => {
       let x0 = 1e9, x1 = -1e9, y0 = 1e9;
       for (const e of [0, 0.25, 0.5, 0.75, 1]) for (const s of [1, -1]) {
-        const P = ex.pose(e, s, 0, 0), pts = [P.pel, P.sc, P.head, ...["L", "R"].flatMap((k) => Object.values(P[k]))];
+        for (const rp of [0, 1, 2, 3]) {
+        const P = ex.pose(e, s, 0, 0, rp), pts = [P.pel, P.sc, P.head, ...["L", "R"].flatMap((k) => Object.values(P[k])), ...(ex.fitPts ? ex.fitPts(P, s) : [])];
         for (const q of pts) { const [x, y] = VIEWS[vk].p(q); x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); }
+        }
       }
       const h = Math.max(-y0 + 62, 120), w = Math.max(x1 - x0 + 56, 150);
       return [((x0 + x1) / 2 - w / 2), -h, w, h + 14];
@@ -586,7 +970,7 @@
   }
 
   /* ── state ── */
-  const KEY = "aa-light-progress";
+  const KEY = SESSION.key;
   let idx = 0, T = 0, started = false, playing = false, mistake = false, sound = true, done = false, view = "main", last = performance.now(), clock = 0, celeb = 0, doneAt = 0;
   try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.day === new Date().toDateString() && s.idx < SEG.length) idx = s.idx; } catch (_) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ day: new Date().toDateString(), idx })); } catch (_) {} };
@@ -639,7 +1023,7 @@
     const g = SEG[idx], ex = EX[g.ex];
     if (g.type === "prep") {
       const sideTxt = ex.perSide ? "，" + ex.perSide[g.side > 0 ? 0 : 1] : "";
-      say(g.sw ? "换边" + sideTxt : `${ex.name}，第${g.set}组${sideTxt}，${ex.hold ? ex.hold + "秒" : ex.reps + "次"}`);
+      say(g.sw ? "换边" + sideTxt : `${ex.name}，第${g.set}组${sideTxt}，${ex.sayAmt}`);
     } else if (g.type === "work") { if (!play("go", 0.7)) beep(880, 0.22); }
     else if (g.type === "rest") { play("pop", 0.35); if (RESTS[(idx * 5 + 3) % RESTS.length].bottle) setTimeout(() => play("drink", 0.5), 1400); } if (g.type === "rest") say(`休息${g.dur}秒` + (g.next !== g.ex ? `，下一个，${EX[g.next].name}` : ""));
   }
@@ -651,11 +1035,11 @@
   /* ── frame ── */
   function draw() {
     const g = SEG[idx], showEx = done ? EX[EX.length - 1] : g.type === "rest" ? EX[g.next] : EX[g.ex];
-    let e = showEx.hold ? 1 : 0, side = g.side || 1, k = "prep", label = "准备", left = g.dur - T, repTxt = "", tchip = -1, tpose = clock, sz = 1, pk = "";
+    let e = showEx.hold ? 1 : 0, side = g.side || 1, k = "prep", label = "准备", left = g.dur - T, repTxt = "", tchip = -1, tpose = clock, sz = 1, pk = "", rp = 0;
     const st = $("#stage");
     if (!started || g.type === "rest" || done) {
       /* preview loop of the exercise that is coming */
-      if (showEx.phases) { const r = repState({ ...showEx, reps: 1e6 }, clock, showEx.perSide ? 1 : 1); e = r.e; side = r.side; k = r.ph.k; tchip = r.pi; } else { k = "hold"; }
+      if (showEx.phases) { const r = repState({ ...showEx, reps: 1e6 }, clock, showEx.perSide ? 1 : 1); e = r.e; side = r.side; k = r.ph.k; tchip = r.pi; rp = r.rep; } else { k = "hold"; }
       label = done ? "完成" : !started ? (idx ? "接着上次" : "预览") : "休息";
       left = done ? null : !started ? null : g.dur - T;
       repTxt = !started ? `共 ${SEG.filter((s) => s.type === "work").length} 段 · 约 ${Math.round(TOTAL / 60)} 分钟` : done ? "" : "右下角是下一个动作";
@@ -664,12 +1048,12 @@
       if (showEx.phases) e = showEx.phases[0].e0;
       repTxt = `第 ${g.set} / ${showEx.sets} 组` + (showEx.perSide ? " · " + showEx.perSide[g.side > 0 ? 0 : 1] : "");
     } else if (showEx.phases) {
-      const r = repState(showEx, T, g.side); e = r.e; side = r.side; k = r.ph.k; label = r.ph.label; left = r.left; tchip = r.pi;
+      const r = repState(showEx, T, g.side); e = r.e; side = r.side; k = r.ph.k; label = r.ph.label; left = r.left; tchip = r.pi; rp = r.rep;
       /* the label swells while the muscle works and shrinks on the way back: con grows, ecc shrinks, hold keeps the size and throbs */
       const fr = ease(1 - r.left / r.ph.d), prev = showEx.phases[(r.pi + showEx.phases.length - 1) % showEx.phases.length].k;
       const x = k === "con" ? fr : k === "ecc" ? 1 - fr : prev === "con" ? 1 : 0;
       sz = 1 + 0.45 * x + (k === "hold" ? 0.04 * Math.sin(T * Math.PI * 4) : 0); pk = k;
-      repTxt = `第 ${r.rep + 1} / ${showEx.reps} 次 · 第 ${g.set} / ${showEx.sets} 组` + (showEx.perSide ? " · " + showEx.perSide[g.side > 0 ? 0 : 1] : showEx.alt ? (side > 0 ? " · 右手左腿" : " · 左手右腿") : "");
+      repTxt = `第 ${r.rep + 1} / ${showEx.reps} 次 · 第 ${g.set} / ${showEx.sets} 组` + (showEx.perSide ? " · " + showEx.perSide[g.side > 0 ? 0 : 1] : showEx.altLab ? " · " + showEx.altLab[side > 0 ? 0 : 1] : "");
     } else {
       k = "hold"; label = "保持"; tpose = T;
       repTxt = `第 ${g.set} / ${showEx.sets} 组` + (showEx.perSide ? " · " + showEx.perSide[g.side > 0 ? 0 : 1] : "");
@@ -682,24 +1066,26 @@
       $("#l0").textContent = scene === "done" ? "练完啦" : "休息一下";
       $("#pip").hidden = scene !== "rest";
       if (scene === "rest") {
-        const P = showEx.pose(e, side, 0, tpose), vk = showEx.views[0][0], vb = showEx.vb[0];
+        const P = showEx.pose(e, side, 0, tpose, rp), vk = showEx.views[0][0], vb = showEx.vb[0];
         const pv = $("#vp"); pv.setAttribute("viewBox", vb.map(f1).join(" "));
-        pv.innerHTML = `<line x1="${vb[0] - 50}" y1="0" x2="${vb[0] + vb[2] + 50}" y2="0" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>` + figure(vk, P, showEx.hot(P, side), 0.8);
+        pv.innerHTML = `<line x1="${vb[0] - 50}" y1="0" x2="${vb[0] + vb[2] + 50}" y2="0" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>` + (showEx.props ? showEx.props(vk, P, side, rp) : "") + figure(vk, P, showEx.hot(P, side), 0.8) + (showEx.fore ? showEx.fore(vk, P, side, rp) : "");
       } st.classList.remove("two"); $(".panel.alt").hidden = true; $("#tabs").hidden = true; st.dataset.view = "main";
     } else {
     $("#pip").hidden = true;
-    const P = showEx.pose(e, side, 0, tpose), act = k === "con" || k === "hold" ? 1 : k === "ecc" ? 0.7 : 0.45;
+    const P = showEx.pose(e, side, 0, tpose, rp), act = k === "con" || k === "hold" ? 1 : k === "ecc" ? 0.7 : 0.45;
     const hot = showEx.hot(P, side);
     let ns = showEx.notes ? showEx.notes(P, k === "prep" ? showEx.phases[0].k : k, side) : [showEx.cycle(P)[Math.floor(tpose / 4) % showEx.cycle(P).length]];
     showEx.views.forEach(([vk, lab], vi) => {
       const vb = showEx.vb[vi];
       let svg = `<line x1="${vb[0] - 50}" y1="0" x2="${vb[0] + vb[2] + 50}" y2="0" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>`;
-      if (vi === 0) { const back = ["pushup", "plank"].includes(showEx.id) && vk === "side" ? VIEWS.side.p(mid(P.pel, P.R.knee, 0.3)) : null; svg += critters(vb, back && [back[0] - 12, back[1] - 9]); }
+      if (vi === 0) { const back = showEx.perch && vk === "side" ? VIEWS.side.p(mid(P.pel, P.R.knee, 0.3)) : null; svg += critters(vb, back && [back[0] - 12, back[1] - 9]); }
       svg += `<ellipse cx="${f1(VIEWS[vk].p(P.pel)[0])}" cy="1" rx="${vk === "side" ? 52 : 30}" ry="3" fill="${INK}" opacity=".12"/>`;
-      if (mistake && showEx.mistake.view === vk) svg += ghost(vk, P, showEx.pose(Math.max(e, 0.75), side, 1, tpose));
+      if (mistake && showEx.mistake.view === vk) svg += ghost(vk, P, showEx.pose(Math.max(e, 0.75), side, 1, tpose, rp));
+      if (showEx.props) svg += showEx.props(vk, P, side, rp);
       svg += figure(vk, P, hot, act);
+      if (showEx.fore) svg += showEx.fore(vk, P, side, rp);
       if (vi === 0) svg += critFront;
-      if (mistake && showEx.mistake.view === vk) { const W = showEx.pose(Math.max(e, 0.75), side, 1, tpose), mk = showEx.mistake; svg += note(vk, vb, mk.at(W, side), mk.off, mk.text, PINK, true); }
+      if (mistake && showEx.mistake.view === vk) { const W = showEx.pose(Math.max(e, 0.75), side, 1, tpose, rp), mk = showEx.mistake; svg += note(vk, vb, mk.at(W, side), mk.off, mk.text, PINK, true); }
       else ns.filter((n) => n[0] === vk).slice(0, 1).forEach((n) => (svg += note(vk, vb, n[1], n[2], n[3], n[4])));
       const el = $("#v" + vi); el.setAttribute("viewBox", vb.map(f1).join(" ")); el.innerHTML = svg;
       $("#l" + vi).textContent = lab;
@@ -730,7 +1116,7 @@
   function renderList() {
     const cur = SEG[idx].type === "rest" && started ? SEG[idx].next : SEG[idx].ex;
     $("#list").innerHTML = EX.map((ex, i) => `<button class="item ${done || i < cur ? "done" : i === cur ? "cur" : ""}" data-i="${i}">
-      <b>${i + 1}</b><span>${ex.name}</span><small>${ex.sets} × ${ex.hold ? ex.hold + " 秒" : ex.reps + " 次"}${ex.perSide ? " · 每侧" : ""}${ex.phases ? " · " + ex.phases.map((p) => p.d).join("/") : ""} · 休息 ${ex.rest}s</small></button>`).join("");
+      <b>${i + 1}</b><span>${ex.name}</span><small>${ex.sets} × ${ex.amount}${ex.phases ? " · " + ex.phases.map((p) => p.d).join("/") : ""} · 休息 ${ex.rest}s</small></button>`).join("");
     document.querySelectorAll(".item").forEach((b) => (b.onclick = () => { go(SEG.findIndex((s) => s.ex === +b.dataset.i)); draw(); }));
   }
 
