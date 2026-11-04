@@ -4,7 +4,7 @@ import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 
 export default defineConfig({
-  site: "https://genli.dev",
+  site: "https://root-ligen.vercel.app",
   integrations: [
     tailwind({ applyBaseStyles: false }),
     mdx(),
