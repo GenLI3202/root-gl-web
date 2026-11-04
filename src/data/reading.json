@@ -1,8 +1,8 @@
 {
-  "syncedThrough": 1793596335,
+  "syncedThrough": 1793781430,
   "stats": {
-    "totalSeconds": 2326314,
-    "readDays": 1114,
+    "totalSeconds": 2327326,
+    "readDays": 1115,
     "booksRead": 166,
     "booksFinished": 48,
     "notes": 2725,
@@ -37,7 +37,7 @@
       },
       {
         "year": 2026,
-        "seconds": 274363
+        "seconds": 275375
       }
     ],
     "hours": [
