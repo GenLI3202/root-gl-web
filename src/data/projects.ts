@@ -6,7 +6,7 @@ import type { Locale } from "@/i18n";
  */
 
 export type StageId = "source" | "plan" | "operate" | "trade" | "hedge";
-export type SketchName = "site" | "map" | "pareto" | "market" | "ride" | "browser";
+export type SketchName = "site" | "map" | "pareto" | "market" | "digest" | "ride" | "browser";
 
 export interface Stage {
   id: StageId;
@@ -160,6 +160,24 @@ export const PROJECTS: Project[] = [
     },
     tags: ["Python", "FastAPI", "Plotly", "React"],
     href: SAME("https://mamoda-web-dashboard.vercel.app/"),
+  },
+  {
+    id: "bess-cool",
+    sketch: "digest",
+    tint: "var(--tint-sky)",
+    title: SAME("BESS·COOL"),
+    status: {
+      en: "Live demo · ZH/EN",
+      zh: "Demo 已上线 · 中英双语",
+      de: "Live-Demo · ZH/EN",
+    },
+    description: {
+      en: "A curated watch on the energy storage industry: European market revenues, supply-chain prices from lithium to cells, new PCS/BMS/EMS products, a daily brief, and a product comparison with weights you set yourself. Every number keeps its date and source.",
+      zh: "储能行业精选站：欧洲市场收入、从碳酸锂到电芯的供应链行情、PCS/BMS/EMS 新品、储能日报，还有可以自己调权重的多维产品对比。每个数字都保留日期和出处。",
+      de: "Ein kuratierter Blick auf die Speicherbranche: Erlöse an europäischen Märkten, Lieferkettenpreise von Lithium bis zur Zelle, neue PCS/BMS/EMS-Produkte, ein Tagesbriefing und ein Produktvergleich mit selbst einstellbaren Gewichten. Jede Zahl behält Datum und Quelle.",
+    },
+    tags: ["React", "TypeScript", "Vite", "GitHub Actions"],
+    href: SAME("https://bess-cool.vercel.app/"),
   },
   {
     id: "across",
