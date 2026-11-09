@@ -1,11 +1,11 @@
 {
-  "syncedThrough": 1794131830,
+  "syncedThrough": 1794167367,
   "stats": {
-    "totalSeconds": 2327351,
-    "readDays": 1115,
-    "booksRead": 166,
+    "totalSeconds": 2328611,
+    "readDays": 1116,
+    "booksRead": 167,
     "booksFinished": 48,
-    "notes": 2725,
+    "notes": 2726,
     "years": [
       {
         "year": 2019,
@@ -37,12 +37,12 @@
       },
       {
         "year": 2026,
-        "seconds": 275400
+        "seconds": 276660
       }
     ],
     "hours": [
-      78606,
-      60000,
+      78613,
+      60009,
       35853,
       19052,
       8386,
@@ -282,7 +282,7 @@
     {
       "id": "26767625",
       "title": "毛姆小说精选集",
-      "author": "毛姆",
+      "author": "[英]毛姆",
       "category": "文学-经典作品",
       "seconds": 107521,
       "progress": 63,
