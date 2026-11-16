@@ -107,6 +107,7 @@
 - [x] **All nine training sessions live** (2026-11-04) — every theme card now links to its follow-along page through one dynamic route, `src/pages/training/[session].astro`, which picks `src/training/<slug>.html` by the card's `href`. The nine pages are generated in the scientific-training repo (`python3 docs/app/follow/build.py --site <gen-web>/src/training`) from its strength templates, so sets, reps and tempo follow the planner; copy them over the same way after any change there
 - [x] **Site URL fixed** (2026-11-04) — `astro.config.mjs` `site` was `https://genli.dev`, a domain that serves someone else's blog, so every canonical link, `og:image` and sitemap `<loc>` pointed there. It is now `https://root-ligen.vercel.app`, the live URL; change it again if a custom domain is ever attached
 - [x] **Cycling distance corrected** (2026-11-04) — the hobbies card said ≈ 4 800 km a year; Strava shows 148 rides and about 6 734 km between 2025-11-04 and 2026-11-04, so all three locales now say ≈ 6 700 km
+- [x] **BESS·COOL on the projects page** (2026-11-06) — new card in "Other things I've built" (`src/data/projects.ts`), linking to https://bess-cool.vercel.app/ (the repo is private, so no source link). Trilingual copy; new `digest` cover in `ProjectSketch.astro`: the daily brief beside a radar chart for the product comparison
 
 ## Remaining Work
 
