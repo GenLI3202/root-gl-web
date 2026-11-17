@@ -1,0 +1,74 @@
+---
+/**
+ * The training room's language switch: one sticker button that offers the other language.
+ * It flips <html data-train-lang>, remembers the choice for the follow-along pages and tells
+ * listeners through a "training-lang" window event.
+ */
+---
+
+<button class="lang-switch" type="button" data-lang-switch>
+  <span data-l="zh">EN</span>
+  <span data-l="en" lang="zh-CN">中文</span>
+</button>
+
+<style>
+  .lang-switch {
+    padding: 0.35rem 1rem;
+    border: 3px solid var(--train-ink);
+    border-radius: 99px;
+    background: var(--train-cream);
+    color: var(--train-ink);
+    font: inherit;
+    font-weight: 900;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 0 var(--train-ink);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  .lang-switch:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 var(--train-ink);
+  }
+
+  .lang-switch:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 var(--train-ink);
+  }
+
+  .lang-switch:focus-visible {
+    outline: 3px dashed var(--train-ink);
+    outline-offset: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lang-switch {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  type TrainingLang = "zh" | "en";
+
+  const LABEL: Record<TrainingLang, string> = { zh: "Switch to English", en: "切换到中文" };
+  const buttons = document.querySelectorAll<HTMLButtonElement>("[data-lang-switch]");
+  const current = (): TrainingLang => (document.documentElement.dataset.trainLang === "en" ? "en" : "zh");
+  const paintLabels = (): void => buttons.forEach((b) => b.setAttribute("aria-label", LABEL[current()]));
+
+  function setLang(lang: TrainingLang): void {
+    const root = document.documentElement;
+    root.dataset.trainLang = lang;
+    root.lang = lang === "en" ? "en" : "zh-CN";
+    try {
+      localStorage.setItem("training-lang", lang);
+    } catch {
+      /* private mode: the switch still works for this page */
+    }
+    paintLabels();
+    window.dispatchEvent(new CustomEvent("training-lang", { detail: lang }));
+  }
+
+  buttons.forEach((btn) => btn.addEventListener("click", () => setLang(current() === "en" ? "zh" : "en")));
+  paintLabels();
+</script>

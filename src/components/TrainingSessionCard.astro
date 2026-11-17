@@ -1,5 +1,6 @@
 ---
-import type { TrainingSession } from "@/data/training-sessions";
+import type { Bilingual, TrainingSession } from "@/data/training-sessions";
+import Bi from "@/components/Bi.astro";
 
 /**
  * One session theme in the training room. A session with a follow-along page is a link;
@@ -13,7 +14,14 @@ interface Props {
 const { session, today = false } = Astro.props;
 const ready = Boolean(session.href);
 const Tag = ready ? "a" : "div";
-const LEVELS = ["", "轻松", "适中", "吃力", "硬核"];
+const LEVELS: Bilingual[] = [
+  { zh: "", en: "" },
+  { zh: "轻松", en: "Easy" },
+  { zh: "适中", en: "Moderate" },
+  { zh: "吃力", en: "Hard" },
+  { zh: "硬核", en: "Brutal" },
+];
+const level = LEVELS[session.level];
 ---
 
 <Tag
@@ -21,23 +29,36 @@ const LEVELS = ["", "轻松", "适中", "吃力", "硬核"];
   href={ready ? session.href : undefined}
   aria-disabled={ready ? undefined : "true"}
 >
-  {today && <span class="sticker">今天</span>}
-  {!ready && <span class="sticker idle-sticker">待开发</span>}
-  <span class="plan">{session.plan}</span>
-  <h2 class="name">{session.name}</h2>
+  {today && <span class="sticker"><Bi text={{ zh: "今天", en: "Today" }} /></span>}
+  {!ready && <span class="sticker idle-sticker"><Bi text={{ zh: "待开发", en: "Coming soon" }} /></span>}
+  <span class="plan"><Bi text={session.plan} /></span>
+  <h2 class="name"><Bi text={session.name} /></h2>
   <ul class="tags" role="list">
-    <li class="tag time">{session.minutes} 分钟</li>
-    <li class="tag level" aria-label={`难度 ${LEVELS[session.level]}`}>
+    <li class="tag time">
+      <Bi text={{ zh: `${session.minutes} 分钟`, en: `${session.minutes} min` }} />
+    </li>
+    <li class="tag level">
       <span class="dots" aria-hidden="true">
         {[1, 2, 3, 4].map((n) => <i class:list={{ on: n <= session.level }} />)}
       </span>
-      {LEVELS[session.level]}
+      <Bi text={level} />
     </li>
-    {session.focus.map((f) => <li class="tag focus">{f}</li>)}
-    <li class="tag gear">{session.gear}</li>
+    {session.focus.map((f) => <li class="tag focus"><Bi text={f} /></li>)}
+    <li class="tag gear"><Bi text={session.gear} /></li>
   </ul>
-  {today && <p class="moves">{session.exercises.join(" · ")}</p>}
-  {ready && <span class="go" aria-hidden="true">开练 →</span>}
+  {
+    today && (
+      <p class="moves">
+        <Bi
+          text={{
+            zh: session.exercises.map((e) => e.zh).join(" · "),
+            en: session.exercises.map((e) => e.en).join(" · "),
+          }}
+        />
+      </p>
+    )
+  }
+  {ready && <span class="go" aria-hidden="true"><Bi text={{ zh: "开练 →", en: "Start →" }} /></span>}
 </Tag>
 
 <style>

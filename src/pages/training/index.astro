@@ -1,6 +1,8 @@
 ---
 import TrainingLayout from "@/layouts/TrainingLayout.astro";
 import TrainingSessionCard from "@/components/TrainingSessionCard.astro";
+import TrainingLangSwitch from "@/components/TrainingLangSwitch.astro";
+import Bi from "@/components/Bi.astro";
 import { TRAINING_SESSIONS, TODAY_SESSION } from "@/data/training-sessions";
 
 /** The training room: pick a session theme. Reached only through the dumbbell on the cycling page. */
@@ -8,28 +10,55 @@ const today = TRAINING_SESSIONS.find((s) => s.id === TODAY_SESSION);
 const others = TRAINING_SESSIONS.filter((s) => s.id !== TODAY_SESSION);
 ---
 
-<TrainingLayout title="训练室">
+<TrainingLayout title={{ zh: "训练室", en: "Training room" }}>
   <main class="room">
-    <a class="back" href="/hobbies/cycling/" data-back>← 回到骑行</a>
+    <div class="top-row">
+      <a class="back" href="/hobbies/cycling/" data-back>
+        ← <Bi text={{ zh: "回到骑行", en: "Back to cycling" }} />
+      </a>
+      <TrainingLangSwitch />
+    </div>
     <header class="room-head">
-      <h1>训练室</h1>
-      <p>选一个主题，九节都能跟练了。</p>
+      <h1><Bi text={{ zh: "训练室", en: "Training room" }} /></h1>
+      <p>
+        <Bi
+          text={{
+            zh: "选一个主题，九节都能跟练了。",
+            en: "Pick a theme: all nine sessions are ready to follow along.",
+          }}
+        />
+      </p>
     </header>
 
     {today && (
-      <section class="today-slot" aria-label="今天的训练">
+      <section class="today-slot" aria-labelledby="today-h">
+        <h2 id="today-h" class="sr-only"><Bi text={{ zh: "今天的训练", en: "Today's session" }} /></h2>
         <TrainingSessionCard session={today} today />
       </section>
     )}
 
     <section aria-labelledby="all-h">
-      <h2 id="all-h" class="all-title">全部主题 · {TRAINING_SESSIONS.length} 种</h2>
+      <h2 id="all-h" class="all-title">
+        <Bi
+          text={{
+            zh: `全部主题 · ${TRAINING_SESSIONS.length} 种`,
+            en: `All themes · ${TRAINING_SESSIONS.length}`,
+          }}
+        />
+      </h2>
       <div class="grid">
         {others.map((s) => <TrainingSessionCard session={s} />)}
       </div>
     </section>
 
-    <p class="foot">主题来自每周训练规划里的 9 种力量课模板，按 Friel 与 Doyle 的周期安排。</p>
+    <p class="foot">
+      <Bi
+        text={{
+          zh: "主题来自每周训练规划里的 9 种力量课模板，按 Friel 与 Doyle 的周期安排。",
+          en: "The themes are the nine strength templates of my weekly training plan, periodized after Friel and Doyle.",
+        }}
+      />
+    </p>
   </main>
 </TrainingLayout>
 
@@ -55,8 +84,23 @@ const others = TRAINING_SESSIONS.filter((s) => s.id !== TODAY_SESSION);
     gap: 1.6rem;
   }
 
+  .top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
   .back {
-    align-self: flex-start;
     color: var(--train-ink);
     font-family: var(--font-hand);
     font-size: 1.5rem;
