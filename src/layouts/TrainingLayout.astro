@@ -43,4 +43,9 @@ const { title } = Astro.props;
   body.training-room::before {
     display: none;
   }
+
+  /* the site's serif display face is for the site; the room keeps its own grotesque in both languages */
+  body.training-room :is(h1, h2, h3) {
+    font-family: inherit;
+  }
 </style>
