@@ -5,6 +5,7 @@ import HandIcon from "@/components/HandIcon.astro";
 import type { HandIconName } from "@/components/hand-icons";
 import SayHello from "@/components/SayHello.astro";
 import MunichClock from "@/components/MunichClock.astro";
+import PaperSketch from "@/components/PaperSketch.astro";
 import { t, localizeUrl, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import { NOW_ITEMS, NOW_UPDATED } from "@/data/now";
 import { formatPostDate, getPostLabels, getPostUrl, getPostsForLocale } from "@/utils/posts";
@@ -172,6 +173,7 @@ function isExternal(href: string): boolean {
     </div>
 
     <p class="hero-intro" set:html={copy.intro} />
+    <PaperSketch locale={locale} art="baima" side="right" top="-16rem" reach="60px" size={0.75} />
     <p class="hero-notebook">{copy.notebook}</p>
 
     <MunichClock locale={locale} />
@@ -184,6 +186,7 @@ function isExternal(href: string): boolean {
         </a>
       ))}
     </div>
+    <PaperSketch locale={locale} art="munich" side="left" top="-18rem" reach="20px" size={0.62} />
   </div>
 </section>
 
