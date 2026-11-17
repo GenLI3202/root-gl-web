@@ -1,5 +1,6 @@
 ---
 import HobbyShell from "@/components/HobbyShell.astro";
+import PaperSketch from "@/components/PaperSketch.astro";
 import { t, type Locale } from "@/i18n";
 
 interface Props {
@@ -21,4 +22,6 @@ const KICKER: Record<Locale, string> = {
   kicker={KICKER[locale]}
   lead={t(locale, "hobbies.guitar.lead")}
   illustration="/images/hobbies/guitar-singing.svg"
-/>
+>
+  <PaperSketch locale={locale} art="guitar" side="left" top="-19rem" reach="16px" size={0.7} />
+</HobbyShell>

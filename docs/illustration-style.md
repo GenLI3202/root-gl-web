@@ -85,6 +85,49 @@ should stay quiet.
 2. Run `python3 scripts/sketch-portraits.py <slug>`.
 3. Check it next to two existing portraits at 96 × 120 and at 2× before committing.
 
+## Drawings on the paper
+
+Pieces of Gen's life from the "在模型与山野之间" poster are redrawn in the study room's
+freehand-ink manner (not the portrait rules) and laid on the page's paper, beside the text
+rather than inside it. The drawings live in `src/utils/paper-art.ts`; `PaperSketch.astro`
+places one. Current set: Home has the two cities of Gen's life in the hero, Luoyang's White
+Horse Temple on the right beside the intro and Munich's Frauenkirche lower on the left beside
+the Munich clock; Cycling has Gen's bike beside the distance line and a rider on a
+winding road toward the mountains; Reading has a stack of books with a vase; Guitar has the
+guitar. Projects has none: a person seen from behind at a desk did not work in this style.
+
+- Landmarks are drawn from photos of the real place, not from memory, so the shape that makes
+  them recognisable is right. The White Horse Temple is its Ming gate as photographed (three
+  blocks, the middle one taller, each under its own upturned hip-and-gable roof, the name plaque
+  over the big arch, its characters written in) with one of the saddled Song stone horses in
+  front; an earlier version from memory read as a generic roof over three doors.
+- Gen's own bike (a burgundy Lapierre) must look like the real one, which hand-coded strokes
+  cannot do. It is the poster's pen-and-colour drawing as an image instead (`raster`), keyed out
+  of its paper so the page shows through (`public/images/sketches/bike.webp`, 1000 px wide,
+  about 160 KB, lazy-loaded). It sweeps in from the left with the scroll instead of being drawn
+  stroke by stroke; on dark paper it is mostly inverted with the hue turned back, so the frame
+  stays red. Use this route for anything that has to be recognisable as a specific object.
+- Drawn by hand in code with `src/utils/sketch.ts`, using the poster only for composition. No
+  tracing: traced lines come out dense and broken, which fights the few-stroke look and makes
+  the drawing animation choppy.
+- One open stroke per line, in the order a pen would go: silhouette first, then details, then
+  the far background. Faces stay blank, on statues too; people are seen from behind.
+- Four weights: `ink`, `fine` for windows, folds and texture, `faint` for distant hills and
+  water, and `accent`, the red pen, only where the poster is red (the bike frame, the road). A
+  pale wash on one or two shapes adds depth and comes in last. Each drawing seeds its own
+  jitter, so editing one never moves another.
+- Placement: put `<PaperSketch>` between two blocks, before the one it belongs to. It is a
+  zero-height anchor, so it does not move the layout. On screens 1200 px and wider the drawing
+  sits in the margin, runs off the screen edge and reaches `reach` behind the content in pale
+  ink (40% opacity, thinner strokes); places get a hand-written red label in the margin. Keep
+  `reach` small on the side where headings or the first words of lines sit, and use `size`
+  below 1 on pages with the wide 912 px column, whose margins are narrower. Below 1200 px the
+  drawing becomes a band in the flow, 86% of the screen wide, so a phone page does not turn
+  into a gallery. `main` clips the drawings at the screen edge
+  and above the footer.
+- Drawing follows the scroll (`ScrollSketch`): under a third on first sight, the rest at an
+  even pen speed, never un-drawn. Reduced motion, no JavaScript and print show it finished.
+
 ## Prompt for an image model
 
 If a drawing is made with an image model instead of the script, use this description and

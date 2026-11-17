@@ -1,0 +1,84 @@
+---
+/**
+ * An ink drawing that finishes itself as the reader scrolls. Strokes marked `.ink` are drawn
+ * in document order at an even pen speed; shapes marked `.wash` fade in at the end. On arrival
+ * (or when the drawing first comes into view) a little under a third of the ink is on the paper,
+ * and the rest is drawn while the drawing scrolls up to the middle of the viewport. Drawing only moves forward: scrolling back
+ * leaves it finished. Without JavaScript, with reduced motion, or in print the drawing is
+ * shown complete.
+ */
+interface Props {
+  viewBox: string;
+  /** Accessible description of the picture */
+  label: string;
+  class?: string;
+}
+
+const { viewBox, label, class: className } = Astro.props;
+---
+
+<svg
+  class:list={["scroll-sketch", className]}
+  viewBox={viewBox}
+  role="img"
+  aria-label={label}
+  data-scroll-sketch
+>
+  <slot />
+</svg>
+
+<style>
+  .scroll-sketch {
+    --p: 1;
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .scroll-sketch :global(.ink) {
+    fill: none;
+    stroke: var(--room-ink);
+    stroke-width: 1.35;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .scroll-sketch :global(.ink.fine) {
+    stroke-width: 0.9;
+  }
+
+  .scroll-sketch :global(.ink.faint) {
+    stroke-width: 1;
+    stroke-opacity: 0.45;
+  }
+
+  .scroll-sketch :global(.ink.accent) {
+    stroke: var(--accent);
+  }
+
+  .scroll-sketch :global(.wash) {
+    fill: var(--room-ink-wash);
+    stroke: none;
+  }
+
+  /* Armed by the script: each stroke has pathLength 1, a start --a and a rate --k */
+  .scroll-sketch.is-armed :global(.ink) {
+    stroke-dasharray: 1 2;
+    stroke-dashoffset: calc((1 - clamp(0, (var(--p) - var(--a, 0)) * var(--k, 1), 1)) * 1.05);
+  }
+
+  .scroll-sketch.is-armed :global(.wash) {
+    opacity: clamp(0, (var(--p) - 0.86) * 7, 1);
+  }
+
+  @media print {
+    .scroll-sketch {
+      --p: 1 !important;
+    }
+  }
+</style>
+
+<script>
+  import "@/utils/scroll-sketch";
+</script>

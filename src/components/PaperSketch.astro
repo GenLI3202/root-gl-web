@@ -1,0 +1,232 @@
+---
+import ScrollSketch from "@/components/ScrollSketch.astro";
+import { PAPER_ART, type PaperArtId } from "@/utils/paper-art";
+import type { Locale } from "@/i18n";
+
+/**
+ * One of the poster drawings (src/utils/paper-art.ts), drawn large on the page's paper instead
+ * of inside the text: in the margin on `side`, running off the screen edge and reaching a little
+ * behind the content in pale ink, with a hand-written label in the margin for places. It
+ * finishes drawing itself as it scrolls into view (see ScrollSketch).
+ *
+ * Put it between two blocks of a page, before the one it belongs to. It is a zero-height anchor
+ * there, so it neither moves the layout nor needs anything from its parent. Narrower than
+ * 1200px there is no margin to draw in, and it becomes a full-bleed band in the flow instead.
+ */
+interface Props {
+  locale: Locale;
+  art: PaperArtId;
+  side: "left" | "right";
+  /** Offset from the anchor on wide screens */
+  top?: string;
+  /** How far the drawing reaches in behind the content on wide screens */
+  reach?: string;
+  /** Size on wide screens; pages with a wide content column have narrower margins, so use less */
+  size?: number;
+}
+
+const { locale, art: id, side, top = "0px", reach = "140px", size = 1 } = Astro.props;
+const art = PAPER_ART[id];
+const caption = art.caption?.[locale];
+const scale = art.scale ?? 1;
+---
+
+<div
+  class:list={["paper-anchor", `side-${side}`]}
+  style={`--sketch-top: ${top}; --reach: ${reach}; --scale: ${scale}; --size: ${size};`}
+>
+  <figure class="paper-sketch">
+    {art.raster ? (
+      <div class="raster" role="img" aria-label={art.label[locale]} data-scroll-sketch>
+        <img
+          src={art.raster.src}
+          width={art.raster.width}
+          height={art.raster.height}
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+    ) : (
+      <ScrollSketch viewBox={art.viewBox} label={art.label[locale]}>
+        {art.wash.map((d) => <path class="wash" d={d} fill-rule="evenodd" />)}
+        <g filter="url(#hand-wobble)">
+          {art.ink.map((d) => <path class="ink" d={d} />)}
+          {art.accent.map((d) => <path class="ink accent" d={d} />)}
+          {art.fine.map((d) => <path class="ink fine" d={d} />)}
+          {art.faint.map((d) => <path class="ink faint" d={d} />)}
+        </g>
+      </ScrollSketch>
+    )}
+    {caption && (
+      <figcaption>
+        <span class="place">{caption.place}</span>
+        {caption.note && <span class="note">{caption.note}</span>}
+      </figcaption>
+    )}
+  </figure>
+</div>
+
+<style>
+  .paper-anchor {
+    --w: calc(clamp(440px, 46vw, 680px) * var(--scale) * var(--size));
+    --ink-alpha: 0.4;
+    position: relative;
+    height: 0;
+  }
+
+  :global(.theme-dark) .paper-anchor {
+    --ink-alpha: 0.34;
+  }
+
+  .paper-sketch {
+    position: absolute;
+    z-index: -1;
+    top: var(--sketch-top);
+    width: var(--w);
+    margin: 0;
+    pointer-events: none;
+  }
+
+  .side-left .paper-sketch {
+    left: calc(var(--reach) - var(--w));
+  }
+
+  .side-right .paper-sketch {
+    right: calc(var(--reach) - var(--w));
+  }
+
+  /* Pale, fine ink so the content in front stays easy to read; the red pen stays brighter */
+  .paper-sketch :global(.scroll-sketch .ink) {
+    stroke-width: 0.85;
+    stroke-opacity: var(--ink-alpha);
+  }
+
+  .paper-sketch :global(.scroll-sketch .ink.fine) {
+    stroke-width: 0.55;
+  }
+
+  .paper-sketch :global(.scroll-sketch .ink.faint) {
+    stroke-width: 0.6;
+    stroke-opacity: calc(var(--ink-alpha) * 0.55);
+  }
+
+  .paper-sketch :global(.scroll-sketch .ink.accent) {
+    stroke-width: 1.1;
+    stroke-opacity: 0.75;
+  }
+
+  .paper-sketch :global(.scroll-sketch .wash) {
+    fill-opacity: 0.45;
+  }
+
+  /* A finished drawing kept as an image: swept in from the left as the reader scrolls */
+  .raster {
+    --p: 1;
+    opacity: 0.85;
+  }
+
+  .raster img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .raster:global(.is-armed) {
+    -webkit-mask-image: linear-gradient(100deg, #000 calc(var(--p) * 130% - 30%), transparent calc(var(--p) * 130%));
+    mask-image: linear-gradient(100deg, #000 calc(var(--p) * 130% - 30%), transparent calc(var(--p) * 130%));
+  }
+
+  /* Dark paper: like the stroke drawings, the ink turns light; the hue turns back so the frame
+     stays red. Not a full inversion, so the tyres read as grey rather than glaring white. */
+  :global(.theme-dark) .raster img {
+    filter: invert(0.88) hue-rotate(180deg) saturate(1.2);
+  }
+
+  :global(.theme-dark) .raster {
+    opacity: 0.7;
+  }
+
+  /* Place label in the margin, like a note pencilled on the paper */
+  figcaption {
+    position: absolute;
+    bottom: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    max-width: max(9rem, calc(50vw - 380px));
+    font-family: var(--font-hand);
+    line-height: 1.2;
+  }
+
+  .side-left figcaption {
+    right: calc(var(--reach) + 1.75rem);
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .side-right figcaption {
+    left: calc(var(--reach) + 1.75rem);
+  }
+
+  .place {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .note {
+    font-size: 1.1rem;
+    color: var(--fg-muted);
+  }
+
+  /* No margin to draw in: a full-bleed band in the flow, the label underneath */
+  @media (max-width: 1199px) {
+    .raster {
+      opacity: 1;
+    }
+
+    .paper-anchor {
+      --ink-alpha: 0.6;
+      height: auto;
+      width: 100vw;
+      margin: 1.25rem calc(50% - 50vw);
+    }
+
+    :global(.theme-dark) .paper-anchor {
+      --ink-alpha: 0.5;
+    }
+
+    .paper-sketch {
+      position: relative;
+      z-index: auto;
+      top: auto;
+      left: auto;
+      right: auto;
+      width: min(86vw, calc(640px * var(--scale)));
+      margin: 0 auto;
+    }
+
+    .side-left .paper-sketch,
+    .side-right .paper-sketch {
+      left: auto;
+      right: auto;
+    }
+
+    figcaption,
+    .side-left figcaption,
+    .side-right figcaption {
+      position: static;
+      max-width: none;
+      align-items: flex-start;
+      text-align: left;
+      margin-top: 0.25rem;
+      padding-inline: 1.25rem;
+    }
+  }
+</style>
+
+<script>
+  import "@/utils/scroll-sketch";
+</script>
