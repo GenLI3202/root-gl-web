@@ -381,6 +381,11 @@ body {
 }
 
 /* Fine paper grain over the whole page; pointer-events off so it never blocks input */
+/* Drawings on the paper (PaperSketch) may run past the screen edge or into the footer; clip them */
+main {
+  overflow: clip;
+}
+
 body::before {
   content: "";
   position: fixed;

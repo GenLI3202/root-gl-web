@@ -8,6 +8,7 @@ import CyclingKey from "@/components/CyclingKey.astro";
 import CyclingBigDays from "@/components/CyclingBigDays.astro";
 import CyclingMap from "@/components/CyclingMap.astro";
 import TrainingDoor from "@/components/TrainingDoor.astro";
+import PaperSketch from "@/components/PaperSketch.astro";
 import { t, type Locale } from "@/i18n";
 import { formatDate, formatNumber, funFigures, loadCycling, loadRoutes } from "@/utils/cycling";
 
@@ -194,6 +195,7 @@ const tableRows = data
   illustration="/images/hobbies/cyclist-rider.svg"
 >
   <TrainingDoor slot="corner" locale={locale} />
+  <PaperSketch locale={locale} art="bike" side="right" top="0.5rem" reach="200px" size={0.55} />
   <section class="intro">
     {data ? (
       <>
@@ -225,6 +227,7 @@ const tableRows = data
     </section>
   )}
 
+  <PaperSketch locale={locale} art="ride" side="left" top="-1rem" reach="40px" size={0.48} />
   {data && (
     <section class="hobby-section">
       <h2 class="section-title">{copy.bigTitle}</h2>
