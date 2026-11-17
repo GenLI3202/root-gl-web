@@ -1,11 +1,14 @@
 ---
 import TrainingLayout from "@/layouts/TrainingLayout.astro";
+import Bi from "@/components/Bi.astro";
 import { TRAINING_SESSIONS } from "@/data/training-sessions";
 
 /**
  * One follow-along page per session theme. The apps are self-contained pages built in the
- * scientific-training repo (`python3 docs/app/follow/build.py --site <gen-web>/src/training`)
- * and copied into src/training/ verbatim; edit them there and rebuild, so both stay in sync.
+ * scientific-training repo and copied in verbatim, together with their voice sprites:
+ * `python3 docs/app/follow/build.py --site <gen-web>/src/training --voice <gen-web>/public/training/voice`.
+ * Edit them there and rebuild, so both stay in sync. Each app has its own language switch and
+ * shares the room's choice (see TrainingLayout).
  */
 const APPS = import.meta.glob<string>("/src/training/*.html", { query: "?raw", import: "default", eager: true });
 
@@ -22,8 +25,8 @@ const app = APPS[`/src/training/${slug}.html`];
 if (!app) throw new Error(`missing src/training/${slug}.html for ${session.id}`);
 ---
 
-<TrainingLayout title={`${session.name} · 训练室`}>
-  <a class="to-room" href="/training/">← 选主题</a>
+<TrainingLayout title={{ zh: `${session.name.zh} · 训练室`, en: `${session.name.en} · Training room` }}>
+  <a class="to-room" href="/training/">← <Bi text={{ zh: "选主题", en: "All themes" }} /></a>
   <Fragment set:html={app} />
 </TrainingLayout>
 

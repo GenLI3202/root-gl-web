@@ -1,0 +1,15 @@
+---
+import type { Bilingual } from "@/data/training-sessions";
+
+/**
+ * Training-room text in both languages. Both spans are in the page; the room's language switch
+ * (data-train-lang on <html>, see TrainingLayout) hides the other one, so switching needs no reload.
+ */
+interface Props {
+  text: Bilingual;
+}
+
+const { text } = Astro.props;
+---
+
+<span data-l="zh" lang="zh-CN">{text.zh}</span><span data-l="en" lang="en">{text.en}</span>
