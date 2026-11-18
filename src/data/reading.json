@@ -1,11 +1,11 @@
 {
-  "syncedThrough": 1794780257,
+  "syncedThrough": 1794870157,
   "stats": {
-    "totalSeconds": 2332680,
+    "totalSeconds": 2332725,
     "readDays": 1117,
     "booksRead": 167,
     "booksFinished": 48,
-    "notes": 2726,
+    "notes": 2727,
     "years": [
       {
         "year": 2019,
@@ -37,12 +37,12 @@
       },
       {
         "year": 2026,
-        "seconds": 280729
+        "seconds": 280774
       }
     ],
     "hours": [
-      78613,
-      60009,
+      78708,
+      60035,
       35853,
       19052,
       8386,
@@ -62,9 +62,9 @@
       136337,
       147131,
       128429,
-      110984,
-      102636,
-      97750
+      111140,
+      104252,
+      99708
     ],
     "hoursTimeZone": "Europe/Berlin"
   },
