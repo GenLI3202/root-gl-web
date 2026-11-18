@@ -17,7 +17,8 @@ interface Props {
 interface HomeCopy {
   hello: string;
   nameLine: string;
-  intro: string;
+  motto: string;
+  intro: string[];
   notebook: string;
   lately: string;
   updated: string;
@@ -37,12 +38,23 @@ const COPY: Record<Locale, HomeCopy> = {
   en: {
     hello: "hi, glad you found this place",
     nameLine: "I'm Gen Li.",
-    intro:
-      "I'm a PhD researcher at TU Munich's Center for Energy Markets, currently a PhD intern " +
-      "at Huawei. I work on <span class='marker'>local energy management systems</span>: the " +
-      "software that makes a site's batteries, PV, EV chargers and grid connection work as one. " +
-      "Lately I'm also hooked on energy management for AI data-center campuses. On weekends " +
-      "I'm on a bike somewhere south of Munich.",
+    motto:
+      "Seeking the beauty of order and the flow of energy, across nature, algorithms, " +
+      "and the open road.",
+    intro: [
+      "I am someone <span class='marker'>deeply moved by beauty</span> in all its forms. " +
+        "Rather than defining myself by titles or resumes, I prefer to see myself as an " +
+        "explorer guided by intuition, harmony, and vitality.",
+      "To me, mathematics and modeling are not cold abstractions, but a quiet kind of " +
+        "aesthetics: a way to glimpse the hidden elegance beneath a complex world. With this " +
+        "sensibility, I am drawn to nature, renewable energy, and the evolving world of AI " +
+        "Agents, imagining a cleaner, gentler flow of energy through mathematical clarity and " +
+        "autonomous intelligence.",
+      "Away from the screen, I look for that same resonance in everyday life. I love cycling " +
+        "and staying active, feeling the wind and the pulse of my own energy out in nature. " +
+        "I am an avid reader, and every now and then, I still pick up my somewhat rusty " +
+        "guitar, not to play perfectly, just to enjoy a few unhurried chords.",
+    ],
     notebook:
       "This site is my notebook: research notes, rides, books, and the occasional guitar evening.",
     lately: "Lately",
@@ -52,11 +64,18 @@ const COPY: Record<Locale, HomeCopy> = {
   zh: {
     hello: "你好，欢迎来坐坐",
     nameLine: "我是李根。",
-    intro:
-      "慕尼黑工业大学能源市场中心的博士研究员，目前在华为做博士实习。我研究" +
-      "<span class='marker'>本地能量管理系统（LEMS）</span>，" +
-      "也就是让一个场站里的储能、光伏、充电桩和并网点协同工作的那套软件。" +
-      "最近还迷上了 AI 数据中心园区的能量管理。周末多半在慕尼黑以南的某条路上骑车。",
+    motto: "在自然、算法与风之间，寻找美的秩序与能量的流动。",
+    intro: [
+      "我是一个<span class='marker'>容易被美好事物打动</span>的人。" +
+        "比起用头衔或履历来介绍自己，我更愿意说，自己是一个追随直觉与美感的探索者。",
+      "在我眼里，数学和建模并不是冰冷的公式，而是一种极简的美学——" +
+        "它让我得以捕捉复杂世界里隐秘的秩序。带着这份敏锐，我热爱自然与新能源，" +
+        "也对 AI Agent（人工智能体）充满好奇，希望用数学的优雅和智能体的灵动，" +
+        "去参与一种更温柔、更可持续的能量流动。",
+      "屏幕之外，我把同样的热情留给了生活里的质感。我喜欢在骑行和运动中感受风的阻力与" +
+        "身体的能量，去触摸真实的山川；也喜欢在书页间安静地漫游。偶尔兴致来了，" +
+        "还会抱起那把有些生疏的吉他，不求精准，只为弹几段取悦当下的旋律。",
+    ],
     notebook: "这个网站是我的笔记本：研究、骑行、读书，偶尔还有一晚吉他。",
     lately: "最近",
     updated: "更新于",
@@ -65,13 +84,23 @@ const COPY: Record<Locale, HomeCopy> = {
   de: {
     hello: "hallo, schön, dass du hier bist",
     nameLine: "Ich bin Gen Li.",
-    intro:
-      "Ich bin Doktorand am Center for Energy Markets der TU München und derzeit " +
-      "PhD-Praktikant bei Huawei. Ich arbeite an <span class='marker'>lokalen " +
-      "Energiemanagementsystemen</span>: der Software, die Batteriespeicher, PV, Ladesäulen und " +
-      "Netzanschluss eines Standorts zusammenspielen lässt. Seit Kurzem beschäftigt mich auch " +
-      "das Energiemanagement von KI-Rechenzentrumsparks. Am Wochenende sitze ich irgendwo " +
-      "südlich von München auf dem Rad.",
+    motto:
+      "Auf der Suche nach der Schönheit der Ordnung und dem Fluss der Energie, in der " +
+      "Natur, in Algorithmen und auf offener Straße.",
+    intro: [
+      "Ich bin jemand, den <span class='marker'>Schönes leicht berührt</span>. Statt mich " +
+        "über Titel oder Lebenslauf zu beschreiben, sehe ich mich lieber als Entdecker, der " +
+        "seiner Intuition und seinem Sinn für Schönheit folgt.",
+      "Mathematik und Modellierung sind für mich keine kalten Formeln, sondern eine schlichte " +
+        "Form von Ästhetik: Sie lassen mich die verborgene Ordnung in einer komplexen Welt " +
+        "erkennen. Aus diesem Gespür heraus liebe ich die Natur und erneuerbare Energien und " +
+        "bin neugierig auf KI-Agenten. Mit der Klarheit der Mathematik und der Beweglichkeit " +
+        "autonomer Agenten möchte ich zu einem sanfteren, nachhaltigeren Energiefluss beitragen.",
+      "Abseits des Bildschirms suche ich dieselbe Resonanz im Alltag. Beim Radfahren und beim " +
+        "Sport spüre ich den Wind und die eigene Kraft draußen in den Bergen. Ich verliere mich " +
+        "gern still zwischen Buchseiten. Und ab und zu nehme ich meine etwas eingerostete " +
+        "Gitarre in die Hand, nicht um perfekt zu spielen, sondern für ein paar Akkorde ohne Eile.",
+    ],
     notebook:
       "Diese Seite ist mein Notizbuch: Forschung, Ausfahrten, Bücher und ab und zu ein Gitarrenabend.",
     lately: "Gerade",
@@ -172,7 +201,10 @@ function isExternal(href: string): boolean {
       </span>
     </div>
 
-    <p class="hero-intro" set:html={copy.intro} />
+    <p class="hero-motto">{copy.motto}</p>
+    <div class="hero-intro">
+      {copy.intro.map((paragraph) => <p set:html={paragraph} />)}
+    </div>
     <PaperSketch locale={locale} art="baima" side="right" top="-16rem" reach="60px" size={0.75} />
     <p class="hero-notebook">{copy.notebook}</p>
 
@@ -339,11 +371,24 @@ function isExternal(href: string): boolean {
     transform: rotate(4deg) scale(1.06);
   }
 
+  .hero-motto {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-style: italic;
+    line-height: 1.6;
+    max-width: 38rem;
+    margin-bottom: 1.25rem;
+  }
+
   .hero-intro {
     font-size: var(--text-lg);
     line-height: 1.75;
     max-width: 38rem;
     margin-bottom: 0.75rem;
+  }
+
+  .hero-intro p + p {
+    margin-top: 0.9rem;
   }
 
   .hero-notebook {
