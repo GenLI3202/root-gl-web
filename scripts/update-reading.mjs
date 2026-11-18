@@ -18,7 +18,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const GATEWAY = "https://i.weread.qq.com/api/agent/gateway";
-const SKILL_VERSION = "1.0.5";
+const SKILL_VERSION = "1.0.6";
 const MIN_SECONDS = 3 * 60 * 60;
 const CONCURRENCY = 4;
 const OUT_PATH = path.join(process.cwd(), "src/data/reading.json");
@@ -45,6 +45,7 @@ if (!API_KEY) {
 }
 
 const fullScan = process.argv.includes("--full");
+let upgradeNoticeShown = false;
 
 async function call(apiName, params = {}) {
   const res = await fetch(GATEWAY, {
@@ -54,8 +55,11 @@ async function call(apiName, params = {}) {
   });
   if (!res.ok) throw new Error(`${apiName}: HTTP ${res.status}`);
   const data = await res.json();
-  if (data.upgrade_info) {
-    throw new Error(`${apiName}: API asks for a skill upgrade: ${JSON.stringify(data.upgrade_info)}`);
+  // A newer WeRead skill version only adds a notice; the response itself is still valid
+  if (data.upgrade_info && !upgradeNoticeShown) {
+    upgradeNoticeShown = true;
+    const { current_version: current, latest_version: latest } = data.upgrade_info;
+    console.log(`::warning::WeRead skill ${latest} is out, SKILL_VERSION is ${current}`);
   }
   if (data.errcode) throw new Error(`${apiName}: errcode ${data.errcode} ${data.errmsg ?? ""}`);
   return data;
