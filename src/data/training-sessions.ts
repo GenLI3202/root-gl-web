@@ -57,6 +57,14 @@ const EX = {
   splitSquat: { zh: "后脚抬高分腿蹲", en: "Rear-foot-elevated split squat" },
   climber: { zh: "登山者", en: "Mountain climber" },
   plankRow: { zh: "平板哑铃划船", en: "Plank row" },
+  cobra: { zh: "俯卧眼镜蛇", en: "Prone cobra" },
+  tRaise: { zh: "俯卧 T 字举", en: "Prone T raise" },
+  scaption: { zh: "肩胛面上举", en: "Scaption" },
+  pushupPlus: { zh: "俯卧撑加强", en: "Push-up plus" },
+  curlUp: { zh: "改良卷腹", en: "Curl-up" },
+  clamshell: { zh: "蚌式开合", en: "Clamshell" },
+  sideRaise: { zh: "侧卧抬腿", en: "Side-lying leg raise" },
+  oneLegBridge: { zh: "单腿臀桥", en: "Single-leg bridge" },
 } satisfies Record<string, Bilingual>;
 
 export const TRAINING_SESSIONS: TrainingSession[] = [
@@ -185,5 +193,69 @@ export const TRAINING_SESSIONS: TrainingSession[] = [
     gear: DUMBBELL,
     exercises: [EX.splitSquat, EX.rdl, EX.stepUp, EX.touchdown, EX.row, EX.plankRow],
     href: "/training/ms-heavy/",
+  },
+];
+
+/**
+ * Focused sessions: four hand-picked sessions outside the weekly plan, for one body area each. They mirror the FOCUS_*
+ * templates in the scientific-training planner (strength/strength.toml), whose exercise choice and doses come from Doyle
+ * ch. 7–11 and the EMG notes in its knowledge/app/ folder.
+ */
+export const FOCUS_SESSIONS: TrainingSession[] = [
+  {
+    id: "FOCUS_SHOULDER",
+    name: { zh: "肩袖护航", en: "Cuff guard" },
+    plan: { zh: "专项 · 肩部", en: "Focus · shoulders" },
+    minutes: 20,
+    level: 1,
+    focus: [
+      { zh: "肩袖", en: "Rotator cuff" },
+      { zh: "肩胛稳定", en: "Shoulder blades" },
+    ],
+    gear: DUMBBELL,
+    exercises: [EX.tRaise, EX.extRot, EX.scaption, EX.pushupPlus, EX.row, EX.cobra],
+    href: "/training/focus-shoulder/",
+  },
+  {
+    id: "FOCUS_CORE",
+    name: { zh: "三面核心", en: "Three-plane core" },
+    plan: { zh: "专项 · 核心", en: "Focus · core" },
+    minutes: 20,
+    level: 2,
+    focus: [
+      { zh: "前后 · 左右 · 旋转", en: "All three planes" },
+      { zh: "核心耐力", en: "Core endurance" },
+    ],
+    gear: DUMBBELL,
+    exercises: [EX.curlUp, EX.sidePlank, EX.birdDog, EX.plankRow, EX.chop, EX.reverseCrunch, EX.cobra],
+    href: "/training/focus-core/",
+  },
+  {
+    id: "FOCUS_BACK",
+    name: { zh: "挺背回正", en: "Back to upright" },
+    plan: { zh: "专项 · 背部", en: "Focus · back" },
+    minutes: 18,
+    level: 2,
+    focus: [
+      { zh: "对冲骑姿", en: "Counter the riding hunch" },
+      { zh: "后链", en: "Posterior chain" },
+    ],
+    gear: DUMBBELL,
+    exercises: [EX.rdl, EX.row, EX.cobra, EX.tRaise, EX.bridge, EX.birdDog],
+    href: "/training/focus-back/",
+  },
+  {
+    id: "FOCUS_HIPS",
+    name: { zh: "稳髋护膝", en: "Steady hips" },
+    plan: { zh: "专项 · 髋臀", en: "Focus · hips" },
+    minutes: 21,
+    level: 2,
+    focus: [
+      { zh: "臀中肌", en: "Glute med" },
+      { zh: "膝盖走直线", en: "Knee tracking" },
+    ],
+    gear: BODYWEIGHT,
+    exercises: [EX.clamshell, EX.oneLegBridge, EX.sideRaise, EX.touchdown, EX.sidePlank],
+    href: "/training/focus-hips/",
   },
 ];

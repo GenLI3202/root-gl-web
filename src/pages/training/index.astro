@@ -3,7 +3,7 @@ import TrainingLayout from "@/layouts/TrainingLayout.astro";
 import TrainingSessionCard from "@/components/TrainingSessionCard.astro";
 import TrainingLangSwitch from "@/components/TrainingLangSwitch.astro";
 import Bi from "@/components/Bi.astro";
-import { TRAINING_SESSIONS, TODAY_SESSION } from "@/data/training-sessions";
+import { FOCUS_SESSIONS, TRAINING_SESSIONS, TODAY_SESSION } from "@/data/training-sessions";
 
 /** The training room: pick a session theme. Reached only through the dumbbell on the cycling page. */
 const today = TRAINING_SESSIONS.find((s) => s.id === TODAY_SESSION);
@@ -23,8 +23,8 @@ const others = TRAINING_SESSIONS.filter((s) => s.id !== TODAY_SESSION);
       <p>
         <Bi
           text={{
-            zh: "选一个主题，九节都能跟练了。",
-            en: "Pick a theme: all nine sessions are ready to follow along.",
+            zh: "选一个主题：九节周期课，外加四节专项课，都能跟练。",
+            en: "Pick a theme: nine plan sessions and four focused ones, all ready to follow along.",
           }}
         />
       </p>
@@ -51,11 +51,28 @@ const others = TRAINING_SESSIONS.filter((s) => s.id !== TODAY_SESSION);
       </div>
     </section>
 
+    <section aria-labelledby="focus-h">
+      <h2 id="focus-h" class="all-title">
+        <Bi text={{ zh: `专项 · ${FOCUS_SESSIONS.length} 种`, en: `Focused · ${FOCUS_SESSIONS.length}` }} />
+      </h2>
+      <p class="section-note">
+        <Bi
+          text={{
+            zh: "不在每周计划里：哪里想补练哪里，轻松骑完或单独做都行，一周 2–3 次就够。",
+            en: "Not part of the weekly plan: train the area you want, after an easy ride or on its own, 2–3 times a week.",
+          }}
+        />
+      </p>
+      <div class="grid">
+        {FOCUS_SESSIONS.map((s) => <TrainingSessionCard session={s} moves />)}
+      </div>
+    </section>
+
     <p class="foot">
       <Bi
         text={{
-          zh: "主题来自每周训练规划里的 9 种力量课模板，按 Friel 与 Doyle 的周期安排。",
-          en: "The themes are the nine strength templates of my weekly training plan, periodized after Friel and Doyle.",
+          zh: "周期课来自每周训练规划里的 9 种力量课模板，按 Friel 与 Doyle 的周期安排；专项课的动作按 Doyle 第 7–11 章和肌电研究挑选。",
+          en: "The plan sessions are the nine strength templates of my weekly training plan, periodized after Friel and Doyle; the focused ones pick their moves from Doyle ch. 7–11 and EMG studies.",
         }}
       />
     </p>
@@ -134,6 +151,12 @@ const others = TRAINING_SESSIONS.filter((s) => s.id !== TODAY_SESSION);
     margin: 0.6rem 0 1rem;
     font-size: 1.1rem;
     font-weight: 900;
+  }
+
+  .section-note {
+    margin: -0.4rem 0 1rem;
+    font-size: 0.95rem;
+    font-weight: 700;
   }
 
   .grid {
