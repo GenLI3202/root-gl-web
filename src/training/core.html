@@ -721,11 +721,11 @@
       notes: (P, k, s) => { const a = s > 0 ? P.R : P.L;
         return k === "ecc" ? [["iso", a.elbow, [-30, -40], "肘约 45°", LIME]] : k === "hold" ? [["iso", a.elbow, [-30, -40], "上臂轻碰地，别弹", LIME]] : [["iso", a.hand, [-40, -24], "胸和三头推起", ORG]]; },
       mistake: { view: "iso", at: (W, s) => (s > 0 ? W.R : W.L).elbow, off: [-40, -36], text: "✕ 肘外张成 90°" } },
-    external_rotation: { name: "侧卧肩外旋", pose: extRot, perSide: ["右臂", "左臂"], unit: "侧", order: "con", labels: { con: "向外转", hold: "停", ecc: "慢放" }, db: true,
+    external_rotation: { name: "侧卧肩外旋", pose: extRot, isoYaw: 45, perSide: ["右臂", "左臂"], unit: "侧", order: "con", labels: { con: "向外转", hold: "停", ecc: "慢放" }, db: true,
       muscles: ["冈下肌", "小圆肌", "三角肌后束", "斜方肌中束"],
       cue: "侧躺，上面那只手肘弯 90° 贴在身侧（腋下可夹条毛巾），前臂向上转开，身体不转；用很轻的哑铃，慢慢放回。",
       src: "依据：Doyle 第 8 章 p.129–130、第 11 章 p.188；外旋动作肌电 [R19][R20]（R20 只读到摘要）",
-      views: [["iso", ISO_LAB], ["behind", "脚端 FEET"]], tabs: [ISO_TAB, "脚端"], fore: (vk, P, s) => dumbbell(vk, (s > 0 ? P.R : P.L).hand, V(1, 0, 0), 6),
+      views: [["iso", ISO_LAB], ["behind", "脚端 FEET"]], tabs: [ISO_TAB, "脚端"], fore: (vk, P, s) => dumbbell(vk, (s > 0 ? P.R : P.L).hand, norm(sub(P.sc, P.pel)), 6),
       hot: (P, s) => { const a = s > 0 ? P.R : P.L, key = s > 0 ? "R.arm" : "L.arm"; return [{ on: key, dot: a.sh, r: 6.5 }]; },
       notes: (P, k, s) => { const a = s > 0 ? P.R : P.L;
         return k === "con" ? [["iso", a.sh, [-10, -40], "肩袖发力", ORG], ["behind", a.elbow, [40, -26], "肘贴身侧", LIME]]
@@ -1120,6 +1120,10 @@
     const ps = ex.props ? ex.props(vk, P, side, rp) : "", box = vk === "iso" && ex.props && ex.fitPts ? boundsOf(ex.fitPts(P, side)) : null;
     return (box ? "" : ps) + figure(vk, P, hot, act, box && { svg: ps, box }) + (ex.fore ? ex.fore(vk, P, side, rp) : "");
   }
+  /* moves with isoYaw turn in the 45° view only, so the body lies across the screen: seen along the body, a raised leg or
+     forearm would point straight up the screen and a lifted chest would hardly show. A per-side move's other side is
+     mirrored and turned half a circle further, so it faces the camera too. */
+  const isoPose = (ex, vk, P, s) => (vk === "iso" && ex.isoYaw != null ? mapP(P, (v) => rotY(v, (ex.isoYaw + (s < 0 && ex.perSide ? 180 : 0)) * deg, P.pel)) : P);
   /* the corners of a box prop → [x0, x1, y0, y1, z0, z1] */
   const boundsOf = (ps) => ["x", "y", "z"].flatMap((a) => [Math.min(...ps.map((q) => q[a])), Math.max(...ps.map((q) => q[a]))]);
   const SEGS = (P) => [["Ls", P.L.ankle, P.L.knee, 8.5], ["Lt", P.L.knee, P.L.hip, 11.5], ["Rs", P.R.ankle, P.R.knee, 8.5], ["Rt", P.R.knee, P.R.hip, 11.5],
@@ -1150,7 +1154,7 @@
     ex.vb = ex.views.map(([vk], vi) => {
       const pts = [];
       for (const e of [0, 0.25, 0.5, 0.75, 1]) for (const s of [1, -1]) for (const rp of [0, 1, 2, 3]) {
-        const P = ex.pose(e, s, 0, 0, rp);
+        const P = isoPose(ex, vk, ex.pose(e, s, 0, 0, rp), s);
         pts.push(P.pel, P.sc, P.head, ...["L", "R"].flatMap((k) => Object.values(P[k])), ...(ex.fitPts ? ex.fitPts(P, s) : []));
       }
       if (vk === "iso") {
@@ -1388,25 +1392,27 @@
       $("#l0").textContent = tr(scene === "done" ? "练完啦" : "休息一下");
       $("#pip").hidden = scene !== "rest";
       if (scene === "rest") {
-        const P = showEx.pose(e, side, 0, tpose, rp), vk = showEx.views[0][0], vb = showEx.vb[0];
+        const vk = showEx.views[0][0], vb = showEx.vb[0], P = isoPose(showEx, vk, showEx.pose(e, side, 0, tpose, rp), side);
         const pv = $("#vp"); pv.setAttribute("viewBox", vb.map(f1).join(" "));
         pv.innerHTML = floorSvg(vk, vb, showEx.mat[0]) + bodySvg(showEx, vk, P, side, rp, showEx.hot(P, side), 0.8);
       } st.classList.remove("two"); $(".panel.alt").hidden = true; $("#tabs").hidden = true; st.dataset.view = "main";
     } else {
     $("#pip").hidden = true;
-    const P = showEx.pose(e, side, 0, tpose, rp), act = k === "con" || k === "hold" ? 1 : k === "ecc" ? 0.7 : 0.45;
-    const hot = showEx.hot(P, side);
-    let ns = showEx.notes ? showEx.notes(P, k === "prep" ? showEx.phases[0].k : k, side) : [showEx.cycle(P)[Math.floor(tpose / 4) % showEx.cycle(P).length]];
+    const P0 = showEx.pose(e, side, 0, tpose, rp), act = k === "con" || k === "hold" ? 1 : k === "ecc" ? 0.7 : 0.45;
     showEx.views.forEach(([vk, lab], vi) => {
-      const vb = showEx.vb[vi];
+      /* each view gets the pose as it draws it (side-lying moves are turned to face the 45° camera), and the
+         highlights, notes and mistake ghost follow that same pose */
+      const vb = showEx.vb[vi], P = isoPose(showEx, vk, P0, side), hot = showEx.hot(P, side);
+      const ns = showEx.notes ? showEx.notes(P, k === "prep" ? showEx.phases[0].k : k, side) : [showEx.cycle(P)[Math.floor(tpose / 4) % showEx.cycle(P).length]];
+      const W = mistake && showEx.mistake.view === vk ? isoPose(showEx, vk, showEx.pose(Math.max(e, 0.75), side, 1, tpose, rp), side) : null;
       let svg = floorSvg(vk, vb, showEx.mat[vi]);
       /* on push-up and plank days a critter may sit on the lower back */
       if (vi === 0) { const back = showEx.perch && vk === "iso" ? VIEWS.iso.p(add(mid(P.pel, P.sc, 0.15), V(0, 9, 0))) : null; svg += critters(vb, back && [back[0] - 12, back[1] - 1]); }
       svg += shadowSvg(vk, P);
-      if (mistake && showEx.mistake.view === vk) svg += ghost(vk, P, showEx.pose(Math.max(e, 0.75), side, 1, tpose, rp));
+      if (W) svg += ghost(vk, P, W);
       svg += bodySvg(showEx, vk, P, side, rp, hot, act);
       if (vi === 0) svg += critFront;
-      if (mistake && showEx.mistake.view === vk) { const W = showEx.pose(Math.max(e, 0.75), side, 1, tpose, rp), mk = showEx.mistake; svg += note(vk, vb, mk.at(W, side), mk.off, mk.text, PINK, true); }
+      if (W) { const mk = showEx.mistake; svg += note(vk, vb, mk.at(W, side), mk.off, mk.text, PINK, true); }
       else ns.filter((n) => n[0] === vk).slice(0, 1).forEach((n) => (svg += note(vk, vb, n[1], n[2], n[3], n[4])));
       const el = $("#v" + vi); el.setAttribute("viewBox", vb.map(f1).join(" ")); el.innerHTML = svg;
       $("#l" + vi).textContent = lab;
