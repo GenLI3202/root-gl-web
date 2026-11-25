@@ -1270,7 +1270,8 @@
   window.followFallbacks = [];                              /* lines the sprite could not say, for checking */
   /* the files are fetched as soon as the page opens (no audio context needed), so the first line after ▶ is ready */
   function fetchVox(lang) {
-    VOX_FILES[lang] = VOX_FILES[lang] || Promise.all([fetch(`${VOICE}cues-${lang}.json`).then((r) => r.json()), fetch(`${VOICE}cues-${lang}.mp3`).then((r) => r.arrayBuffer())])
+    /* revalidated on every load: the offset table and the audio must come from the same recording */
+    VOX_FILES[lang] = VOX_FILES[lang] || Promise.all([fetch(`${VOICE}cues-${lang}.json`, { cache: "no-cache" }).then((r) => r.json()), fetch(`${VOICE}cues-${lang}.mp3`, { cache: "no-cache" }).then((r) => r.arrayBuffer())])
       .catch((e) => { delete VOX_FILES[lang]; throw e; });
     return VOX_FILES[lang];
   }
