@@ -9,9 +9,11 @@ import Bi from "@/components/Bi.astro";
 interface Props {
   session: TrainingSession;
   today?: boolean;
+  /** list the exercises under the tags (always on for today's card) */
+  moves?: boolean;
 }
 
-const { session, today = false } = Astro.props;
+const { session, today = false, moves = today } = Astro.props;
 const ready = Boolean(session.href);
 const Tag = ready ? "a" : "div";
 const LEVELS: Bilingual[] = [
@@ -47,7 +49,7 @@ const level = LEVELS[session.level];
     <li class="tag gear"><Bi text={session.gear} /></li>
   </ul>
   {
-    today && (
+    moves && (
       <p class="moves">
         <Bi
           text={{

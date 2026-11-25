@@ -1,7 +1,7 @@
 ---
 import TrainingLayout from "@/layouts/TrainingLayout.astro";
 import Bi from "@/components/Bi.astro";
-import { TRAINING_SESSIONS } from "@/data/training-sessions";
+import { FOCUS_SESSIONS, TRAINING_SESSIONS } from "@/data/training-sessions";
 
 /**
  * One follow-along page per session theme. The apps are self-contained pages built in the
@@ -13,7 +13,7 @@ import { TRAINING_SESSIONS } from "@/data/training-sessions";
 const APPS = import.meta.glob<string>("/src/training/*.html", { query: "?raw", import: "default", eager: true });
 
 export function getStaticPaths() {
-  return TRAINING_SESSIONS.filter((s) => s.href).map((s) => ({
+  return [...TRAINING_SESSIONS, ...FOCUS_SESSIONS].filter((s) => s.href).map((s) => ({
     params: { session: s.href!.split("/").filter(Boolean).pop() },
     props: { session: s },
   }));
