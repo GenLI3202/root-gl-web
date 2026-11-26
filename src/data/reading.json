@@ -1,8 +1,8 @@
 {
-  "syncedThrough": 1795386990,
+  "syncedThrough": 1795682656,
   "stats": {
-    "totalSeconds": 2336773,
-    "readDays": 1118,
+    "totalSeconds": 2338262,
+    "readDays": 1119,
     "booksRead": 167,
     "booksFinished": 48,
     "notes": 2728,
@@ -37,7 +37,7 @@
       },
       {
         "year": 2026,
-        "seconds": 284822
+        "seconds": 286311
       }
     ],
     "hours": [
@@ -69,6 +69,20 @@
     "hoursTimeZone": "Europe/Berlin"
   },
   "books": [
+    {
+      "id": "3300234745",
+      "title": "局外人（萨特：一部理性与经典之作）",
+      "author": "[法]阿尔贝·加缪",
+      "category": "文学-世界名著",
+      "seconds": 10890,
+      "progress": 86,
+      "finishedAt": null,
+      "lastReadAt": 1795682656,
+      "highlights": 1,
+      "thoughts": 3,
+      "link": "https://weread.qq.com/book-detail?type=1&v=1d732600813abc232g015215",
+      "titleEn": "The Stranger"
+    },
     {
       "id": "40055543",
       "title": "置身事内：中国政府与经济发展",
