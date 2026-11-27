@@ -1,11 +1,11 @@
 {
-  "syncedThrough": 1795682656,
+  "syncedThrough": 1795787195,
   "stats": {
-    "totalSeconds": 2338262,
-    "readDays": 1119,
+    "totalSeconds": 2339796,
+    "readDays": 1120,
     "booksRead": 167,
-    "booksFinished": 48,
-    "notes": 2728,
+    "booksFinished": 49,
+    "notes": 2730,
     "years": [
       {
         "year": 2019,
@@ -37,7 +37,7 @@
       },
       {
         "year": 2026,
-        "seconds": 286311
+        "seconds": 287845
       }
     ],
     "hours": [
@@ -50,8 +50,8 @@
       45140,
       28387,
       57396,
-      75371,
-      76888,
+      75515,
+      77083,
       83002,
       102431,
       120306,
@@ -61,8 +61,8 @@
       97293,
       136337,
       147131,
-      128429,
-      111140,
+      128917,
+      111802,
       105287,
       101761
     ],
@@ -74,11 +74,11 @@
       "title": "局外人（萨特：一部理性与经典之作）",
       "author": "[法]阿尔贝·加缪",
       "category": "文学-世界名著",
-      "seconds": 10890,
-      "progress": 86,
-      "finishedAt": null,
-      "lastReadAt": 1795682656,
-      "highlights": 1,
+      "seconds": 12353,
+      "progress": 99,
+      "finishedAt": 1795787053,
+      "lastReadAt": 1795787100,
+      "highlights": 3,
       "thoughts": 3,
       "link": "https://weread.qq.com/book-detail?type=1&v=1d732600813abc232g015215",
       "titleEn": "The Stranger"
@@ -254,7 +254,7 @@
     {
       "id": "35459982",
       "title": "紫图经典文库：三岛由纪夫·潮骚",
-      "author": "三岛由纪夫",
+      "author": "[日]三岛由纪夫",
       "category": "文学-外国文学",
       "seconds": 17359,
       "progress": 96,
